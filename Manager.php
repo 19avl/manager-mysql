@@ -28,7 +28,7 @@ Class Manager
 			return;
 		}
 
-		$this->dbc = new mysqli($SERVER["host"], $SERVER["user"], $SERVER["pass"], '');
+		$this->dbc = new mysqli($SERVER["host"], $SERVER["user"], $SERVER["pass"], "");
 
 		if(!mysqli_connect_errno()){
 
@@ -97,7 +97,7 @@ Class Manager
 		$RT["ON_PAGE"] = $LIMIT["SCHEMA"];
 		$RT["FIELD_ST"] = ["schema_name", "charset_name", "collation_name"];
 		$RT["FIELD_SE"] = ["DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
-		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
+		$RT["FILTER_EX"] = ["...","=","<>","LIKE"];
 
 		if($nv["page_db"] === "0"){$nv["page_db"] = $RT["ON_PAGE"][0];}
 
@@ -158,6 +158,28 @@ Class Manager
 		return $RT;
 	}
 
+	public function info()
+	{
+		$RT = [];
+		$RT[] = "CLIENT_INFO: ".$this->dbc->client_info;
+		$RT[] = "SERVER_INFO: ".$this->dbc->server_info;
+		$RT[] = "CHARACTER_SET_SERVER: ".$this->dbc->character_set_name();
+		$RT[] = "&nbsp;";
+
+		$result = $this->request("SELECT CURRENT_USER();", __LINE__);
+		if($result[0]){
+
+			$RT[] = "USER: ".$result[1]->fetch_row()[0];
+		}
+
+		$RT[] = "&nbsp;";
+		if(isset($GLOBALS["_SERVER"]["SERVER_SOFTWARE"])){
+
+			$RT[] = $GLOBALS["_SERVER"]["SERVER_SOFTWARE"];
+		}
+
+		return $RT;
+	}
 
 	public function tb($_DB, $nv, $LIMIT)
 	{
@@ -167,7 +189,8 @@ Class Manager
 		$RT["DB"] = $_DBS;
 		$RT["CREATE"] = "";
 		$RT["TRIGGERS"] = [];
-		$RT["ROUTINES"] = [];
+		$RT["PROCEDURE"] = [];
+		$RT["FUNCTION"] = [];
 		$RT["EVENTS"] = [];
 		$RT["TABLES"] = [];
 		$RT["COUNT"] = "";
@@ -175,7 +198,7 @@ Class Manager
 		$RT["ON_PAGE"] = $LIMIT["TABLES"];
 		$RT["FIELD_ST"] = ["table_name", "create_time", "update_time", "engine", "table_collation"];
 		$RT["FIELD_SE"] = ["CREATE_TIME", "UPDATE_TIME", "ENGINE", "TABLE_COLLATION", "AUTO_INCREMENT"];
-		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
+		$RT["FILTER_EX"] = ["...","=","<>","LIKE"];
 
 		$VIEW = [];
 		$OPEN_TABLES = [];
@@ -210,7 +233,7 @@ Class Manager
 
 					while( $row_precedure = $precedure[1]->fetch_assoc() ){
 
-						$RT["ROUTINES"][$row["Name"]] = $row_precedure["Create Procedure"];
+						$RT["PROCEDURE"][$row["Name"]] = $row_precedure["Create Procedure"];
 					}
 				}
 			}
@@ -218,27 +241,27 @@ Class Manager
 			$result = $this->request("SHOW FUNCTION STATUS WHERE `Db`=x'".$_DB."';", __LINE__);
 
 			if($result[0])
-			{			
+			{
 				while( $row = $result[1]->fetch_assoc() ){
 
 					$function = $this->request("SHOW CREATE FUNCTION `".$row["Name"]."`;", __LINE__);
 
 					while( $row_function = $function[1]->fetch_assoc() ){
 
-						$RT["ROUTINES"][$row["Name"]] = $row_function["Create Function"];
+						$RT["FUNCTION"][$row["Name"]] = $row_function["Create Function"];
 					}
 				}
 			}
 
 			$result = $this->request("SELECT EVENT_NAME
-				FROM information_schema.EVENTS where EVENT_SCHEMA=x'".$_DB."';", __LINE__, false);	
-				
+				FROM information_schema.EVENTS where EVENT_SCHEMA=x'".$_DB."';", __LINE__, false);
+
 			if($result[0])
 			{
-				while( $row = $result[1]->fetch_assoc() ){ 
-			
+				while( $row = $result[1]->fetch_assoc() ){
+
 					$event = $this->request("SHOW CREATE EVENT `".$row["EVENT_NAME"]."`;", __LINE__);
-					
+
 					while( $row_event = $event[1]->fetch_assoc() ){
 
 						$RT["EVENTS"][$row["EVENT_NAME"]] = $row_event["Create Event"];
@@ -595,42 +618,48 @@ Class Manager
 	}
 
 
-	public function copy_tb($_DB, $list_tb, $copy_2bd, $prefix=true)
+	public function copy_tb($_DB, $list_tb, $copy_2bd, $name_new, $pre=false)
 	{
 		$_DBS = pack('H*', "$_DB");
 		$copy_2bdS = pack('H*', "$copy_2bd");
-
-		$pre = "";
-		if($prefix){$pre = "_copy";}
 
 		if( isset($list_tb) )
 		{
 			foreach($list_tb as $val)
 			{
 
-				$VIEW = true;
+				$VIEW = false;
 
 				$view = $this->request("SELECT COUNT(*)
 					FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$val."';", __LINE__);
 
-				if(($view[1]->fetch_row()[0] !== "0") && ($_DBS !== $copy_2bdS)){ $VIEW = false; }				
-	
-				if($VIEW)
+				if(($view[1]->fetch_row()[0] !== "0") && ($_DBS !== $copy_2bdS)){ $VIEW = true; }
+
+				if(!$VIEW)
 				{
 					$valS = pack('H*', "$val");
 
 					if($val !== "")
 					{
+						if($pre === false){
+
+							$tbs_new = pack('H*', "$val");
+						}
+						elseif($pre === true){
+
+							if(($name_new === $valS)){ $tbs_new = pack('H*', "$val")."_copy"; }
+							else{ $tbs_new = $name_new; }
+						}
 
 						$result = $this->request(
-							"CREATE TABLE `".$copy_2bdS."`.`".$valS.$pre."` LIKE `".$_DBS."`.`".$valS."`;", __LINE__);
+							"CREATE TABLE `".$copy_2bdS."`.`".$tbs_new."` LIKE `".$_DBS."`.`".$valS."`;", __LINE__);
 
 						if($result[0])
 						{
 							$result = $this->request("SET FOREIGN_KEY_CHECKS=0;", __LINE__);
 
 							$this->request(
-								"INSERT INTO `".$copy_2bdS."`.`".$valS.$pre."` SELECT * FROM `".$_DBS."`.`".$valS."`;", __LINE__);
+								"INSERT INTO `".$copy_2bdS."`.`".$tbs_new."` SELECT * FROM `".$_DBS."`.`".$valS."`;", __LINE__);
 
 							$constraint = $this->request("SELECT
 								COLUMN_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME,
@@ -656,7 +685,7 @@ Class Manager
 									$row_constraint["REFERENCED_TABLE_SCHEMA"] = $copy_2bdS;
 								}
 
-								$this->request("ALTER TABLE `".$copy_2bdS."`.`".$valS.$pre."` ADD CONSTRAINT ".
+								$this->request("ALTER TABLE `".$copy_2bdS."`.`".$tbs_new."` ADD CONSTRAINT ".
 								$row_constraint["CONSTRAINT_NAME"]."0 FOREIGN KEY (`".
 								$row_constraint["COLUMN_NAME"]."`) REFERENCES `".
 								$row_constraint["REFERENCED_TABLE_SCHEMA"]."`.`".
@@ -963,7 +992,6 @@ Class Manager
 		}
 		$field = $t;
 
-		$return = true;
 		$sfkA = [];
 		$sfvA = [];
 		$sfk = "";
@@ -975,7 +1003,7 @@ Class Manager
 
 			$PRE = "";
 
-			$this->check_type($k, $v, $type, $PRE, $return);
+			$this->check_type($k, $v, $type, $PRE);
 
 			$sfkA[] = "`".$k."`";
 
@@ -984,8 +1012,6 @@ Class Manager
 
 		$sfk = implode(", ", $sfkA);
 		$sfv = implode(", ", $sfvA);
-
-		if(!$return){return 0;}
 
 		$this->use_db($_DBS);
 
@@ -1015,7 +1041,6 @@ Class Manager
 		}
 		$field = $t;
 
-		$return = true;
 		$sfA = [];
 		$sf = "";
 
@@ -1025,7 +1050,7 @@ Class Manager
 
 			$PRE = "";
 
-			$this->check_type($k, $v, $type, $PRE, $return);
+			$this->check_type($k, $v, $type, $PRE);
 
 			$sfA[] = "`".$k."`=".$PRE."'".$v."'";
 		}
@@ -1038,12 +1063,10 @@ Class Manager
 		{
 			$PRE = "";
 
-			$this->check_type($k, $v, $type, $PRE, $return);
+			$this->check_type($k, $v, $type, $PRE);
 
 			$A[] = "`".$k."`=".$PRE."'".addslashes($v)."' ";
 		}
-
-		if(!$return){return 0;}
 
 		$this->use_db($_DBS);
 
@@ -1053,6 +1076,9 @@ Class Manager
 
 	public function delete_rc($_DB, $_TB, $key)
 	{
+		$type = [];
+		$this->check_field($_DB, $_TB, $type);
+
 		$_DBS = pack('H*', "$_DB");
 		$_TBS = pack('H*', "$_TB");
 
@@ -1067,7 +1093,11 @@ Class Manager
 
 		foreach($key as $k=>$v)
 		{
-			$A[] = "`".$k."`='".addslashes($v)."'";
+			$PRE = "";
+
+			$this->check_type($k, $v, $type, $PRE);			
+			
+			$A[] = "`".$k."`=".$PRE."'".addslashes($v)."'";
 		}
 
 		$this->use_db($_DBS);
@@ -1091,7 +1121,7 @@ Class Manager
 	}
 
 
-	private function check_type($k, &$v, $type, &$PRE, &$return)
+	private function check_type($k, &$v, $type, &$PRE)
 	{
 		if($type[$k]["DATA_TYPE"] == "bit"){
 
@@ -1122,6 +1152,7 @@ Class Manager
 		$query = "";
 		$open_value = false;
 		$quote = "'";
+		$pos_erq = 0;
 
 		$strlen_text_script = strlen($text_script);
 
@@ -1178,25 +1209,24 @@ Class Manager
 
 				$list_script[] = $query;
 				$query = "";
+				$pos_erq = $i;
 			}
 		}
 
-		if($open_value == false){
-
-			$this->use_db($use);
-
-			foreach($list_script as $script)
-			{
-				if((trim($script) != "") && (trim($script) != ";")){
-
-					$this->sqls_eval($script, $use);
-				}
-			}
+		if($open_value === true)
+		{
+			$string = substr($text_script, $pos_erq);
+			$this->_LOG["MESSAGE"][] = "Error in your SQL syntax near<br>".htmlentities($string);
 		}
-		else{
 
-			$this->_LOG["RESULT"][] = "<b>"._MESSAGE_ERROR."</b><br><br>".preg_replace("/".PHP_EOL."/",
-				"<br>", htmlentities($text_script));
+		$this->use_db($use);
+
+		foreach($list_script as $script)
+		{
+			if((trim($script) != "") && (trim($script) != ";")){
+
+				$this->sqls_eval($script, $use);
+			}
 		}
 	}
 

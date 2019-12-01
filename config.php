@@ -5,11 +5,14 @@ Copyright (c) 2018-2019 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
+
+
 defined("_EXEC") or die();
+
 set_time_limit(0);
 
-//error_reporting (0);
-error_reporting (E_ALL);
+error_reporting (0);
+//error_reporting (E_ALL);
 
 
 /* - HOST */
@@ -32,4 +35,5 @@ $LIMIT = [
 "RECORDS"=>["5", "10", "20", "100"]
 ];
 	
-	
+
+

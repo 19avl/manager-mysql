@@ -2,6 +2,7 @@
 
 defined("_EXEC") or die();
 
+define("_APP", "Manager of database MYSQL");
 
 define("_AT_ERROR", "Request failed");
 define("_AT_PASSWORD", "Password");
@@ -23,7 +24,7 @@ define("_MESSAGE_NOT_VALUE", "Value not defined");
 define("_MESSAGE_FIND_NOT_FOUND", "Value not found:");
 define("_MESSAGE_SEARCHING", "SEARCHING");
 
-define("_TITLE_DEF_COLUMN", "`table_name` varchar(64) COLLATE utf8_bin NOT NULL");
+define("_TITLE_DEF_COLUMN", "`name` varchar(64) COLLATE utf8_bin NOT NULL");
 define("_TITLE_DEF_TABLE", "ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin");
 
 define("_NOTE_DATABASE", "database");
@@ -57,7 +58,4 @@ define("_ACTION_COLUMN_DELETE", "delete column");
 define("_ACTION_COLUMN_INSERT", "insert column");
 define("_ACTION_COLUMN_CHANGE", "change column");
 define("_ACTION_TABLE_CHANGE", "change table");
-
-
-
 

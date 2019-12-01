@@ -104,13 +104,14 @@ Class Control
 	static public function authorize_form($ms)
 	{
 		print "<div class='separator11'></div>";
+		print "<div class='app'>"._APP."</div>";
+		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='message' >".$ms."</div>";
 		print "<form method='post'>";
-		print "<input type='password' id='en_pass' name='' class='int' value='' placeholder='"._AT_PASSWORD."'/>";
+		print "<input type='password' id='en_pass' name='' class='int_pass' value='' placeholder='"._AT_PASSWORD."'/>";
 		print "<br><input type='button' name='' class='btn' value='OK' onclick='ct.get_ps(); '/><br/>";
 		print "</form>";
 	}
-
 
 	private function rs($len)
 	{
@@ -124,9 +125,7 @@ Class Control
 		}
 
 		return $str;
-
 	}
-
 
 	private function enc($key, $str)
 	{

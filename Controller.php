@@ -55,10 +55,10 @@ Class Controller
 		$this->view->mk($this->_DB, $this->_TB, $this->LIST_SQL, $this->nv, $this->display);
 
 		if($this->_DB === ""){
-		
-			$this->view->info($this->manager->dbc);
+
+			$this->view->info($this->manager->info());
 		}
-		
+
 		$this->view->stat($this->manager->dbc);
 
 		$this->view->message($this->manager->_LOG);
@@ -70,7 +70,7 @@ Class Controller
 		elseif(($this->_DB !== "") && ($this->_TB === ""))
 		{
 			$this->view->tb($this->_DB, $this->DATA, $this->action, $this->nv);
-		}	
+		}
 	}
 
 
@@ -151,7 +151,7 @@ Class Controller
 
 		$this->field = isset($_POST["field"]) ? $this->set_value_list($_POST["field"]) : [];
 
-		$this->tb_name_new = isset($_POST["tb_name_new"]) ? $this->set_value($_POST["tb_name_new"]) : "";
+		$this->name_new = isset($_POST["name_new"]) ? $this->set_value($_POST["name_new"]) : "";
 
 		$this->cl_del = isset($_POST["cl_del"]) ? $this->set_value($_POST["cl_del"]) : "";
 
@@ -166,8 +166,6 @@ Class Controller
 		$this->script = isset($_POST["script"]) ? $this->set_value($_POST["script"]) : "";
 
 		$this->script_id = isset($_POST["script_id"]) ? $this->set_value($_POST["script_id"]) : "";
-
-		$this->search = isset($_POST["search"]) ? $this->set_value($_POST["search"]) : "";
 	}
 
 
@@ -205,13 +203,13 @@ Class Controller
 			{
 				case "_FIND_DB":
 				{
-					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->search);
+					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->cl_in);
 				}
 				break;
 
 				case "_FIND_TB":
 				{
-					$this->manager->searching($this->_DB, [$this->_TB], $this->search);
+					$this->manager->searching($this->_DB, [$this->_TB], $this->cl_in);
 				}
 				break;
 
@@ -233,16 +231,17 @@ Class Controller
 
 				case "_RENAME_TB":
 				{
-					if($this->manager->rename_tb($this->_DB, $this->_TB, $this->tb_name_new)){
+					if($this->manager->rename_tb($this->_DB, $this->_TB, $this->name_new)){
 
-						$this->_TB = unpack('H*', "$this->tb_name_new")[1];
+						$this->_TB = unpack('H*', "$this->name_new")[1];
 					}
 				}
 				break;
 
 				case "_COPY_TB":
 				{
-					$this->manager->copy_tb($this->_DB, $this->list_tb, $this->_DB);
+					$this->manager->copy_tb($this->_DB, [$this->_TB], $this->_DB, $this->name_new, true);
+					$this->_TB = "";
 				}
 				break;
 
@@ -255,6 +254,7 @@ Class Controller
 				case "_DELETE_TB":
 				{
 					$this->manager->delete_tb($this->_DB, $this->list_tb);
+					$this->_TB = "";
 					$this->nv["from_tb"] = "0";
 				}
 				break;
