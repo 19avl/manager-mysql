@@ -11,8 +11,8 @@ defined("_EXEC") or die();
 
 set_time_limit(0);
 
-error_reporting (0);
-//error_reporting (E_ALL);
+//error_reporting (0);
+error_reporting (E_ALL);
 
 
 /* - HOST */
@@ -32,7 +32,7 @@ $SERVER = ["host"=>"localhost", "user"=>"root", "pass"=>""];
 $LIMIT = [
 "SCHEMA"=>["25", "50", "100"],
 "TABLES"=>["25", "50", "100"],
-"RECORDS"=>["5", "10", "20", "100"]
+"RECORDS"=>["5", "10", "25", "100"]
 ];
 	
 

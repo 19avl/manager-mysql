@@ -216,7 +216,7 @@ Class Controller
 				case "_CLEAR_DB":
 				{
 					$this->manager->clear_db($this->list_db);
-					$this->display = "db";
+					if($this->_DB === ""){$this->display = "db";}
 				}
 				break;
 

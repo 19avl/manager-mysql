@@ -15,37 +15,37 @@ defined("_EXEC") or die();
 "use strict";
 
 var ct =
-{	
-	pst: function(arg){		
-		
-		var status = "status";		
+{
+	pst: function(arg){
+
+		var status = "status";
 		var container = "content";
 
-		var data = "session=1"+"&request="+this.set_ps();			
+		var data = "session=1"+"&request="+this.set_ps();
 
 		var url = "<?php echo _URL; ?>";
-	
+
 		var X = false;
 
 		if (window.XMLHttpRequest){ X = new XMLHttpRequest(); }
 		else if (window.ActiveXObject){
-		
-			try{ X = new ActiveXObject("Microsoft.XMLHTTP"); } 
+
+			try{ X = new ActiveXObject("Microsoft.XMLHTTP"); }
 			catch (CatchException){ X = new ActiveXObject("Msxml2.XMLHTTP"); }
 		}
 
-		if (!X){ 
+		if (!X){
 
-			alert("<?php echo _AT_ERROR; ?>"); 
-			return; 
+			alert("<?php echo _AT_ERROR; ?>");
+			return;
 		}
-					
+
 		X.onreadystatechange = function(){
-		
+
 			if (X.readyState == 4){
-			
-				if (X.status == 200){	
-					
+
+				if (X.status == 200){
+
 					document.getElementById(container).innerHTML = X.responseText;
 					document.getElementById(status).innerHTML = "";
 				}
@@ -54,18 +54,18 @@ var ct =
 		}
 
 		X.open("POST", url, true);
-		X.setRequestHeader("Max-Forwards", "0");	
-		X.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=utf-8");	
+		X.setRequestHeader("Max-Forwards", "0");
+		X.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=utf-8");
 		X.send(data);
 	},
-	
-	clr_ps: function(){
-		
-		document.getElementById("pass").innerHTML = "";	
-		this.pst("&exit=exit");			
-	},	
 
-	get_ps: function(){		
+	clr_ps: function(){
+
+		document.getElementById("pass").innerHTML = "";
+		this.pst("&exit=exit");
+	},
+
+	get_ps: function(){
 
 		var pass = document.getElementById("en_pass").value;
 		var result = pass.replace(/^\s+/, '').replace(/\s+$/, '');
@@ -86,7 +86,7 @@ var ct =
 		}
 
 		return "";
-	},	
+	},
 
 	rs: function()
 	{
@@ -114,12 +114,12 @@ var ct =
 			$hash += (Math.pow(parseInt(key[i]), parseInt(str[i])) % m).toString(16);
 		}
 
-		return $hash;	
+		return $hash;
 	},
 
 	hashE: function(str)
 	{
-		var str = this.utf8_enc(str);
+		var str = unescape(encodeURIComponent(str));
 
 		var M = 25717;
 		var L = str.length;
@@ -137,37 +137,9 @@ var ct =
 		return H;
 	},
 
-	utf8_enc: function(data)
+	str_request: function(oForm)
 	{
-		var text = '';
-
-		for(var n = 0; n < data.length; n++)
-		{
-			var c = data.charCodeAt(n);
-
-			if(c < 128) 
-			{
-				text += String.fromCharCode(c);
-			} 
-			else if((c > 127) && (c < 2048)) 
-			{
-				text += String.fromCharCode((c >> 6) | 192);
-				text += String.fromCharCode((c & 63) | 128);
-			}
-			else 
-			{
-				text += String.fromCharCode((c >> 12) | 224);
-				text += String.fromCharCode(((c >> 6) & 63) | 128);
-				text += String.fromCharCode((c & 63) | 128);
-			}
-		}
-
-		return text;
-	},
-
-	str_request: function(oForm)		
-	{
-		var A = (<?php echo json_encode(Control::$CHECK); ?>).replace(/\s{1,}/g, "").split(","); 
+		var A = (<?php echo json_encode(Control::$CHECK); ?>).replace(/\s{1,}/g, "").split(",");
 
 		var R = [];
 
@@ -182,7 +154,7 @@ var ct =
 				else if((new RegExp('\^'+A[i]+'\\[')).test(c)){
 
 					if(R[A[i]]){ R[A[i]] += oForm[c]+"&"; }
-					else{ R[A[i]] = oForm[c]+"&"; }	
+					else{ R[A[i]] = oForm[c]+"&"; }
 				}
 			}
 		}
@@ -197,9 +169,8 @@ var ct =
 		}
 
 		return str_check;
-	},	
+	},
 };
-
 
 
 var ms =
@@ -383,7 +354,7 @@ var ms =
 		if((id_tr) && (document.getElementById(id_tr).value === ""))
 		{
 			this.open_alert(war);
-			
+
 			if( el.nodeName === "SELECT"){ el[0].selected='selected'; }
 		}
 		else
@@ -563,8 +534,11 @@ var ms =
 
 		if(h === "350px"){document.getElementById(id).style.height = 50+"px";}
 		else{document.getElementById(id).style.height = 350+"px";}
-	},	
+	},
+
+
 };
+
 
 </script>
 
@@ -572,7 +546,7 @@ var ms =
 <style type="text/css">
 
 
-body{background: #555555; color: #eee; }	
+body{background: #555555; color: #eee; }
 
 .message{ color: #f70;  }
 
@@ -588,35 +562,41 @@ border: 1px solid #555;
 }
 
 .nav_value{
-background:#333; border: 0px; color: #eee;	
+background:#333; border: 0px; color: #eee;
 }
 
-.btn, .btn_text{  
-background: #333; 
+.btn, .btn_text{
+background: #333;
 border: 1px solid #777;
 color: #eee;
 }
 
-.slc{ 
-background:#333; 
-border: 0px; color: #eee; 
+.btn_record{
+background: #f70;
+border: 1px solid #777;
+color: #eee;
+}
+
+.slc{
+background:#333;
+border: 0px; color: #eee;
 }
 
 .int, .int_pass{ background: none; border: 1px solid #777; color: #eee;}
 .int_db{ background: none; border: 0px; color: #eee; outline: none; }
 
-.ct_row{ 
-background: #333; 
+.ct_row{
+background: #333;
 }
 
 
 .ct_pre,
-.ct_name, 
-.ct_name_title, 
-.ct_info_A, 
-.ct_info_B, 
+.ct_name,
+.ct_name_title,
+.ct_info_A,
+.ct_info_B,
 .ct_info_D{
-background: #555; 
+background: #555;
 border: 1px solid #777;
 color: #EEE;
 }
@@ -629,52 +609,52 @@ color: #EEE;
 .rt_label_type,
 .rt_select_type,
 .rt_value_input,
-.rt_value_input_disabled,	
+.rt_value_input_disabled,
 .rt_value_text,
 .st_value_field,
 .st_value_table,
 .st_select_value,
 .st_fn_value{
-background: #555;	
+background: #555;
 border: 1px solid #777;
 color: #eee;
 }
 
 .st_select_value{
-border: 0px;	
+border: 0px;
 background: #333;
 outline: none;
 }
 
-.st_btn, .std_btn{ 
-background: #333; 
+.st_btn, .std_btn{
+background: #333;
 border: 1px solid #333;
 color: #eee;
 }
 
-.rt_label_key, 
-.rt_label_name, 
+.rt_label_key,
+.rt_label_name,
 .rt_label_type{ background: #333; }
 .rt_select_type{ outline: none; cursor: pointer; }
 .rt_value_input_disabled{ background:#333; }
 .rt_value_text{	margin-bottom:0px;}
 
-.type_value{	
-background: #333; 
+.type_value{
+background: #333;
 color: #eee;
 }
 
 #script_text{
-background: #555; 
-border: 1px solid #777; 
+background: #555;
+border: 1px solid #777;
 color: #eee;
 }
 
 #status{ color: #eee; border: 1px solid #777; }
 
 .wr_main_nav{
-border-top: 7px solid #555;	
-border-bottom: 3px solid #555; 
+border-top: 7px solid #555;
+border-bottom: 3px solid #555;
 }
 
 
@@ -682,26 +662,26 @@ border-bottom: 3px solid #555;
 .altDialog{ background: #333; }
 .altDialog_text{ color: #f70; }
 .altDialog_btn{
-background: #333; 
+background: #333;
 border: 1px solid #555;
 color: #eee;
 }
 
 .confirmDialog_title{
 color: #eee;
-font-size: 27px; 
+font-size: 27px;
 border-bottom: 1px solid #999;
 }
 
 .confirmDialog_text{
 color: #f70;
-font-size: 15px; 
+font-size: 15px;
 }
 
-.confirmDialog_btn{	
-background: #333; 
+.confirmDialog_btn{
+background: #333;
 border: 1px solid #555;
-color: #eee;	
+color: #eee;
 }
 
 .confirmDialog {
@@ -720,9 +700,9 @@ border: 1px solid #555;
 
 html{height:100%;}
 
-body{ 
+body{
 font-family: Arial,Helvetica,sans-serif;
-font-size: 12px; 
+font-size: 12px;
 height:100%;
 }
 
@@ -730,11 +710,11 @@ height:100%;
 
 option{font-size: 14px;}
 
-.separator0, 
-.separator2, 
-.separator11, 
+.separator0,
+.separator2,
+.separator11,
 .separator22{
-clear:both; 
+clear:both;
 margin: 0px;
 }
 
@@ -744,23 +724,23 @@ margin: 0px;
 .separator22{padding: 22px;}
 
 .res{
-overflow: auto; 
+overflow: auto;
 max-height: 300px;
 }
 
-.message{ 
-font-size: 14px; 
-padding-bottom: 11px; 
+.message{
+font-size: 14px;
+padding-bottom: 11px;
 }
 
-.result{ 
-font-size: 14px; 
-padding-bottom: 11px; 
+.result{
+font-size: 14px;
+padding-bottom: 11px;
 }
 
 .nav_main_back{
 z-index: 201;
-position:fixed; 
+position:fixed;
 top: 0;
 left: 0;
 width: 100%;
@@ -769,11 +749,11 @@ height: 47px;
 
 .nav_main{
 z-index: 301;
-position:fixed; 
+position:fixed;
 top: 0;
 width: 970px;
-padding-top: 5px; 
-margin: 0px; 
+padding-top: 5px;
+margin: 0px;
 }
 
 .nav_main_form{
@@ -781,15 +761,15 @@ display: inline-block;
 }
 
 .nav{
-text-align: left; 
-padding: 2px; 
-margin: 0px; 
+text-align: left;
+padding: 2px;
+margin: 0px;
 }
 
-.nav_wrap, 
-.nav_wrap_filter{ 
-margin: 1px; 
-display:inline-block; 
+.nav_wrap,
+.nav_wrap_filter{
+margin: 1px;
+display:inline-block;
 }
 
 .nav_wrap{
@@ -801,20 +781,20 @@ width: 430px;
 }
 
 .nav_value{
-width: 157px; 
-padding: 7px; 
-margin: 3px 0px 2px 2px;	
+width: 157px;
+padding: 7px;
+margin: 3px 0px 2px 2px;
 }
 
 .nav_label{
-width: 119px; 
-padding: 3px; 
-margin: 2px; 
-border: 0px; 
+width: 119px;
+padding: 3px;
+margin: 2px;
+border: 0px;
 display:inline-block;
 }
 
-.btn{
+.btn, .btn_record{
 width: 147px;
 height: 33px;
 padding: 5px;
@@ -829,21 +809,21 @@ margin: 2px 0px 2px 0px;
 text-align: right;
 }
 
-.slc{ 
-width: 125px; 
-padding: 7px; 
+.slc{
+width: 125px;
+padding: 7px;
 margin: 3px 0px 2px 2px;
 }
 
-.int{ 
-width: 211px; 
-padding: 7px; 
+.int{
+width: 211px;
+padding: 7px;
 margin: 3px 3px 2px 2px;
 }
 
-.int_pass{ 
-width: 211px; 
-padding: 7px; 
+.int_pass{
+width: 211px;
+padding: 7px;
 margin: 3px 3px 2px 0px;
 }
 
@@ -854,23 +834,23 @@ margin: 3px 3px 2px 2px;
 }
 
 .ct_row{
-margin: 0px; 
-padding: 0px; 
+margin: 0px;
+padding: 0px;
 }
 
 .ct_check{
-margin: 9px; 
-padding: 0px; 
+margin: 9px;
+padding: 0px;
 }
 
 .ct_pre,
-.ct_name, 
-.ct_name_title, 
-.ct_info_A, 
-.ct_info_B, 
+.ct_name,
+.ct_name_title,
+.ct_info_A,
+.ct_info_B,
 .ct_info_D{
-padding: 7px;  
-margin-top: 2px; 
+padding: 7px;
+margin-top: 2px;
 margin-left: 2px;
 }
 
@@ -881,14 +861,14 @@ margin-left: 2px;
 .ct_info_D{ width: 179px; }
 
 
-.st_btn{ 
+.st_btn{
 width: 151px;
 height: 33px;
 padding: 5px;
 margin-right: 2px;
 }
 
-.std_btn{ 
+.std_btn{
 width: 151px;
 height: 33px;
 padding: 5px;
@@ -903,14 +883,14 @@ padding-left: 12px;
 .rt_label_name,
 .rt_label_type,
 .rt_select_type,
-.rt_value_input,	
+.rt_value_input,
 .rt_value_input_disabled,
 .rt_value_text,
 .st_value_field,
 .st_value_table,
-.st_select_value,	
+.st_select_value,
 .st_fn_value{
-padding: 8px; 
+padding: 8px;
 margin: 1px 2px 1px 0px;
 }
 
@@ -927,7 +907,7 @@ margin: 1px 2px 1px 0px;
 .st_fn_value{ width: 646px; }
 
 
-.type_value{	
+.type_value{
 z-index: 101;
 position: absolute;
 width: 419px;
@@ -935,33 +915,33 @@ padding: 3px 2px 1px 3px;
 }
 
 .type_value_sl{
-display: block; 
-padding: 9px; 
-max-height: 99px; 
+display: block;
+padding: 9px;
+max-height: 99px;
 overflow: auto;
 }
 
 .type_value_sl_k{
-display:inline-block; 
+display:inline-block;
 white-space: nowrap;
 }
 
 #script_text{
-width: 958px; 
-height: 190px; 
-resize: vertical; 
-padding: 5px; 
+width: 958px;
+height: 190px;
+resize: vertical;
+padding: 5px;
 margin: 3px 0px 0px 0px;
 }
 
 #status{
-z-index: 505;	
-position:fixed; 
-top:0; 
+z-index: 505;
+position:fixed;
+top:0;
 font-size: 12px;
-text-align: left; 
-display:inline-block; 
-padding: 8px;  
+text-align: left;
+display:inline-block;
+padding: 8px;
 margin-top: 7px;
 width: 39px;
 height: 15px;
@@ -979,20 +959,20 @@ left: 0;
 }
 
 .page{
-text-align: center; 
+text-align: center;
 width:100%;
 }
 
 .block{
-width:970px; 
-display:inline-block; 
-text-align: left; 
+width:970px;
+display:inline-block;
+text-align: left;
 padding: 0px 59px 0px 59px;
 }
 
 .wr_main_nav{
 z-index: 191;
-width: 970px;	
+width: 970px;
 }
 
 
@@ -1000,41 +980,41 @@ width: 970px;
 
 .altDialog{
 z-index: 1101;
-position:fixed; 
+position:fixed;
 top: 0px;
 width: 970px;
-padding-top: 5px; 
-margin: 0px; 
+padding-top: 5px;
+margin: 0px;
 }
 
 .altDialog_text{
-padding: 11px; 	
-font-size: 15px; 
+padding: 11px;
+font-size: 15px;
 display: inline-block;
 }
 
 .altDialog_btn{
 width: 127px;
 height: 33px;
-padding: 5px; 
+padding: 5px;
 margin: 3px 2px 2px 0px;
 float: right;
 }
 
 .confirmDialog_title{
-padding: 7px; 
+padding: 7px;
 margin : 7px;
 }
 
 .confirmDialog_text{
-padding: 7px; 
+padding: 7px;
 margin : 7px;
 }
 
-.confirmDialog_btn{	
+.confirmDialog_btn{
 width: 127px;
 height: 33px;
-padding: 5px; 
+padding: 5px;
 margin: 3px 2px 2px 0px;
 }
 
@@ -1054,12 +1034,13 @@ margin: 10% auto;
 padding: 11px;
 }
 
+
 </style>
 
 </head>
 <body onload="ms.pst('session=1');">
 
-<?php Control::storage(); ?>	
+<?php Control::storage(); ?>
 
 <div id="expl_page" class="page">
 	<input id="status" type="text" value="" style="display: none;">
@@ -1069,7 +1050,7 @@ padding: 11px;
 
 
 
-<!--[if lt IE 11]>    
+<!--[if lt IE 11]>
 <script type="text/javascript">
 document.getElementById("expl_page").innerHTML = "<h2><?php echo _MESSAGE_SUPPORT; ?></h2>";
 </script>

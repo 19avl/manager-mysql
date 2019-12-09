@@ -32,11 +32,8 @@ Class Manager
 
 		if(!mysqli_connect_errno()){
 
-			$this->dbc->query( "SET character_set_client = 'utf8';" );
-			$this->dbc->query( "SET character_set_connection = 'utf8';" );
-			$this->dbc->query( "SET character_set_results = 'utf8';" );
+			$this->dbc->set_charset("utf8");
 			$this->dbc->query( "SET sql_mode = 'STRICT_ALL_TABLES';" );
-
 			$this->server_version = $this->dbc->server_version;
 		}
 		else{
@@ -55,7 +52,7 @@ Class Manager
 	{
 		$this->_LOG["SQL"][] = $sql;
 
-		$line = "";
+		$line = $line.": ";
 
 		$this->dbc->real_query($sql);
 		$result = $this->dbc->store_result();
@@ -109,22 +106,14 @@ Class Manager
 		}
 		else{ $WHERE = ""; }
 
-		if($nv["order_db"] !== "0"){
-
-			$ORDER = "ORDER BY ".($nv["order_db"]+1);
-		}
-		else{
-
-			$ORDER = "ORDER BY 1";
-		}
-
 		$result = $this->request("SELECT COUNT(*)
 			FROM information_schema.SCHEMATA ".$WHERE." ;", __LINE__);
 		if($result[0]){	if($result[1]->fetch_row()[0] <= $nv["from_db"]){$nv["from_db"] = "0";} }
 
 		$result = $this->request("SELECT SQL_CALC_FOUND_ROWS
 			SCHEMA_NAME, DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
-			FROM information_schema.SCHEMATA ".$WHERE." ".$ORDER." LIMIT ".$nv["from_db"].", ".$nv["page_db"].";", __LINE__);
+			FROM information_schema.SCHEMATA ".$WHERE." ORDER BY ".
+			($nv["order_db"]+1)." LIMIT ".$nv["from_db"].", ".$nv["page_db"].";", __LINE__);
 
 		if($result[0]){
 
@@ -288,15 +277,6 @@ Class Manager
 			}
 			else{ $WHERE = ""; }
 
-			if($nv["order_tb"] !== "0"){
-
-				$ORDER = "ORDER BY ".($nv["order_tb"]+1);
-			}
-			else{
-
-				$ORDER = "ORDER BY 1";
-			}
-
 			$result = $this->request("SELECT COUNT(*)
 				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE." ;", __LINE__);
 
@@ -307,8 +287,8 @@ Class Manager
 
 			$result = $this->request("SELECT SQL_CALC_FOUND_ROWS
 				TABLE_NAME, CREATE_TIME, UPDATE_TIME, ENGINE, TABLE_COLLATION, AUTO_INCREMENT
-				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE." ".$ORDER." LIMIT ".
-					$nv["from_tb"].", ".$nv["page_tb"].";", __LINE__);
+				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE." ORDER BY ".
+				($nv["order_tb"]+1)." LIMIT ".$nv["from_tb"].", ".$nv["page_tb"].";", __LINE__);
 
 			if($result[0]){
 
@@ -337,7 +317,6 @@ Class Manager
 							$RT["TABLES"][$row["TABLE_NAME"]]["COUNT"] = $lines[1]->fetch_row()[0];
 						}
 					}
-
 				}
 			}
 
@@ -494,22 +473,18 @@ Class Manager
 
 			$RT["FIELD_SE"] = array_merge([_NOTE_ALL],["key: PRI"], ["key: UNI"],["key: MUL"], $TYPE, $FIELD);
 
-			if(in_array($nv["fl_operator_rc"], $RT["FILTER_EX"])){
+			if(in_array($nv["fl_operator_rc"], $RT["FILTER_EX"]))
+			{
+				$PRE = "";
+				if(($RT["FIELDS"][pack('H*', $nv["fl_field_rc"])]["DATA_TYPE"] === "bit") &&
+					preg_match("/^[01]{1,}$/", $nv["fl_value_rc"])){$PRE = "b";}
 
 				$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
 					"WHERE `".pack('H*', $nv["fl_field_rc"])."` LIKE '%".addslashes($nv["fl_value_rc"])."%'" :
-					"WHERE `".pack('H*', $nv["fl_field_rc"])."` ".$nv["fl_operator_rc"]." '".addslashes($nv["fl_value_rc"])."'";
+					"WHERE CAST(`".pack('H*', $nv["fl_field_rc"])."` AS CHAR) ".
+					$nv["fl_operator_rc"]." ".$PRE."'".addslashes($nv["fl_value_rc"])."'";
 			}
 			else{ $WHERE = ""; }
-
-			if($nv["order_rc"] !== "0"){
-
-				$ORDER = "ORDER BY ".($nv["order_rc"]+1)."";
-			}
-			else{
-
-				$ORDER = "ORDER BY 1";
-			}
 
 			if($nv["page_rc"] === "0"){$nv["page_rc"] = $RT["ON_PAGE"][0];}
 
@@ -518,8 +493,8 @@ Class Manager
 			if($result[0]){	if($result[1]->fetch_row()[0] <= $nv["from_rc"]){$nv["from_rc"] = "0";} }
 
 			$result = $this->request("SELECT SQL_CALC_FOUND_ROWS ".implode(", ",  $LIST).
-				" FROM `$_DBS`.`$_TBS` ".$WHERE." ".$ORDER." LIMIT ".
-				$nv["from_rc"].", ".$nv["page_rc"].";", __LINE__);
+				" FROM `$_DBS`.`$_TBS` ".$WHERE." ORDER BY ".
+				($nv["order_rc"]+1)." LIMIT ".$nv["from_rc"].", ".$nv["page_rc"].";", __LINE__);
 
 			if($result[0]){
 
@@ -1095,8 +1070,8 @@ Class Manager
 		{
 			$PRE = "";
 
-			$this->check_type($k, $v, $type, $PRE);			
-			
+			$this->check_type($k, $v, $type, $PRE);
+
 			$A[] = "`".$k."`=".$PRE."'".addslashes($v)."'";
 		}
 

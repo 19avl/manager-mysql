@@ -113,6 +113,7 @@ Class Control
 		print "</form>";
 	}
 
+
 	private function rs($len)
 	{
 		mt_srand(time()+(double)microtime()*1000000);
@@ -126,6 +127,7 @@ Class Control
 
 		return $str;
 	}
+
 
 	private function enc($key, $str)
 	{
