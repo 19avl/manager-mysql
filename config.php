@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2019 Andrey Lyskov
+Copyright (c) 2018-2020 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -35,5 +35,5 @@ $LIMIT = [
 "RECORDS"=>["5", "10", "25", "100"]
 ];
 	
-
+	
 

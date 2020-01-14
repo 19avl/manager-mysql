@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2019 Andrey Lyskov
+Copyright (c) 2018-2020 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -52,7 +52,7 @@ Class Manager
 	{
 		$this->_LOG["SQL"][] = $sql;
 
-		$line = $line.": ";
+		$line = "";
 
 		$this->dbc->real_query($sql);
 		$result = $this->dbc->store_result();
@@ -67,6 +67,29 @@ Class Manager
 		return [true, $result];
 	}
 
+
+	private function get_sub($_DB, $_DBS, $tb, $target, $create, $searching, $add)
+	{
+		$RT = [];
+
+		$result = $this->request("SELECT ".$target."_NAME
+				FROM information_schema.".$tb." where ".$add." ".$target."_SCHEMA=x'".$_DB."';", __LINE__, false);
+
+		if($result[0])
+		{
+			while( $row = $result[1]->fetch_assoc() ){
+
+				$trigger = $this->request($create." `$_DBS`.`".$row[$target."_NAME"]."`;", __LINE__);
+
+				while( $row_trigger = $trigger[1]->fetch_assoc() ){
+
+					$RT[$row[$target."_NAME"]] = $row_trigger[$searching];
+				}
+			}
+		}
+
+		return $RT;
+	}
 
 	public function mk($script_id, $_sql)
 	{
@@ -176,7 +199,7 @@ Class Manager
 
 		$RT = [];
 		$RT["DB"] = $_DBS;
-		$RT["CREATE"] = "";
+		$RT["CREATE"] = [];
 		$RT["TRIGGERS"] = [];
 		$RT["PROCEDURE"] = [];
 		$RT["FUNCTION"] = [];
@@ -192,76 +215,33 @@ Class Manager
 		$VIEW = [];
 		$OPEN_TABLES = [];
 
-		$result = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
+		$CREATE = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
 
-		if($result[0])
+		if($CREATE[0])
 		{
-			$RT["CREATE"] = $result[1]->fetch_row()[1];
-
-			$result = $this->request("SHOW TRIGGERS FROM `$_DBS`;", __LINE__);
-
-			while( $row = $result[1]->fetch_assoc() ){
-
-				$RT["TRIGGERS"][$row["Trigger"]] = "CREATE TRIGGER `".
-					$row["Trigger"]."` ".
-					$row["Timing"]." ".
-					$row["Event"]." ON `".
-					$row["Table"]."` FOR EACH ROW ".
-					$row["Statement"];
-			}
+			$RT["CREATE"]["DB"] = $CREATE[1]->fetch_row()[1];
 
 			$this->use_db($_DBS);
 
-			$result = $this->request("SHOW PROCEDURE STATUS WHERE `Db`=x'".$_DB."';", __LINE__);
+			$RT["TRIGGERS"] = $this->get_sub($_DB, $_DBS,
+				"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER", "SQL Original Statement", "");
 
-			if($result[0])
-			{
-				while( $row = $result[1]->fetch_assoc() ){
+			$RT["PROCEDURE"] = $this->get_sub($_DB, $_DBS,
+				"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE", "Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND");
 
-					$precedure = $this->request("SHOW CREATE PROCEDURE `".$row["Name"]."`;", __LINE__);
+			$RT["FUNCTION"] = $this->get_sub($_DB, $_DBS,
+				"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION", "Create Function", "ROUTINE_TYPE='FUNCTION' AND");
 
-					while( $row_precedure = $precedure[1]->fetch_assoc() ){
-
-						$RT["PROCEDURE"][$row["Name"]] = $row_precedure["Create Procedure"];
-					}
-				}
-			}
-
-			$result = $this->request("SHOW FUNCTION STATUS WHERE `Db`=x'".$_DB."';", __LINE__);
-
-			if($result[0])
-			{
-				while( $row = $result[1]->fetch_assoc() ){
-
-					$function = $this->request("SHOW CREATE FUNCTION `".$row["Name"]."`;", __LINE__);
-
-					while( $row_function = $function[1]->fetch_assoc() ){
-
-						$RT["FUNCTION"][$row["Name"]] = $row_function["Create Function"];
-					}
-				}
-			}
-
-			$result = $this->request("SELECT EVENT_NAME
-				FROM information_schema.EVENTS where EVENT_SCHEMA=x'".$_DB."';", __LINE__, false);
-
-			if($result[0])
-			{
-				while( $row = $result[1]->fetch_assoc() ){
-
-					$event = $this->request("SHOW CREATE EVENT `".$row["EVENT_NAME"]."`;", __LINE__);
-
-					while( $row_event = $event[1]->fetch_assoc() ){
-
-						$RT["EVENTS"][$row["EVENT_NAME"]] = $row_event["Create Event"];
-					}
-				}
-			}
+			$RT["EVENTS"] = $this->get_sub($_DB, $_DBS,
+				"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "");
 
 			$result = $this->request("SELECT TABLE_NAME
 				FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."';", __LINE__);
 
-			while( $row = $result[1]->fetch_assoc() ){ $VIEW[] = $row["TABLE_NAME"];}
+			if($result[0])
+			{
+				while( $row = $result[1]->fetch_assoc() ){ $VIEW[] = $row["TABLE_NAME"];}
+			}
 
 			$result = $this->request("SHOW OPEN TABLES FROM `$_DBS` WHERE In_use>0;", __LINE__);
 
@@ -341,7 +321,7 @@ Class Manager
 		$RT = [];
 		$RT["DB"] = $_DBS;
 		$RT["TB"] = $_TBS;
-		$RT["CREATE"] = "";
+		$RT["CREATE"] = [];
 		$RT["PRI"] = false;
 		$RT["EXCEPT"] = false;
 		$RT["VIEW"] = false;
@@ -351,18 +331,23 @@ Class Manager
 		$RT["ON_PAGE"] = $LIMIT["RECORDS"];
 		$RT["COUNT"] = 0;
 		$RT["FIELD_ST"] = [];
-		$RT["FIELD_SE"] = [];
 		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
 
-		$TYPE = [];
-		$FIELD = [];
+		$CONSTRAINT = [];
 		$LIST = [];
 
-		$result = $this->request("SHOW CREATE TABLE `$_DBS`.`$_TBS`;", __LINE__);
+		$CREATE = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
 
-		if($result[0])
+		if($CREATE[0])
 		{
-			$RT["CREATE"] = $result[1]->fetch_row()[1];
+			$RT["CREATE"]["DB"] = $CREATE[1]->fetch_row()[1];
+		}
+
+		$CREATE = $this->request("SHOW CREATE TABLE `$_DBS`.`$_TBS`;", __LINE__);
+
+		if($CREATE[0])
+		{
+			$RT["CREATE"]["TB"] = $CREATE[1]->fetch_row()[1];
 
 			$result = $this->request("SELECT COUNT(*)
 				FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$_TB."';", __LINE__);
@@ -370,6 +355,17 @@ Class Manager
 			while( $row = $result[1]->fetch_row() ){
 
 				if($row[0] !== "0"){$RT["VIEW"] = true;}
+			}
+
+			$result = $this->request("SELECT kc.COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
+				FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kc
+				ON tc.TABLE_SCHEMA = kc.TABLE_SCHEMA AND tc.TABLE_NAME = kc.TABLE_NAME
+				AND tc.CONSTRAINT_NAME = kc.CONSTRAINT_NAME
+				WHERE tc.TABLE_SCHEMA = x'".$_DB."' AND tc.TABLE_NAME = x'".$_TB."';", __LINE__);
+
+			while( $row = $result[1]->fetch_row() ){
+
+				$CONSTRAINT[$row[0]][] = $row[2];
 			}
 
 			$result = $this->request("select
@@ -383,8 +379,17 @@ Class Manager
 				{
 					$RT["FIELDS"][$row["COLUMN_NAME"]] = $row;
 
+					if(isset($CONSTRAINT[$row["COLUMN_NAME"]])){
+
+						$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = $CONSTRAINT[$row["COLUMN_NAME"]];
+					}
+					else{
+
+					$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = [];
+					}
+
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_TYPE"] =
-						preg_replace("/\'\'/", "'", $RT["FIELDS"][$row['COLUMN_NAME']]["COLUMN_TYPE"]);
+						preg_replace("/\'\'/", "'", $RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_TYPE"]);
 
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_VALUE"] = [];
 
@@ -400,7 +405,7 @@ Class Manager
 
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["FOREIGN"] = false;
 
-					if($row["COLUMN_KEY"] === "MUL")
+					if(in_array("FOREIGN KEY", $RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"]))
 					{
 						$constraint = $this->request("SELECT
 							REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
@@ -436,12 +441,6 @@ Class Manager
 					if(in_array( $row["COLUMN_TYPE"], $exceptions)){$RT["EXCEPT"] = true;}
 
 					$RT["FIELD_ST"][] =  $row["COLUMN_NAME"];
-					$FIELD[] = "field: ".$row["COLUMN_NAME"];
-
-					if(!in_array( "type: ".$RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"], $TYPE )){
-
-						$TYPE[] = "type: ".$RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"];
-					}
 
 					if($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "bit"){
 
@@ -470,8 +469,6 @@ Class Manager
 					if($RT["EXCEPT"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_SPATIAL_TYPE_PROCESSED; }
 				}
 			}
-
-			$RT["FIELD_SE"] = array_merge([_NOTE_ALL],["key: PRI"], ["key: UNI"],["key: MUL"], $TYPE, $FIELD);
 
 			if(in_array($nv["fl_operator_rc"], $RT["FILTER_EX"]))
 			{
@@ -602,7 +599,6 @@ Class Manager
 		{
 			foreach($list_tb as $val)
 			{
-
 				$VIEW = false;
 
 				$view = $this->request("SELECT COUNT(*)
@@ -643,8 +639,8 @@ Class Manager
 								WHERE TABLE_SCHEMA = x'".$_DB."' AND TABLE_NAME = x'".$val."' AND
 								CONSTRAINT_NAME <> 'PRIMARY' AND REFERENCED_TABLE_NAME is not null;", __LINE__);
 
-						while($row_constraint = $constraint[1]->fetch_assoc())
-						{
+							while($row_constraint = $constraint[1]->fetch_assoc())
+							{
 								$referent = $this->request("SELECT UPDATE_RULE, DELETE_RULE
 									FROM information_schema.REFERENTIAL_CONSTRAINTS
 									WHERE CONSTRAINT_SCHEMA = x'".$_DB."'
@@ -774,6 +770,79 @@ Class Manager
 			print $string;
 			ob_get_flush();
 		}
+	}
+
+
+	public function export_db($list_db, $exceptions)
+	{
+		$string = PHP_EOL."SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
+		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=0;".PHP_EOL;
+
+		$filename = "dump_".date("d-m-Y").".txt";
+
+		foreach($list_db as $value){
+
+			$_DBS = pack('H*', "$value");
+
+			$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
+				FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$value."';", __LINE__);
+
+			if($result[0]){
+
+				$schema = $result[1]->fetch_row();
+
+				$string .= PHP_EOL."CREATE DATABASE `".$_DBS."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";";
+
+				$string .= PHP_EOL."USE `$_DBS`;";
+
+				$string .= PHP_EOL.$this->export($value, $this->get_list_tb($value), $exceptions);
+			}
+		}
+
+		$this->use_db($_DBS);
+
+		$trigger = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
+			"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER",
+			"SQL Original Statement", "")).";";
+
+		if($trigger !== ";"){
+
+			$string .= PHP_EOL."/* TRIGGER */".PHP_EOL;
+			$string .= PHP_EOL.$trigger.PHP_EOL;
+		}
+
+		$procedure = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
+			"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE",
+			"Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND")).";";
+
+		if($procedure !== ";"){
+
+			$string .= PHP_EOL."/* PROCEDURES */".PHP_EOL;
+			$string .= PHP_EOL.$procedure.PHP_EOL;
+		}
+
+		$function = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
+			"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION",
+			"Create Function", "ROUTINE_TYPE='FUNCTION' AND")).";";
+
+		if($function !== ";"){
+
+			$string .= PHP_EOL."/* FUNCTIONS */".PHP_EOL;
+			$string .= PHP_EOL.$function.PHP_EOL;
+		}
+
+		$events = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
+			"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "")).";";
+
+		if($events !== ";"){
+
+			$string .= PHP_EOL."/* EVENTS */".PHP_EOL;
+			$string .= PHP_EOL.$events.PHP_EOL;
+		}
+
+		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=1;".PHP_EOL;
+
+		$this->export_get($filename, $string);
 	}
 
 
@@ -967,10 +1036,8 @@ Class Manager
 		}
 		$field = $t;
 
-		$sfkA = [];
-		$sfvA = [];
-		$sfk = "";
-		$sfv = "";
+		$sfK = [];
+		$sfV = [];
 
 		foreach($field as $k=>$v)
 		{
@@ -979,18 +1046,15 @@ Class Manager
 			$PRE = "";
 
 			$this->check_type($k, $v, $type, $PRE);
+			
+			$sfK[] = "`".$k."`";
 
-			$sfkA[] = "`".$k."`";
-
-			$sfvA[] = $PRE."'".$v."'";
+			$sfV[] = $PRE."'".$v."'";			
 		}
-
-		$sfk = implode(", ", $sfkA);
-		$sfv = implode(", ", $sfvA);
 
 		$this->use_db($_DBS);
 
-		$this->request("INSERT INTO `".$_TBS."` (".$sfk.") VALUES (".$sfv.");", __LINE__);
+		$this->request("INSERT INTO `".$_TBS."` (".implode(", ", $sfK).") VALUES (".implode(", ", $sfV).");", __LINE__);
 	}
 
 
@@ -1016,9 +1080,7 @@ Class Manager
 		}
 		$field = $t;
 
-		$sfA = [];
-		$sf = "";
-
+		$sfV = [];
 		foreach($field as $k=>$v)
 		{
 			$v = html_entity_decode($v, ENT_QUOTES);
@@ -1027,25 +1089,22 @@ Class Manager
 
 			$this->check_type($k, $v, $type, $PRE);
 
-			$sfA[] = "`".$k."`=".$PRE."'".$v."'";
+			$sfV[] = "`".$k."`=".$PRE."'".$v."'";
 		}
 
-		$sf = implode(", ", $sfA);
-
-		$A = [];
-
+		$sfK = [];
 		foreach($key as $k=>$v)
 		{
 			$PRE = "";
 
 			$this->check_type($k, $v, $type, $PRE);
 
-			$A[] = "`".$k."`=".$PRE."'".addslashes($v)."' ";
+			$sfK[] = "`".$k."`=".$PRE."'".addslashes($v)."' ";
 		}
 
 		$this->use_db($_DBS);
-
-		$this->request("UPDATE `".$_TBS."` SET ".$sf." WHERE ".implode(" AND ", $A)." LIMIT 1;", __LINE__);
+				
+		$this->request("UPDATE `".$_TBS."` SET ".implode(", ", $sfV)." WHERE ".implode(" AND ", $sfK)." LIMIT 1;", __LINE__);
 	}
 
 
@@ -1064,20 +1123,19 @@ Class Manager
 		}
 		$key = $t;
 
-		$A = [];
-
+		$sfK = [];
 		foreach($key as $k=>$v)
 		{
 			$PRE = "";
 
 			$this->check_type($k, $v, $type, $PRE);
 
-			$A[] = "`".$k."`=".$PRE."'".addslashes($v)."'";
+			$sfK[] = "`".$k."`=".$PRE."'".addslashes($v)."'";
 		}
 
 		$this->use_db($_DBS);
 
-		$this->request("DELETE FROM `$_TBS` WHERE ".implode(" AND ", $A).";", __LINE__);
+		$this->request("DELETE FROM `$_TBS` WHERE ".implode(" AND ", $sfK).";", __LINE__);
 	}
 
 
@@ -1085,9 +1143,9 @@ Class Manager
 	{
 		$result = $this->request("select
 			COLUMN_NAME, CHARACTER_SET_NAME, DATA_TYPE, COLUMN_TYPE, CHARACTER_MAXIMUM_LENGTH
-				from information_schema.columns
-				where TABLE_SCHEMA=x'".$_DB."'
-				AND table_name = x'".$_TB."';", __LINE__);
+			from information_schema.columns
+			where TABLE_SCHEMA=x'".$_DB."'
+			AND table_name = x'".$_TB."';", __LINE__);
 
 		while($row = $result[1]->fetch_assoc()){
 
@@ -1098,15 +1156,18 @@ Class Manager
 
 	private function check_type($k, &$v, $type, &$PRE)
 	{
-		if($type[$k]["DATA_TYPE"] == "bit"){
+		if(isset($type[$k]["DATA_TYPE"]))
+		{
+			if($type[$k]["DATA_TYPE"] == "bit"){
 
-			$PRE = "b";
-		}
+				$PRE = "b";
+			}
 
-		if($type[$k]["DATA_TYPE"] == "year"){
+			if($type[$k]["DATA_TYPE"] == "year"){
 
-			$v = base_convert("$v", 10, 2);
-			$PRE = "b";
+				$v = base_convert("$v", 10, 2);
+				$PRE = "b";
+			}
 		}
 	}
 

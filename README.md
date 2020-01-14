@@ -1,26 +1,37 @@
 
 ## Manager of database MYSQL
 
-Copyright (c) 2018-2019 Andrey Lyskov
+Copyright (c) 2018-2020 Andrey Lyskov
 
 #### Description
 
-sql.php - SQL script of the user.
+Web-based administration tool for MYSQL.  
 
+
+#### Features
+
+- Browse databases, tables, views, fields and indexes with aggregate, sort and limit results
+- Browse routines, triggers and events
+- Searching globally in a database or a subset of it
+- Copy, drop, rename, alter tables and fields
+- Create, copy, drop, update records that do not contain Spatial Data Types 
+- Execute any SQL command from a text field  
+- Export structure, data, views, triggers, routines, events to SQL 
 
 #### Requirements 
 
 PHP (>=5.6) [ mysqli extension ]  
 MySQL (>=5.5)
 
-#### License
-
-This project is licensed under the MIT License - see the LICENSE.md file
 
 #### Usage
 
 - Edit config.php, sql.php
 - Open in your browser http://yoursite/manager-mysql/index.php
+
+#### License
+
+MIT, see LICENSE.md file.
 
 
 

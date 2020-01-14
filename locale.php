@@ -54,8 +54,5 @@ define("_ACTION_BACK", "back");
 define("_ACTION_RENAME", "rename");
 define("_ACTION_UPDATE", "update");
 define("_ACTION_INSERT", "insert");
-define("_ACTION_COLUMN_DELETE", "delete column");
-define("_ACTION_COLUMN_INSERT", "insert column");
-define("_ACTION_COLUMN_CHANGE", "change column");
-define("_ACTION_TABLE_CHANGE", "change table");
+
 

@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2019 Andrey Lyskov
+Copyright (c) 2018-2020 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -35,6 +35,13 @@ Class Control
 		fl_field_rc,
 		fl_value_rc";
 
+	private $exceptions = [
+		["action","_EXPORT_DB"], 
+		["action","_EXPORT_DB_FILTER"],
+		["action","_EXPORT_TB"], 
+		["action","_EXPORT_TB_FILTER"]
+	];
+
 
 	public function __construct(){
 
@@ -48,7 +55,7 @@ Class Control
 	}
 
 
-	public function AT($pass, array $exceptions=[])
+	public function AT($pass)
 	{
 
 		if($pass === ""){return true;}
@@ -63,9 +70,9 @@ Class Control
 
 		$update = false;
 
-		foreach($exceptions as $k=>$v)
+		foreach($this->exceptions as $k=>$v)
 		{
-			if(isset($_POST[$exceptions[$k][0]]) && ($_POST[$exceptions[$k][0]] == $exceptions[$k][1])){
+			if(isset($_POST[$this->exceptions[$k][0]]) && ($_POST[$this->exceptions[$k][0]] == $this->exceptions[$k][1])){
 
 				$update = true;
 			}

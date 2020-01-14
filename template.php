@@ -173,6 +173,7 @@ var ct =
 };
 
 
+
 var ms =
 {
 	pst: function(data)
@@ -248,8 +249,6 @@ var ms =
 			{
 				if(form[i].name)
 				{
-					if(form[i].type == "radio"){continue;};
-
 					if(form[i].type == "checkbox")
 					{
 						if(form[i].checked){
@@ -517,8 +516,8 @@ var ms =
 			}
 			else{
 
+				document.getElementById("id_alt_message_text").innerText = title;
 				document.getElementById("id_alt_message").style.display = "";
-				document.getElementById("id_alt_message_text").innerHTML = title;
 			}
 		}
 	},
@@ -543,8 +542,8 @@ var ms =
 </script>
 
 
-<style type="text/css">
 
+<style type="text/css">
 
 body{background: #555555; color: #eee; }
 
@@ -555,10 +554,8 @@ body{background: #555555; color: #eee; }
 .nav_main_back{ background:#333;  border-bottom: 2px solid #555;}
 .nav_main{ background: none;}
 
-.nav, .nav_label{ background:#333; color: #eee }
-
 .nav_wrap, .nav_wrap_filter{
-border: 1px solid #555;
+background: #333;
 }
 
 .nav_value{
@@ -583,7 +580,6 @@ border: 0px; color: #eee;
 }
 
 .int, .int_pass{ background: none; border: 1px solid #777; color: #eee;}
-.int_db{ background: none; border: 0px; color: #eee; outline: none; }
 
 .ct_row{
 background: #333;
@@ -696,8 +692,6 @@ border: 1px solid #555;
 }
 
 
-
-
 html{height:100%;}
 
 body{
@@ -711,17 +705,17 @@ height:100%;
 option{font-size: 14px;}
 
 .separator0,
-.separator2,
+.separator3,
 .separator11,
-.separator22{
+.separator21{
 clear:both;
 margin: 0px;
 }
 
 .separator0{padding: 0px;}
-.separator2{padding: 2px;}
+.separator3{padding: 3px;}
 .separator11{padding: 11px;}
-.separator22{padding: 22px;}
+.separator21{padding: 21px;}
 
 .res{
 overflow: auto;
@@ -762,13 +756,15 @@ display: inline-block;
 
 .nav{
 text-align: left;
-padding: 2px;
+width: 971px;
+padding: 0px;
 margin: 0px;
 }
 
+
 .nav_wrap,
 .nav_wrap_filter{
-margin: 1px;
+margin-right: 2px;
 display:inline-block;
 }
 
@@ -777,18 +773,18 @@ width: 129px;
 }
 
 .nav_wrap_filter{
-width: 430px;
+width: 445px;
 }
 
 .nav_value{
-width: 157px;
+width: 173px;
 padding: 7px;
 margin: 3px 0px 2px 2px;
 }
 
 .nav_label{
 width: 119px;
-padding: 3px;
+padding: 7px;
 margin: 2px;
 border: 0px;
 display:inline-block;
@@ -813,6 +809,7 @@ text-align: right;
 width: 125px;
 padding: 7px;
 margin: 3px 0px 2px 2px;
+outline: none;
 }
 
 .int{
@@ -825,12 +822,6 @@ margin: 3px 3px 2px 2px;
 width: 211px;
 padding: 7px;
 margin: 3px 3px 2px 0px;
-}
-
-.int_db{
-width: 206px;
-padding: 7px;
-margin: 3px 3px 2px 2px;
 }
 
 .ct_row{
@@ -877,6 +868,8 @@ text-align: left;
 padding-left: 12px;
 }
 
+.run_tr{cursor: pointer;}
+
 .pl_el{width: 973px;}
 
 .rt_label_key,
@@ -910,8 +903,9 @@ margin: 1px 2px 1px 0px;
 .type_value{
 z-index: 101;
 position: absolute;
-width: 419px;
-padding: 3px 2px 1px 3px;
+width: 299px;
+padding: 3px 0px 0px 3px;
+margin-top: 2px;
 }
 
 .type_value_sl{
@@ -919,6 +913,7 @@ display: block;
 padding: 9px;
 max-height: 99px;
 overflow: auto;
+width: 278px;
 }
 
 .type_value_sl_k{
@@ -1036,6 +1031,7 @@ padding: 11px;
 
 
 </style>
+
 
 </head>
 <body onload="ms.pst('session=1');">

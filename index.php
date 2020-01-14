@@ -14,13 +14,14 @@ if(!isset($_POST["session"]))
 else
 {
 	$control = new Control();
-	if(!$control->AT($pass, [["action","_EXPORT_TB"],["action","_EXPORT_DB"]])){die();}
+	if(!$control->AT($pass)){die();}
 
 	require __DIR__."/sql.php";
 	if(!isset($SQL)){$SQL = [];}
 	
 	require __DIR__."/Manager.php";
 	require __DIR__."/View.php";
+	require __DIR__."/Query.php";
 	require __DIR__."/Controller.php";
 
 	new Controller($SERVER, $SQL, $LIMIT);		
