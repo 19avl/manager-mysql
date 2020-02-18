@@ -7,9 +7,9 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
-
-Class Manager
+Class Manager extends Wr_sql
 {
+	use Convert;
 
 	public function __construct()
 	{
@@ -17,79 +17,6 @@ Class Manager
 		$this->connect = false;
 	}
 
-
-	public function connectdb($SERVER)
-	{
-		if(!extension_loaded("mysqli")){
-
-			$this->connect = true;
-			$this->_LOG["MESSAGE"][] = "Module PHP mysqli is not installed";
-
-			return;
-		}
-
-		$this->dbc = new mysqli($SERVER["host"], $SERVER["user"], $SERVER["pass"], "");
-
-		if(!mysqli_connect_errno()){
-
-			$this->dbc->set_charset("utf8");
-			$this->dbc->query( "SET sql_mode = 'STRICT_ALL_TABLES';" );
-			$this->server_version = $this->dbc->server_version;
-		}
-		else{
-
-			$this->connect = true;
-			$this->_LOG["MESSAGE"][] = _MESSAGE_CONNECTION_DB_ERROR.": ".$this->dbc->connect_errno;
-		}
-	}
-
-	private function use_db($db)
-	{
-		if($db !== ""){ $this->dbc->real_query("USE `".$db."`;"); }
-	}
-
-	private function request($sql, $line, $error=true)
-	{
-		$this->_LOG["SQL"][] = $sql;
-
-		$line = "";
-
-		$this->dbc->real_query($sql);
-		$result = $this->dbc->store_result();
-
-		if($this->dbc->error){
-
-			if($error){$this->_LOG["MESSAGE"][] = $line.htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
-
-			return [false, false];
-		}
-
-		return [true, $result];
-	}
-
-
-	private function get_sub($_DB, $_DBS, $tb, $target, $create, $searching, $add)
-	{
-		$RT = [];
-
-		$result = $this->request("SELECT ".$target."_NAME
-				FROM information_schema.".$tb." where ".$add." ".$target."_SCHEMA=x'".$_DB."';", __LINE__, false);
-
-		if($result[0])
-		{
-			while( $row = $result[1]->fetch_assoc() ){
-
-				$trigger = $this->request($create." `$_DBS`.`".$row[$target."_NAME"]."`;", __LINE__);
-
-				while( $row_trigger = $trigger[1]->fetch_assoc() ){
-
-					$RT[$row[$target."_NAME"]] = $row_trigger[$searching];
-				}
-			}
-		}
-
-		return $RT;
-	}
 
 	public function mk($script_id, $_sql)
 	{
@@ -124,10 +51,13 @@ Class Manager
 		if(in_array($nv["fl_operator_db"], $RT["FILTER_EX"])){
 
 			$WHERE = ($nv["fl_operator_db"] === "LIKE") ?
-				"WHERE `".pack('H*', $nv["fl_field_db"])."` LIKE '%".addslashes($nv["fl_value_db"])."%'" :
-				"WHERE `".pack('H*', $nv["fl_field_db"])."`".$nv["fl_operator_db"]."'".addslashes($nv["fl_value_db"])."'";
+				"WHERE `".$this->h2s($nv["fl_field_db"])."` LIKE '%".addslashes($nv["fl_value_db"])."%'" :
+				"WHERE `".$this->h2s($nv["fl_field_db"])."`".$nv["fl_operator_db"]."'".
+				addslashes($nv["fl_value_db"])."'";
 		}
 		else{ $WHERE = ""; }
+
+
 
 		$result = $this->request("SELECT COUNT(*)
 			FROM information_schema.SCHEMATA ".$WHERE." ;", __LINE__);
@@ -150,7 +80,7 @@ Class Manager
 
 				$lines = $this->request("SELECT COUNT(*)
 					FROM information_schema.TABLES WHERE `TABLE_SCHEMA`=x'".
-					unpack('H*', $row["SCHEMA_NAME"])[1]."';", __LINE__);
+					$this->s2h($row["SCHEMA_NAME"])."';", __LINE__);
 
 				if($lines[0]){
 
@@ -195,7 +125,7 @@ Class Manager
 
 	public function tb($_DB, $nv, $LIMIT)
 	{
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		$RT = [];
 		$RT["DB"] = $_DBS;
@@ -238,8 +168,8 @@ Class Manager
 			$result = $this->request("SELECT TABLE_NAME
 				FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."';", __LINE__);
 
-			if($result[0])
-			{
+			if($result[0]){
+
 				while( $row = $result[1]->fetch_assoc() ){ $VIEW[] = $row["TABLE_NAME"];}
 			}
 
@@ -252,8 +182,9 @@ Class Manager
 			if(in_array($nv["fl_operator_tb"], $RT["FILTER_EX"])){
 
 				$WHERE = ($nv["fl_operator_tb"] === "LIKE") ?
-					"AND `".pack('H*', $nv["fl_field_tb"])."` LIKE '%".addslashes($nv["fl_value_tb"])."%'" :
-					"AND `".pack('H*', $nv["fl_field_tb"])."`".$nv["fl_operator_tb"]."'".addslashes($nv["fl_value_tb"])."'";
+					"AND `".$this->h2s($nv["fl_field_tb"])."` LIKE '%".addslashes($nv["fl_value_tb"])."%'" :
+					"AND `".$this->h2s($nv["fl_field_tb"])."`".$nv["fl_operator_tb"]."'".
+					addslashes($nv["fl_value_tb"])."'";
 			}
 			else{ $WHERE = ""; }
 
@@ -315,8 +246,8 @@ Class Manager
 
 	public function rc($_DB, $_TB, $nv, $exceptions, $LIMIT)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
 
 		$RT = [];
 		$RT["DB"] = $_DBS;
@@ -338,8 +269,8 @@ Class Manager
 
 		$CREATE = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
 
-		if($CREATE[0])
-		{
+		if($CREATE[0]){
+
 			$RT["CREATE"]["DB"] = $CREATE[1]->fetch_row()[1];
 		}
 
@@ -473,12 +404,12 @@ Class Manager
 			if(in_array($nv["fl_operator_rc"], $RT["FILTER_EX"]))
 			{
 				$PRE = "";
-				if(($RT["FIELDS"][pack('H*', $nv["fl_field_rc"])]["DATA_TYPE"] === "bit") &&
+				if(($RT["FIELDS"][$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "bit") &&
 					preg_match("/^[01]{1,}$/", $nv["fl_value_rc"])){$PRE = "b";}
 
 				$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-					"WHERE `".pack('H*', $nv["fl_field_rc"])."` LIKE '%".addslashes($nv["fl_value_rc"])."%'" :
-					"WHERE CAST(`".pack('H*', $nv["fl_field_rc"])."` AS CHAR) ".
+					"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($nv["fl_value_rc"])."%'" :
+					"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
 					$nv["fl_operator_rc"]." ".$PRE."'".addslashes($nv["fl_value_rc"])."'";
 			}
 			else{ $WHERE = ""; }
@@ -530,7 +461,7 @@ Class Manager
 	{
 		$RT = [];
 
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		$result = $this->request("SHOW TABLES FROM `$_DBS`;", __LINE__);
 
@@ -538,7 +469,7 @@ Class Manager
 
 			while($row = $result[1]->fetch_row()){
 
-				$RT[] = unpack('H*', $row[0])[1];
+				$RT[] = $this->s2h($row[0]);
 			}
 		}
 		return $RT;
@@ -547,7 +478,7 @@ Class Manager
 
 	public function searching($_DB, $list_tb, $find)
 	{
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		$count = 0;
 
@@ -559,7 +490,7 @@ Class Manager
 		{
 			foreach($list_tb as $val)
 			{
-				$valS = pack('H*', "$val");
+				$valS = $this->h2s($val);
 
 				$result = $this->request("SELECT * FROM `$_DBS`.`$valS`;", __LINE__);
 
@@ -592,8 +523,8 @@ Class Manager
 
 	public function copy_tb($_DB, $list_tb, $copy_2bd, $name_new, $pre=false)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$copy_2bdS = pack('H*', "$copy_2bd");
+		$_DBS = $this->h2s($_DB);
+		$copy_2bdS = $this->h2s($copy_2bd);
 
 		if( isset($list_tb) )
 		{
@@ -608,17 +539,18 @@ Class Manager
 
 				if(!$VIEW)
 				{
-					$valS = pack('H*', "$val");
+					$valS = $this->h2s($val);
 
 					if($val !== "")
 					{
 						if($pre === false){
 
-							$tbs_new = pack('H*', "$val");
+							$tbs_new = $valS;
+
 						}
 						elseif($pre === true){
 
-							if(($name_new === $valS)){ $tbs_new = pack('H*', "$val")."_copy"; }
+							if(($name_new === $valS)){ $tbs_new = $valS."_copy"; }
 							else{ $tbs_new = $name_new; }
 						}
 
@@ -675,7 +607,7 @@ Class Manager
 
 	public function export($_DB, $list_tb, $exceptions)
 	{
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		$field = [];
 		$string = "";
@@ -692,7 +624,7 @@ Class Manager
 				if($row[0] !== "0"){$VIEW = false;}
 			}
 
-			$valS = pack('H*', "$val");
+			$valS = $this->h2s($val);
 
 			$string .= PHP_EOL.PHP_EOL;
 
@@ -730,7 +662,8 @@ Class Manager
 								}
 								elseif(in_array( $field[$k], $exceptions)){
 
-									$row[$k] = "x'".unpack('H*', $row[$k])[1]."'";
+									$row[$k] = "x'".$this->s2h($row[$k])."'";
+
 								}
 								else{
 
@@ -755,24 +688,6 @@ Class Manager
 	}
 
 
-	private function export_get($filename, $string)
-	{
-		if(!isset($this->_LOG["MESSAGE"][0]))
-		{
-			ob_start();
-			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename='.$filename);
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: no-cache, must-revalidate');
-			header('Pragma: no-cache');
-			header('Content-Length: ' . strlen($string));
-			print $string;
-			ob_get_flush();
-		}
-	}
-
-
 	public function export_db($list_db, $exceptions)
 	{
 		$string = PHP_EOL."SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
@@ -782,7 +697,7 @@ Class Manager
 
 		foreach($list_db as $value){
 
-			$_DBS = pack('H*', "$value");
+			$_DBS = $this->h2s($value);
 
 			$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
 				FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$value."';", __LINE__);
@@ -846,6 +761,24 @@ Class Manager
 	}
 
 
+	private function export_get($filename, $string)
+	{
+		if(!isset($this->_LOG["MESSAGE"][0]))
+		{
+			ob_start();
+			header('Content-Type: application/octet-stream');
+			header('Content-Disposition: attachment; filename='.$filename);
+			header('Content-Transfer-Encoding: binary');
+			header('Expires: 0');
+			header('Cache-Control: no-cache, must-revalidate');
+			header('Pragma: no-cache');
+			header('Content-Length: ' . strlen($string));
+			print $string;
+			ob_get_flush();
+		}
+	}
+
+
 	public function export_tb($_DB, $list_tb, $exceptions)
 	{
 		$string = PHP_EOL."SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
@@ -867,7 +800,7 @@ Class Manager
 
 		foreach($list_db as $val){
 
-			$valS = pack('H*', "$val");
+			$valS = $this->h2s($val);
 
 			$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
 				FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$val."';", __LINE__);
@@ -894,7 +827,7 @@ Class Manager
 
 		foreach($list_db as $val)
 		{
-			$valS = pack('H*', "$val");
+			$valS = $this->h2s($val);
 
 			if(($val !== "") && (!in_array($valS, $A))){
 
@@ -903,11 +836,44 @@ Class Manager
 		}
 	}
 
+	public function list_db_filter($nv)
+	{
+		$A = ["information_schema","mysql","performance_schema"];
+
+		$RT = [];
+
+		$FILTER_EX = ["...","=","<>",">","<","LIKE"];
+
+		if(in_array($nv["fl_operator_db"], $FILTER_EX)){
+
+			$WHERE = ($nv["fl_operator_db"] === "LIKE") ?
+				"WHERE `".$this->h2s($nv["fl_field_db"])."` LIKE '%".addslashes($nv["fl_value_db"])."%'" :
+				"WHERE `".$this->h2s($nv["fl_field_db"])."`".$nv["fl_operator_db"]."'".
+				addslashes($nv["fl_value_db"])."'";
+		}
+		else{ $WHERE = ""; }
+
+		$result = $this->request("SELECT  SCHEMA_NAME FROM information_schema.SCHEMATA ".$WHERE.";", __LINE__);
+
+		if($result[0]){
+
+			while( $row = $result[1]->fetch_assoc() )
+			{
+				if(($row["SCHEMA_NAME"] !== "") && (!in_array($row["SCHEMA_NAME"], $A))){
+
+					$RT[] = $this->s2h($row["SCHEMA_NAME"]);
+				}
+			}
+		}
+
+		return $RT;
+	}
+
 
 	public function rename_tb($_DB, $tb_name, $tb_name_new)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$tb_name = pack('H*', "$tb_name");
+		$_DBS = $this->h2s($_DB);
+		$tb_name = $this->h2s($tb_name);
 
 		$this->use_db($_DBS);
 
@@ -920,13 +886,13 @@ Class Manager
 
 	public function clear_tb($_DB, $list_tb)
 	{
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		if( isset($list_tb) )
 		{
 			foreach($list_tb as $val)
 			{
-				$valS = pack('H*', "$val");
+				$valS = $this->h2s($val);
 
 				if($val !== ""){
 
@@ -939,7 +905,7 @@ Class Manager
 
 	public function delete_tb($_DB, $list_tb)
 	{
-		$_DBS = pack('H*', "$_DB");
+		$_DBS = $this->h2s($_DB);
 
 		$VIEW = [];
 
@@ -953,7 +919,7 @@ Class Manager
 
 		foreach($list_tb as $val){
 
-			$valS = pack('H*', "$val");
+			$valS = $this->h2s($val);
 
 			if(in_array($valS, $VIEW)){	$A[] = "`".$valS."`"; }
 			else{ $B[] = "`".$valS."`"; }
@@ -967,12 +933,39 @@ Class Manager
 	}
 
 
+	public function list_tb_filter($_DB, $nv)
+	{
+		$RT = [];
+
+		if($nv["fl_operator_tb"] !== ""){
+
+			$WHERE = ($nv["fl_operator_tb"] === "LIKE") ?
+				"AND `".$this->h2s($nv["fl_field_tb"])."` LIKE '%".addslashes($nv["fl_value_tb"])."%'" :
+				"AND `".$this->h2s($nv["fl_field_tb"])."`".$nv["fl_operator_tb"]."'".
+				addslashes($nv["fl_value_tb"])."'";
+		}
+		else{ $WHERE = ""; }
+
+		$result = $this->request("SELECT TABLE_NAME
+				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE.";", __LINE__);
+
+		if($result[0]){
+
+			while( $row = $result[1]->fetch_assoc() ){
+
+				$RT[] = $this->s2h($row["TABLE_NAME"]);
+			}
+		}
+
+		return $RT;
+	}
+
+
 	public function insert_cl($_DB, $_TB, $cl_def, $cl_in)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
-
-		$cl_in = pack('H*', "$cl_in");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
+		$cl_in = $this->h2s($cl_in);
 
 		$position = "";
 		if($cl_in == ""){ $position = "FIRST";}
@@ -986,10 +979,9 @@ Class Manager
 
 	public function update_cl($_DB, $_TB, $cl_change, $cl_def)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
-
-		$cl_change = pack('H*', "$cl_change");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
+		$cl_change = $this->h2s($cl_change);
 
 		$this->use_db($_DBS);
 
@@ -999,10 +991,9 @@ Class Manager
 
 	public function delete_cl($_DB, $_TB, $cl_del)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
-
-		$cl_del = pack('H*', "$cl_del");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
+		$cl_del = $this->h2s($cl_del);
 
 		$this->use_db($_DBS);
 
@@ -1012,8 +1003,8 @@ Class Manager
 
 	public function update_tb($_DB, $_TB, $tb_def)
 	{
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
 
 		$this->use_db($_DBS);
 
@@ -1026,13 +1017,13 @@ Class Manager
 		$type = [];
 		$this->check_field($_DB, $_TB, $type);
 
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
 
 		$t = [];
 		foreach($field as $k=>$v){
 
-			$t[pack('H*', "$k")] = addslashes("$v");
+			$t[$this->h2s($k)] = addslashes("$v");
 		}
 		$field = $t;
 
@@ -1046,10 +1037,10 @@ Class Manager
 			$PRE = "";
 
 			$this->check_type($k, $v, $type, $PRE);
-			
+
 			$sfK[] = "`".$k."`";
 
-			$sfV[] = $PRE."'".$v."'";			
+			$sfV[] = $PRE."'".$v."'";
 		}
 
 		$this->use_db($_DBS);
@@ -1063,20 +1054,20 @@ Class Manager
 		$type = [];
 		$this->check_field($_DB, $_TB, $type);
 
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
 
 		$t = [];
 		foreach($key as $k=>$v){
 
-			$t[pack('H*', "$k")] = pack('H*', "$v");
+			$t[$this->h2s($k)] = $this->h2s($v);
 		}
 		$key = $t;
 
 		$t = [];
 		foreach($field as $k=>$v){
 
-			$t[pack('H*', "$k")] = addslashes("$v");
+			$t[$this->h2s($k)] = addslashes("$v");
 		}
 		$field = $t;
 
@@ -1103,7 +1094,7 @@ Class Manager
 		}
 
 		$this->use_db($_DBS);
-				
+
 		$this->request("UPDATE `".$_TBS."` SET ".implode(", ", $sfV)." WHERE ".implode(" AND ", $sfK)." LIMIT 1;", __LINE__);
 	}
 
@@ -1113,13 +1104,13 @@ Class Manager
 		$type = [];
 		$this->check_field($_DB, $_TB, $type);
 
-		$_DBS = pack('H*', "$_DB");
-		$_TBS = pack('H*', "$_TB");
+		$_DBS = $this->h2s($_DB);
+		$_TBS = $this->h2s($_TB);
 
 		$t = [];
 		foreach($key as $k=>$v){
 
-			$t[pack('H*', "$k")] = pack('H*', "$v");
+			$t[$this->h2s($k)] = $this->h2s($v);
 		}
 		$key = $t;
 
@@ -1174,7 +1165,7 @@ Class Manager
 
 	public function sqls_eval_list($text_script, $use)
 	{
-		$use = pack('H*', "$use");
+		$use = $this->h2s($use);
 
 		if($text_script === ""){return;}
 

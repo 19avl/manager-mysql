@@ -37,36 +37,29 @@ Class Control
 
 	private $exceptions = [
 		["action","_EXPORT_DB"], 
-		["action","_EXPORT_DB_FILTER"],
 		["action","_EXPORT_TB"], 
-		["action","_EXPORT_TB_FILTER"]
 	];
 
 
-	public function __construct(){
-
-		session_start();
-
-		if(isset($_SESSION['request'])){
-
-			$this->session_key = $_SESSION['request'];
-		}
-		else{ $this->session_key = ''; }
+	public function __construct($pass)
+	{
+		if(!$this->AT($pass)){ die(); }
 	}
 
 
 	public function AT($pass)
 	{
-
 		if($pass === ""){return true;}
 		else{$pass = $this->hashE($pass);}
+		
+		session_id($_POST["session"]);
+		session_start();		
+		
+		if(isset($_SESSION["request"])){
 
-		if(isset($_POST['exit']) && ($_POST['exit'] === 'exit'))
-		{
-			$_POST['request'] = '';
-			$_REQUEST['request'] = '';
-			$_SESSION['request'] = '';
+			$this->session_key = $_SESSION["request"];
 		}
+		else{ $this->session_key = ""; }
 
 		$update = false;
 
@@ -80,17 +73,17 @@ Class Control
 
 		if(!$update)
 		{
-			$_SESSION['request'] = $this->rs(strlen($pass));
-			print "<input type='hidden' id='request' class='' value='".$_SESSION['request']."'/>";
+			$_SESSION["request"] = $this->rs(strlen($pass));
+			print "<input type='hidden' id='request' class='' value='".$_SESSION["request"]."'/>";
 		}
 
-		if(isset($_POST['request']) && ($_POST['request'] !== '') &&
-			($_POST['request'] === (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
+		if(isset($_POST["request"]) && ($_POST["request"] !== "") &&
+			($_POST["request"] === (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
 		{
 			return true;
 		}
-		elseif(isset($_POST['request']) && ($_POST['request'] !== '') &&
-			($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
+		elseif(isset($_POST["request"]) && ($_POST["request"] !== "") &&
+			($_POST["request"] !== (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
 		{
 			$this->authorize_form(_AT_ERROR);
 			return false;

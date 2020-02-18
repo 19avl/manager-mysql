@@ -7,9 +7,9 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
-
-Class View
+Class View extends Wr_html
 {
+	use Convert;
 
 	public function __construct(){}
 
@@ -216,7 +216,7 @@ Class View
 
 			foreach($RT["DB"] as $key=>$value)
 			{
-				$uk = unpack('H*', "$key")[1];
+				$uk = $this->s2h($key);
 
 				$this->div_open("", "ct_row", "", "");
 
@@ -289,11 +289,11 @@ Class View
 
 		$this->form_open();
 
-		$this->form_set($_DB, "",
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-			"", "", "", "", "", "", "", []);
+		$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", []);
 
 		$this->div_open("", "pl_el", "", "");
+		
+		$this->input("name_new", "", "st_label_name", $this->html($this->h2s($_DB)), "", "disabled", "");
 
 		$this->input("cl_in", "search_db", "st_value_table", "",
 			"onclick=\"ms.el_view('id_alt_message', 'none');\"", "", "");
@@ -303,7 +303,7 @@ Class View
 
 		$this->div_close();
 
-		$this->form_close();
+		$this->form_close();		
 
 		$this->div("", "separator11", "", "", "");
 
@@ -365,8 +365,6 @@ Class View
 
 		$this->div("", "separator11", "", "", "");
 
-		$this->div("", "separator11", "", "", "");
-
 		$this->form_open();
 
 		$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", []);
@@ -399,7 +397,7 @@ Class View
 
 		foreach($RT["TABLES"] as $key=>$value)
 		{
-			$uk = unpack('H*', "$key")[1];
+			$uk = $this->s2h($key);
 
 			$this->div_open("", "ct_row", "", "");
 
@@ -445,7 +443,7 @@ Class View
 
 	public function rc($_DB, $_TB, $RT, $nv, $exceptions)
 	{
-		$_TBS = $this->html(pack('H*', $_TB));
+		$_TBS = $this->html($this->h2s($_TB));
 
 		if($RT["CREATE"] == ""){return;}
 
@@ -469,12 +467,12 @@ Class View
 			$this->input("name_new", "", "st_value_table", $_TBS, "", "", "");
 
 			$this->btn("", "st_btn", _ACTION_RENAME,
-				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
+				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_rc', 'id_cn_st_request', '', this, this.form,
 				'"._NOTE_TABLE." / "._ACTION_RENAME."', ['_RENAME_TB'], []); \"");
 		}
 		else
 		{
-			$this->input("name_new", "", "st_fn_value", $_TBS, "", "", "");
+			$this->input("name_new", "", "st_value_vt", $_TBS, "", "", "");
 
 			$this->btn("", "st_btn", _ACTION_RENAME,
 				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_rc', 'id_cn_st_request', '', this, this.form,
@@ -539,7 +537,7 @@ Class View
 				"onchange=\"ms.AT('_DELETE_FL', 'id_cn_st', 'id_cn_st_request', 'cl_del', this, this.form,
 				' / "._ACTION_DELETE."', ['_DELETE_FL','_UPDATE_FL'], []); \"",
 				function($k, $v){return $v;},
-				function($k, $v){return unpack('H*', "$v")[1];},
+				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->html($v);});
 
 			$this->input("cl_def", "cl_def_id", "st_value_field", "",
@@ -550,7 +548,7 @@ Class View
 				' / "._ACTION_UPDATE."', ['_DELETE_FL','_UPDATE_FL'],
 				[], 'cl_def_id', '"._MESSAGE_NOT_VALUE."'); \"",
 				function($k, $v){return $v;},
-				function($k, $v){return unpack('H*', "$v")[1];},
+				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->html($v);});
 
 			$this->select(array_merge([""], $RT["FIELD_ST"]), false, "cl_in_sl", "", "st_select_value", _ACTION_INSERT,
@@ -558,7 +556,7 @@ Class View
 				' / "._ACTION_INSERT."',
 				['_DELETE_FL','_UPDATE_FL'], [], 'cl_def_id', '"._MESSAGE_NOT_VALUE."'); \"",
 				function($k, $v){return $v;},
-				function($k, $v){return unpack('H*', "$v")[1];},
+				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return  ($v === "") ? "first ".$this->html($v) : "after ".$this->html($v);});
 
 			$create_tb = explode("\n", $RT["CREATE"]["TB"]);
@@ -569,7 +567,7 @@ Class View
 
 			$this->btn("", "std_btn", _ACTION_UPDATE,
 				"onclick=\"ms.AT('_UPDATE_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
-				'".$this->html($_TBS)." / "._ACTION_UPDATE."', 
+				'".$this->html($_TBS)." / "._ACTION_UPDATE."',
 				['_UPDATE_TB'], [], 'tb_def_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 			$this->div_close();
@@ -616,11 +614,13 @@ Class View
 			$count_fl = 0;
 			$count_fl_display = 0;
 
+
+
 			foreach($value as $k=>$v)
 			{
 				$count_fl += 1;
 
-				if((count($nv["field_rc"]) === 0) || (in_array(unpack('H*', "$k")[1], $nv["field_rc"]))){
+				if((count($nv["field_rc"]) === 0) || (in_array($this->s2h($k), $nv["field_rc"]))){
 
 						$this->div_open("", "pl_el", "", "");
 						$count_fl_display += 1;
@@ -630,11 +630,11 @@ Class View
 					$this->div_open("", "", "display: none;", "");
 				}
 
-				$uk = unpack('H*', "$k")[1];
+				$uk = $this->s2h($k);
 
 				if($RT["FIELDS"][$k]["COLUMN_KEY"] == "PRI"){
 
-					$this->input("key[".$uk."]", "", "", unpack('H*', "$v")[1], "", "hidden", "");
+					$this->input("key[".$uk."]", "", "", $this->s2h($v), "", "hidden", "");
 				}
 
 				$constraint = "";
@@ -804,7 +804,7 @@ Class View
 			}
 		}
 
-		print "<input name='session' type='hidden' value='1'>";
+		print "<input name='session' type='hidden' value='"._SESSION."'>";
 		print "<input name='request' type='hidden' value=''>";
 	}
 
@@ -838,10 +838,10 @@ Class View
 						}
 						else{
 
-							$checked = (in_array(unpack('H*', "$vst")[1], $nv["field_rc"])) ? "checked" : "";
+							$checked = (in_array($this->s2h($vst), $nv["field_rc"])) ? "checked" : "";
 						}
 
-						$this->checkbox("field_rc[]", "", "", unpack('H*', "$vst")[1], "", $checked);
+						$this->checkbox("field_rc[]", "", "", $this->s2h($vst), "", $checked);
 
 						print $this->html("(".$RT["FIELDS"][$vst]["DATA_TYPE"].") ".$vst);
 
@@ -878,8 +878,8 @@ Class View
 
 				$this->select($RT["FIELD_ST"], $nv["fl_field_".$pre], "fl_field_".$pre, "", "slc", "",
 					"onchange=\"ms.RF('', '', '', this.form, 0);\"",
-					function($k, $v){return unpack('H*', "$v")[1];},
-					function($k, $v){return unpack('H*', "$v")[1];},
+					function($k, $v){return $this->s2h($v);},
+					function($k, $v){return $this->s2h($v);},
 					function($k, $v){return $this->html($v);});
 
 				$this->input("fl_value_".$pre, "", "nav_value", $this->html($nv["fl_value_".$pre]), "", "", "value");
@@ -934,106 +934,6 @@ Class View
 	}
 
 
-	private function form_open($class="")
-	{
-		print "<form name='' method='post' action='' class='".$class."' enctype='multipart/form-data' onSubmit='return false;'>";
-	}
 
-
-	private function form_close()
-	{
-		print "</form>";
-	}
-
-
-	private function div($id, $class, $style, $value, $event)
-	{
-		print "<div id='".$id."' class='".$class."' style='".$style."' ".$event.">".$value."</div>";
-	}
-
-
-	private function div_open($id, $class, $style, $event)
-	{
-		print "<div id='".$id."' class='".$class."' style='".$style."' ".$event.">";
-	}
-
-
-	private function div_close()
-	{
-		print "</div>";
-	}
-
-
-	private function btn($name, $class, $value, $event)
-	{
-		print "<input type='button' name='".$name."' class='".$class."' value='".$value."' ".$event.">";
-	}
-
-
-	private function input($name, $id, $class, $value, $event, $flag, $placeholder)
-	{
-		$type = "text";
-		if($flag === "hidden"){
-
-			$type = "hidden";
-			$flag = "";
-		}
-
-		print "<input id='".$id."' name='".$name."' type='".$type."' class='".$class."' value='".$value."' ".
-			$event." ".$flag." placeholder='".$placeholder."'>";
-	}
-
-
-	private function checkbox($name, $id, $class, $value, $event, $checked)
-	{
-		print "<input type='checkbox' name='".$name."' class='".$class."' value='".$value."' ".$event." ".$checked.">";
-	}
-
-
-	private function radio($name, $id, $class, $value, $event, $checked)
-	{
-		print "<input type='radio' name='".$name."' value='".$value."' ".$event." ".$checked.">";
-	}
-
-
-	private function textarea($name, $id, $class, $value, $event)
-	{
-		print "<textarea id='".$id."' name='".$name."' class='".$class."' ".$event.">".$value."</textarea>";
-	}
-
-
-	private function select($foreach, $selected, $name, $id, $class, $title, $event, $ch, $fk, $fv)
-	{
-		print "<select id='".$id."' name='".$name."' class='".$class."' size='1' ".$event.">";
-
-		if($title !== ""){print "<OPTION SELECTED value='' disabled> ".$title." </OPTION>";}
-
-		foreach($foreach as $k=>$v){
-
-			if($selected === (string)call_user_func($ch, $k, $v)){
-
-				print "<OPTION SELECTED value='".call_user_func($fk, $k, $v)."' > ".call_user_func($fv, $k, $v)." </OPTION>";
-			}
-			else{
-
-				print "<OPTION value='".call_user_func($fk, $k, $v)."' > ".call_user_func($fv, $k, $v)." </OPTION>";
-			}
-		}
-
-		print "</select>";
-	}
-
-
-	private function html($input, $EL="", $DL="")
-	{
-		if($EL !==""){
-
-			return preg_replace("/".$EL."/", $DL, htmlspecialchars($input, ENT_QUOTES | ENT_SUBSTITUTE));
-		}
-		else{
-
-			return htmlspecialchars($input, ENT_QUOTES | ENT_SUBSTITUTE);
-		}
-	}
 
 }

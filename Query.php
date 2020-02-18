@@ -120,31 +120,4 @@ Class Query
 	}
 
 
-	private function set_value($value)
-	{
-		if(get_magic_quotes_gpc() === 1){
-
-			return stripslashes(trim($value));
-		}
-		else{
-
-			return trim($value);
-		}
-	}
-
-
-	private function set_value_list($list)
-	{
-		$RT = [];
-
-		foreach($list as $key=>$value){
-
-				$RT[$key] = $this->set_value($value);
-		}
-
-		return $RT;
-	}
-
-
-
 }

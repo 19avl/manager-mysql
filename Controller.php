@@ -5,6 +5,8 @@ defined("_EXEC") or die();
 
 Class Controller extends Query
 {
+	use Convert;
+
 	private $manager;
 	private $view;
 
@@ -128,7 +130,7 @@ Class Controller extends Query
 				{
 					if($this->manager->rename_tb($this->_DB, $this->_TB, $this->name_new)){
 
-						$this->_TB = unpack('H*', "$this->name_new")[1];
+						$this->_TB = $this->s2h($this->name_new);
 					}
 				}
 				break;
