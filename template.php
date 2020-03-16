@@ -21,7 +21,8 @@ defined("_EXEC") or die();
 
 var ct =
 {	
-	pst: function(arg){		
+	pst: function(data){	
+	
 		
 		var status = "status";		
 		var container = "content";
@@ -63,12 +64,6 @@ var ct =
 		X.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=utf-8");	
 		X.send(data);
 	},
-	
-	clr_ps: function(){
-		
-		document.getElementById("pass").innerHTML = "";	
-		this.pst("&exit=exit");			
-	},	
 
 	get_ps: function(){		
 
@@ -681,15 +676,15 @@ color: #EEE;
 .rt_label_key,
 .rt_label_name,
 .rt_label_type,
-.rt_select_type,
 .rt_value_input,
 .rt_value_input_disabled,	
 .rt_value_text,
+.rt_select_type,
 .st_value_field,
 .st_value_table,
-.st_select_value,
 .st_value_vt,
-.st_label_name{
+.st_label_name,
+.st_select_value{
 background: #555;	
 border: 1px solid #777;
 color: #eee;
@@ -710,9 +705,9 @@ color: #eee;
 .rt_label_key, 
 .rt_label_name, 
 .rt_label_type{ background: #333; }
-.rt_select_type{ outline: none; cursor: pointer; }
 .rt_value_input_disabled{ background:#333; }
 .rt_value_text{	margin-bottom:0px;}
+.rt_select_type{ outline: none; cursor: pointer; }
 
 .type_value{	
 background: #333; 
@@ -956,15 +951,15 @@ padding-left: 12px;
 .rt_label_key,
 .rt_label_name,
 .rt_label_type,
-.rt_select_type,
 .rt_value_input,	
 .rt_value_input_disabled,
 .rt_value_text,
+.rt_select_type,
 .st_value_field,
-.st_value_table,
-.st_select_value,	
+.st_value_table,	
 .st_value_vt,
-.st_label_name{
+.st_label_name,
+.st_select_value{
 padding: 8px; 
 margin: 1px 2px 1px 0px;
 }
@@ -972,15 +967,15 @@ margin: 1px 2px 1px 0px;
 .rt_label_key{ width: 27px; }
 .rt_label_name{ width: 188px; }
 .rt_label_type{ width: 149px; }
-.rt_select_type{ width: 149px; }
 .rt_value_input{ width: 528px; margin-right: 0px;}
 .rt_value_input_disabled{ width: 528px; margin-right: 0px;}
 .rt_value_text{	width: 952px; height: 50px; resize: vertical; }
+.rt_select_type{ width: 149px; }
 .st_value_field{ width: 493px; }
 .st_value_table{ width: 799px; }
-.st_select_value{ width: 151px; }
 .st_value_vt{ width: 646px; }
 .st_label_name{ width: 952px; }
+.st_select_value{ width: 151px; }
 
 .type_value{	
 z-index: 101;
@@ -1065,16 +1060,15 @@ margin: 0px;
 }
 
 .altDialog_text{
-padding: 11px; 	
-font-size: 15px; 
+padding: 11px; 	 
 display: inline-block;
 }
 
 .altDialog_btn{
 width: 127px;
 height: 33px;
-padding: 5px; 
-margin: 3px 2px 2px 0px;
+padding: 5px;
+margin: 2px 2px 2px 0px;
 float: right;
 }
 

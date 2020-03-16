@@ -103,6 +103,14 @@ Class Manager extends Wr_sql
 	public function info()
 	{
 		$RT = [];
+
+		if(isset($GLOBALS["_SERVER"]["SERVER_SOFTWARE"])){
+
+			$RT[] = $GLOBALS["_SERVER"]["SERVER_SOFTWARE"];
+		}
+
+		$RT[] = "&nbsp;";
+
 		$RT[] = "CLIENT_INFO: ".$this->dbc->client_info;
 		$RT[] = "SERVER_INFO: ".$this->dbc->server_info;
 		$RT[] = "CHARACTER_SET_SERVER: ".$this->dbc->character_set_name();
@@ -112,12 +120,6 @@ Class Manager extends Wr_sql
 		if($result[0]){
 
 			$RT[] = "USER: ".$result[1]->fetch_row()[0];
-		}
-
-		$RT[] = "&nbsp;";
-		if(isset($GLOBALS["_SERVER"]["SERVER_SOFTWARE"])){
-
-			$RT[] = $GLOBALS["_SERVER"]["SERVER_SOFTWARE"];
 		}
 
 		return $RT;
@@ -403,14 +405,23 @@ Class Manager extends Wr_sql
 
 			if(in_array($nv["fl_operator_rc"], $RT["FILTER_EX"]))
 			{
-				$PRE = "";
 				if(($RT["FIELDS"][$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "bit") &&
-					preg_match("/^[01]{1,}$/", $nv["fl_value_rc"])){$PRE = "b";}
+					preg_match("/^[01]{1,}$/", $nv["fl_value_rc"]))
+				{
+					$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
+						"WHERE BIN(`".$this->h2s($nv["fl_field_rc"])."`) LIKE '%".$nv["fl_value_rc"]."%'" :
+						"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
+						$nv["fl_operator_rc"]." b'".$nv["fl_value_rc"]."'";
+				}
+				else
+				{
+					$fl_value_rc = addslashes($nv["fl_value_rc"]);
 
-				$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-					"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($nv["fl_value_rc"])."%'" :
-					"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
-					$nv["fl_operator_rc"]." ".$PRE."'".addslashes($nv["fl_value_rc"])."'";
+					$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
+						"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($fl_value_rc)."%'" :
+						"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
+						$nv["fl_operator_rc"]." '".$fl_value_rc."'";
+				}
 			}
 			else{ $WHERE = ""; }
 
@@ -766,13 +777,13 @@ Class Manager extends Wr_sql
 		if(!isset($this->_LOG["MESSAGE"][0]))
 		{
 			ob_start();
-			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename='.$filename);
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: no-cache, must-revalidate');
-			header('Pragma: no-cache');
-			header('Content-Length: ' . strlen($string));
+			header("Content-Type: application/octet-stream");
+			header("Content-Disposition: attachment; filename=".$filename);
+			header("Content-Transfer-Encoding: binary");
+			header("Expires: 0");
+			header("Cache-Control: no-cache, must-revalidate");
+			header("Pragma: no-cache");
+			header("Content-Length: ".strlen($string));
 			print $string;
 			ob_get_flush();
 		}

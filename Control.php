@@ -20,24 +20,17 @@ Class Control
 		tb,
 		key,
 		field,
-		script,
-		tb_name,
-		tb_name_new,
-		cl_name,
+		name_new,
+		cl_del,
 		cl_def,
+		cl_in,
 		cl_change,
-		cl_position,
 		tb_def,
-		fl_field_db,
-		fl_value_db,
-		fl_field_tb,
-		fl_value_tb,
-		fl_field_rc,
-		fl_value_rc";
+		script";
 
 	private $exceptions = [
-		["action","_EXPORT_DB"], 
-		["action","_EXPORT_TB"], 
+		["action","_EXPORT_DB"],
+		["action","_EXPORT_TB"],
 	];
 
 
@@ -51,10 +44,11 @@ Class Control
 	{
 		if($pass === ""){return true;}
 		else{$pass = $this->hashE($pass);}
-		
+
+		ini_set('session.use_cookies', 0);
 		session_id($_POST["session"]);
-		session_start();		
-		
+		session_start();
+
 		if(isset($_SESSION["request"])){
 
 			$this->session_key = $_SESSION["request"];
@@ -77,21 +71,20 @@ Class Control
 			print "<input type='hidden' id='request' class='' value='".$_SESSION["request"]."'/>";
 		}
 
-		if(isset($_POST["request"]) && ($_POST["request"] !== "") &&
-			($_POST["request"] === (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
+		if(!isset($_POST['request']) || ($_POST['request'] === ''))
 		{
-			return true;
-		}
-		elseif(isset($_POST["request"]) && ($_POST["request"] !== "") &&
-			($_POST["request"] !== (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request())))
-		{
-			$this->authorize_form(_AT_ERROR);
+			$this->authorize_form("&nbsp;");
 			return false;
 		}
 		else
 		{
-			$this->authorize_form("&nbsp;");
-			return false;
+			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request()))
+			{
+				$this->authorize_form(_AT_ERROR);
+				return false;
+			}
+
+			return true;
 		}
 	}
 
@@ -108,7 +101,7 @@ Class Control
 		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='message' >".$ms."</div>";
 		print "<form method='post'>";
-		print "<input type='password' id='en_pass' name='' class='int_pass' value='' placeholder='"._AT_PASSWORD."'/>";
+		print "<input type='password' id='en_pass' name='' class='int_pass' value='' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
 		print "<br><input type='button' name='' class='btn' value='OK' onclick='ct.get_ps(); '/><br/>";
 		print "</form>";
 	}
@@ -133,6 +126,8 @@ Class Control
 	{
 		$hash = "";
 		$m = 251;
+
+		if($key === ""){return "";}
 
 		for ($i=0; $i<strlen($str); $i++){
 

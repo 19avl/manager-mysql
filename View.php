@@ -162,8 +162,6 @@ Class View extends Wr_html
 			$this->form_close();
 
 		$this->div_close();
-
-		$this->div("", "separator11", "", "", "");
 	}
 
 
@@ -200,8 +198,6 @@ Class View extends Wr_html
 			$this->form_set($_DB, "",
 				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
 				"", "", "", "", "", "", "", []);
-
-			$this->input("tb_name", "", "", "", "", "hidden", "");
 
 			$this->div_open("", "ct_row", "", "");
 
@@ -254,8 +250,6 @@ Class View extends Wr_html
 
 			$this->div_close();
 
-			$this->div("", "separator11", "", "", "");
-
 			$this->form_close();
 		}
 
@@ -265,18 +259,21 @@ Class View extends Wr_html
 
 	public function info($info)
 	{
+		$this->div("", "separator11", "", "", "");
+
 		foreach($info as $value){
 
 			$this->div("", "", "", $value, "");
 		}
-
-		$this->div("", "separator11", "", "", "");
 	}
 
 
 	public function stat($dbc)
 	{
+		$this->div("", "separator11", "", "", "");
+
 		$this->div("", "", "", $dbc->stat, "");
+
 		$this->div("", "separator11", "", "", "");
 	}
 
@@ -292,7 +289,7 @@ Class View extends Wr_html
 		$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", []);
 
 		$this->div_open("", "pl_el", "", "");
-		
+
 		$this->input("name_new", "", "st_label_name", $this->html($this->h2s($_DB)), "", "disabled", "");
 
 		$this->input("cl_in", "search_db", "st_value_table", "",
@@ -303,7 +300,7 @@ Class View extends Wr_html
 
 		$this->div_close();
 
-		$this->form_close();		
+		$this->form_close();
 
 		$this->div("", "separator11", "", "", "");
 

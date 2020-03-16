@@ -21,13 +21,17 @@ Class Wr_html
 
 	protected function div($id, $class, $style, $value, $event)
 	{
-		print "<div id='".$id."' class='".$class."' style='".$style."' ".$event.">".$value."</div>";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		
+		print "<div ".$id." class='".$class."' style='".$style."' ".$event.">".$value."</div>";
 	}
 
 
 	protected function div_open($id, $class, $style, $event)
 	{
-		print "<div id='".$id."' class='".$class."' style='".$style."' ".$event.">";
+		$id = ($id !== "") ? "id='".$id."'" : "";		
+		
+		print "<div ".$id." class='".$class."' style='".$style."' ".$event.">";
 	}
 
 
@@ -52,7 +56,9 @@ Class Wr_html
 			$flag = "";
 		}
 
-		print "<input id='".$id."' name='".$name."' type='".$type."' class='".$class."' value='".$value."' ".
+		$id = ($id !== "") ? "id='".$id."'" : "";
+
+		print "<input ".$id." name='".$name."' type='".$type."' class='".$class."' value='".$value."' ".
 			$event." ".$flag." placeholder='".$placeholder."'>";
 	}
 
@@ -71,13 +77,17 @@ Class Wr_html
 
 	protected function textarea($name, $id, $class, $value, $event)
 	{
-		print "<textarea id='".$id."' name='".$name."' class='".$class."' ".$event.">".$value."</textarea>";
+		$id = ($id !== "") ? "id='".$id."'" : "";		
+		
+		print "<textarea ".$id." name='".$name."' class='".$class."' ".$event.">".$value."</textarea>";
 	}
 
 
 	protected function select($foreach, $selected, $name, $id, $class, $title, $event, $ch, $fk, $fv)
 	{
-		print "<select id='".$id."' name='".$name."' class='".$class."' size='1' ".$event.">";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+					
+		print "<select ".$id." name='".$name."' class='".$class."' size='1' ".$event.">";
 
 		if($title !== ""){print "<OPTION SELECTED value='' disabled> ".$title." </OPTION>";}
 

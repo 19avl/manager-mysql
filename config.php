@@ -16,7 +16,7 @@ error_reporting (0);
 
 define("_URL", "http://".$_SERVER["SERVER_NAME"].parse_url($_SERVER["REQUEST_URI"])["path"]);
 
-$pass = "qwe";
+$pass = "";
 
 
 /* - MYSQL */

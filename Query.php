@@ -31,8 +31,14 @@ Class Query
 		if(isset($_POST["action"])){ $this->action = $_POST["action"]; }
 
 		if(isset($_POST["display"])){ $this->display = $_POST["display"]; }
+	
+		if(isset($_POST["bd"])){ $this->_DB = $this->set_value($_POST["bd"]); }
 
+		if(isset($_POST["tb"])){ $this->_TB = $this->set_value($_POST["tb"]); }
+		
 		if(isset($_POST["list_db"])){ $this->list_db = $_POST["list_db"]; }
+
+		if(isset($_POST["list_tb"])){ $this->list_tb = $_POST["list_tb"]; }
 
 
 		$this->nv["page_db"] = (isset($_POST["page_db"]) &&
@@ -91,12 +97,6 @@ Class Query
 		$this->nv["fl_operator_rc"] = (isset($_POST["fl_operator_rc"]) &&
 			($_POST["fl_operator_rc"]) !== "..." ) ? $_POST["fl_operator_rc"] : "";
 
-
-		if(isset($_POST["bd"])){ $this->_DB = $this->set_value($_POST["bd"]); }
-
-		if(isset($_POST["tb"])){ $this->_TB = $this->set_value($_POST["tb"]); }
-
-		if(isset($_POST["list_tb"])){ $this->list_tb = $_POST["list_tb"]; }
 
 		if(isset($_POST["key"])){ $this->key = $_POST["key"]; }
 
