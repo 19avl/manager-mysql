@@ -1,7 +1,7 @@
 
-## Manager of database MYSQL
+## Manager for MySQL
 
-Copyright (c) 2018-2020 Andrey Lyskov
+Copyright (c) 2018-2021 Andrey Lyskov
 
 #### Description
 

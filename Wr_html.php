@@ -2,11 +2,8 @@
 
 defined("_EXEC") or die();
 
-Class Wr_html
+trait Wr_html
 {
-	public function __construct(){}	
-
-
 	protected function form_open($class="")
 	{
 		print "<form name='' method='post' action='' class='".$class."' enctype='multipart/form-data' onSubmit='return false;'>";
@@ -19,25 +16,25 @@ Class Wr_html
 	}
 
 
-	protected function div($id, $class, $style, $value, $event)
+	protected function tg($name, $id, $class, $style, $value, $event)
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";
 		
-		print "<div ".$id." class='".$class."' style='".$style."' ".$event.">".$value."</div>";
+		print "<".$name." ".$id." class='".$class."' style='".$style."' ".$event.">".$value."</".$name.">";
 	}
 
 
-	protected function div_open($id, $class, $style, $event)
+	protected function tg_open($name, $id, $class, $style, $event)
 	{
-		$id = ($id !== "") ? "id='".$id."'" : "";		
+		$id = ($id !== "") ? "id='".$id."'" : "";
 		
-		print "<div ".$id." class='".$class."' style='".$style."' ".$event.">";
+		print "<".$name." ".$id." class='".$class."' style='".$style."' ".$event.">";
 	}
 
 
-	protected function div_close()
+	protected function tg_close($name)
 	{
-		print "</div>";
+		print "</".$name.">";
 	}
 
 
@@ -75,18 +72,18 @@ Class Wr_html
 	}
 
 
-	protected function textarea($name, $id, $class, $value, $event)
+	protected function textarea($name, $id, $class, $value, $event, $flag)
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";		
 		
-		print "<textarea ".$id." name='".$name."' class='".$class."' ".$event.">".$value."</textarea>";
+		print "<textarea ".$id." name='".$name."' class='".$class."' ".$event." ".$flag.">".$value."</textarea>";
 	}
 
 
 	protected function select($foreach, $selected, $name, $id, $class, $title, $event, $ch, $fk, $fv)
 	{
-		$id = ($id !== "") ? "id='".$id."'" : "";
-					
+		$id = ($id !== "") ? "id='".$id."'" : "";		
+		
 		print "<select ".$id." name='".$name."' class='".$class."' size='1' ".$event.">";
 
 		if($title !== ""){print "<OPTION SELECTED value='' disabled> ".$title." </OPTION>";}

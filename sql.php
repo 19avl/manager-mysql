@@ -2,24 +2,43 @@
 
 defined("_EXEC") or die();
 
+
 $SQL = [
 
-"sql_mode" => "SELECT @@sql_mode;",
+"plugins" => "SHOW PLUGINS;",
 
-"character_set" => "show variables like 'char%';",
+"variables" => "
+
+-- SELECT @@global.sql_mode;
+-- SELECT @@session.sql_mode;
+
+-- SELECT @@global.FOREIGN_KEY_CHECKS;
+-- SELECT @@session.FOREIGN_KEY_CHECKS;
+
+-- SELECT @@global.event_scheduler;
+
+-- SHOW VARIABLES WHERE Variable_name IN ('log', 'general_log', 'general_log_file', 'log_output');
+
+show GLOBAL variables;
+-- show SESSION variables;",
+
+"collation" => "SHOW COLLATION;",
+
+"engines" => "SHOW ENGINES;",
 
 "processlist" => "SHOW PROCESSLIST;",
 
+"privileges" => "SHOW PRIVILEGES;",
+
 "open tables" => "
-SHOW OPEN TABLES;
 SHOW OPEN TABLES WHERE In_use>0;
-",
+SHOW OPEN TABLES;",
 
-"foreign_key_checks" => "SELECT @@GLOBAL.foreign_key_checks, @@SESSION.foreign_key_checks;",
+"user" => "
+SELECT user, host FROM mysql.user where Grant_priv='Y';
+SELECT user, host, Password FROM mysql.user;",
 
-"foreign key" => "
-SELECT * FROM information_schema.KEY_COLUMN_USAGE 
-WHERE CONSTRAINT_NAME <> 'PRIMARY' AND REFERENCED_TABLE_NAME is not null;
-",
 
 ];
+
+

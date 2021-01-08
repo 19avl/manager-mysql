@@ -55,6 +55,14 @@ trait Convert
 		return $RT;
 	}
 
-
+	protected function set_name($name)
+	{
+		if((substr($name, 0, 1) === "`") && (substr($name, (strlen ($name)-1), 1) === "`")){
+			
+			$name = str_replace("`", "", $name);
+		}
+		
+		return $name;		
+	}
 
 }

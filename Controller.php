@@ -14,15 +14,23 @@ Class Controller extends Query
 	private $DATA_DB;
 	private $DATA;
 
-	public function __construct($SERVER, $SQL, $LIMIT)
+	public function __construct($SERVER, $LIMIT, $PASS)
 	{
-		$this->manager = new Manager();
+		$this->exceptions = [
+			"geo" => ["geometry", "point", "linestring", "polygon",
+				"multipoint", "multilinestring", "multipolygon","geomcollection","geometrycollection"],
+			"bin" => ["tinyblob", "blob", "mediumblob", "longblob", "varbinary"]
+		];
+
 		$this->view = new View();
 
-		$this->exceptions = [
-			"geometry", "point", "linestring", "polygon",
-			"multipoint", "multilinestring", "multipolygon","geomcollection","geometrycollection"
-		];
+		$this->request();
+
+		$this->control = new Control();
+
+		$this->control->main($PASS);
+
+		$this->manager = new Manager();
 
 		$this->manager->connectdb($SERVER);
 
@@ -32,9 +40,14 @@ Class Controller extends Query
 			return;
 		}
 
-		$this->request();
-
 		$this->action();
+
+
+		if(file_exists(__DIR__."/sql.php")){
+
+			require __DIR__."/sql.php";
+		}
+		if(!isset($SQL)){$SQL = [];}
 
 		$this->DATA_DB = $this->manager->db($this->nv, $LIMIT);
 
@@ -46,10 +59,10 @@ Class Controller extends Query
 		}
 		elseif(($this->_DB !== "") && ($this->_TB === ""))
 		{
-			$this->DATA = $this->manager->tb( $this->_DB, $this->nv, $LIMIT);
+			$this->DATA = $this->manager->tb( $this->_DB, $this->nv, $this->cl_sl, $LIMIT);
 		}
 
-		$this->view->alt_message();
+		$this->view->dl_message();
 
 		$this->view->main($this->_DB, $this->_TB, $this->nv, $SQL);
 
@@ -59,7 +72,7 @@ Class Controller extends Query
 
 		if($this->_DB === ""){
 
-			$this->view->info($this->manager->info());
+			$this->view->info($this->manager->info($SERVER["host"]));
 		}
 
 		$this->view->stat($this->manager->dbc);
@@ -68,11 +81,11 @@ Class Controller extends Query
 
 		if(($this->_DB !== "") && ($this->_TB !== ""))
 		{
-			$this->view->rc( $this->_DB, $this->_TB, $this->DATA, $this->nv, $this->exceptions);
+			$this->view->rc($this->_DB, $this->_TB, $this->DATA, $this->nv, $this->exceptions, $this->display);
 		}
 		elseif(($this->_DB !== "") && ($this->_TB === ""))
 		{
-			$this->view->tb($this->_DB, $this->DATA, $this->action, $this->nv);
+			$this->view->tb($this->_DB, $this->DATA, $this->action, $this->nv, $this->display);
 		}
 	}
 
@@ -83,15 +96,9 @@ Class Controller extends Query
 		{
 			switch($this->action)
 			{
-				case "_FIND_DB":
+				case "_RUN_SQL":
 				{
-					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->cl_in);
-				}
-				break;
-
-				case "_FIND_TB":
-				{
-					$this->manager->searching($this->_DB, [$this->_TB], $this->cl_in);
+					$this->manager->sqls_eval_list($this->script, $this->_DB);
 				}
 				break;
 
@@ -126,18 +133,36 @@ Class Controller extends Query
 				}
 				break;
 
+				case "_CREATE_SUB":
+				{
+					$this->manager->create_sub($this->_DB, $this->cl_df);
+				}
+				break;
+
+				case "_UPDATE_SUB":
+				{
+					$this->manager->update_sub($this->_DB, $this->cl_tr, $this->cl_in, $this->cl_df, $this->cl_dl);
+				}
+				break;
+
+				case "_DELETE_SUB":
+				{
+					$this->manager->delete_sub($this->_DB, $this->cl_tr, $this->cl_in);
+				}
+				break;
+
 				case "_RENAME_TB":
 				{
-					if($this->manager->rename_tb($this->_DB, $this->_TB, $this->name_new)){
+					if($this->manager->rename_tb($this->_DB, $this->_TB, $this->cl_in)){
 
-						$this->_TB = $this->s2h($this->name_new);
+						$this->_TB = $this->s2h($this->set_name($this->cl_in));
 					}
 				}
 				break;
 
 				case "_COPY_TB":
 				{
-					$this->manager->copy_tb($this->_DB, [$this->_TB], $this->_DB, $this->name_new, true);
+					$this->manager->copy_tb($this->_DB, [$this->_TB], $this->_DB, $this->cl_in, true);
 					$this->_TB = "";
 				}
 				break;
@@ -162,31 +187,12 @@ Class Controller extends Query
 				}
 				break;
 
-				case "_INSERT_FL":
-				{
-					$this->manager->insert_cl($this->_DB, $this->_TB, $this->cl_def, $this->cl_in);
-					$this->nv["field_rc"] = [];
-				}
-				break;
-
-				case "_UPDATE_FL":
-				{
-					$this->manager->update_cl($this->_DB, $this->_TB, $this->cl_change, $this->cl_def);
-				}
-				break;
-
-				case "_DELETE_FL":
-				{
-					$this->manager->delete_cl($this->_DB, $this->_TB, $this->cl_del);
-					$this->nv["field_rc"] = [];
-				}
-				break;
-
 				case "_UPDATE_TB":
 				{
-					$this->manager->update_tb($this->_DB, $this->_TB, $this->tb_def);
+					$this->manager->update_tb($this->_DB, $this->_TB, $this->cl_df);
 				}
 				break;
+
 
 				case "_INSERT_RC":
 				{
@@ -207,15 +213,22 @@ Class Controller extends Query
 				}
 				break;
 
-				case "_RUN_SQL":
+				case "_FIND_DB":
 				{
-					$this->manager->sqls_eval_list($this->script, $this->_DB);
+					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->cl_in);
 				}
 				break;
 
-   				default: {}
+				case "_FIND_TB":
+				{
+					$this->manager->searching($this->_DB, [$this->_TB], $this->cl_in);
+				}
+				break;
+
+   				default:{}
 				break;
 			}
+
 		}
 	}
 

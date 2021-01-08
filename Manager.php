@@ -1,21 +1,23 @@
 <?php
 
 /*
-Copyright (c) 2018-2020 Andrey Lyskov
+Copyright (c) 2018-2021 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
 defined("_EXEC") or die();
 
-Class Manager extends Wr_sql
+Class Manager
 {
 	use Convert;
+	use Wr_sql;
 
 	public function __construct()
 	{
 		$this->_LOG = [];
 		$this->connect = false;
 	}
+
 
 
 	public function mk($script_id, $_sql)
@@ -42,7 +44,7 @@ Class Manager extends Wr_sql
 		$RT["COUNT"] = "";
 		$RT["FROM"] = [];
 		$RT["ON_PAGE"] = $LIMIT["SCHEMA"];
-		$RT["FIELD_ST"] = ["schema_name", "charset_name", "collation_name"];
+		$RT["FIELD_ST"] = ["SCHEMA_NAME", "DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
 		$RT["FIELD_SE"] = ["DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
 		$RT["FILTER_EX"] = ["...","=","<>","LIKE"];
 
@@ -56,7 +58,6 @@ Class Manager extends Wr_sql
 				addslashes($nv["fl_value_db"])."'";
 		}
 		else{ $WHERE = ""; }
-
 
 
 		$result = $this->request("SELECT COUNT(*)
@@ -100,7 +101,7 @@ Class Manager extends Wr_sql
 		return $RT;
 	}
 
-	public function info()
+	public function info($host)
 	{
 		$RT = [];
 
@@ -113,29 +114,49 @@ Class Manager extends Wr_sql
 
 		$RT[] = "CLIENT_INFO: ".$this->dbc->client_info;
 		$RT[] = "SERVER_INFO: ".$this->dbc->server_info;
-		$RT[] = "CHARACTER_SET_SERVER: ".$this->dbc->character_set_name();
+		$RT[] = "CHARACTER_SET_NAME: ".$this->dbc->character_set_name();
 		$RT[] = "&nbsp;";
+
+		$RT[] = "HOST: ".$host;
 
 		$result = $this->request("SELECT CURRENT_USER();", __LINE__);
 		if($result[0]){
 
-			$RT[] = "USER: ".$result[1]->fetch_row()[0];
+			$user = $result[1]->fetch_row()[0];
+
+			$RT[] = "USER: ".$user;
+
+			$_user = explode("@", $user);
+
+			$result = $this->request("SHOW GRANTS FOR `".$_user[0]."`@`".$_user[1]."`;", __LINE__);
+
+			if($result[0]){
+
+				$RT[] = "".$result[1]->fetch_row()[0];
+			}
 		}
 
 		return $RT;
 	}
 
-	public function tb($_DB, $nv, $LIMIT)
+	public function tb($_DB, $nv, $cl_sl, $LIMIT)
 	{
 		$_DBS = $this->h2s($_DB);
 
 		$RT = [];
 		$RT["DB"] = $_DBS;
 		$RT["CREATE"] = [];
+
+		$RT["EVENTS"] = [];
 		$RT["TRIGGERS"] = [];
 		$RT["PROCEDURE"] = [];
 		$RT["FUNCTION"] = [];
-		$RT["EVENTS"] = [];
+
+		$RT["SUB"] = [];
+		$RT["SUB"]["ID"] = "";
+		$RT["SUB"]["NM"] = "";
+		$RT["SUB"]["SL"] = "";
+
 		$RT["TABLES"] = [];
 		$RT["COUNT"] = "";
 		$RT["FROM"] = [];
@@ -143,6 +164,7 @@ Class Manager extends Wr_sql
 		$RT["FIELD_ST"] = ["table_name", "create_time", "update_time", "engine", "table_collation"];
 		$RT["FIELD_SE"] = ["CREATE_TIME", "UPDATE_TIME", "ENGINE", "TABLE_COLLATION", "AUTO_INCREMENT"];
 		$RT["FILTER_EX"] = ["...","=","<>","LIKE"];
+
 
 		$VIEW = [];
 		$OPEN_TABLES = [];
@@ -155,6 +177,10 @@ Class Manager extends Wr_sql
 
 			$this->use_db($_DBS);
 
+
+			$RT["EVENTS"] = $this->get_sub($_DB, $_DBS,
+				"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "");
+
 			$RT["TRIGGERS"] = $this->get_sub($_DB, $_DBS,
 				"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER", "SQL Original Statement", "");
 
@@ -164,8 +190,44 @@ Class Manager extends Wr_sql
 			$RT["FUNCTION"] = $this->get_sub($_DB, $_DBS,
 				"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION", "Create Function", "ROUTINE_TYPE='FUNCTION' AND");
 
-			$RT["EVENTS"] = $this->get_sub($_DB, $_DBS,
-				"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "");
+			if(isset($cl_sl["events"]) && ($cl_sl["events"] !== "")){
+
+				$RT["SUB"]["NM"] = $cl_sl["events"];
+				if(isset($RT["EVENTS"][$this->h2s($cl_sl["events"])])){
+
+					$RT["SUB"]["SL"] = $RT["EVENTS"][$this->h2s($cl_sl["events"])];
+				}
+
+				$RT["SUB"]["ID"] = "events";
+			}
+			elseif(isset($cl_sl["triggers"]) && ($cl_sl["triggers"] !== "")){
+
+				$RT["SUB"]["NM"] = $cl_sl["triggers"];
+				if(isset($RT["TRIGGERS"][$this->h2s($cl_sl["triggers"])])){
+
+					$RT["SUB"]["SL"] = $RT["TRIGGERS"][$this->h2s($cl_sl["triggers"])];
+				}
+				$RT["SUB"]["ID"] = "triggers";
+			}
+			elseif(isset($cl_sl["procedure"]) && ($cl_sl["procedure"] !== "")){
+
+				$RT["SUB"]["NM"] = $cl_sl["procedure"];
+				if(isset($RT["PROCEDURE"][$this->h2s($cl_sl["procedure"])])){
+
+					$RT["SUB"]["SL"] = $RT["PROCEDURE"][$this->h2s($cl_sl["procedure"])];
+				}
+				$RT["SUB"]["ID"] = "procedure";
+			}
+			elseif(isset($cl_sl["function"]) && ($cl_sl["function"] !== "")){
+
+				$RT["SUB"]["NM"] = $cl_sl["function"];
+				if(isset($RT["FUNCTION"][$this->h2s($cl_sl["function"])])){
+
+					$RT["SUB"]["SL"] = $RT["FUNCTION"][$this->h2s($cl_sl["function"])];
+				}
+				$RT["SUB"]["ID"] = "function";
+			}
+
 
 			$result = $this->request("SELECT TABLE_NAME
 				FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."';", __LINE__);
@@ -249,14 +311,17 @@ Class Manager extends Wr_sql
 	public function rc($_DB, $_TB, $nv, $exceptions, $LIMIT)
 	{
 		$_DBS = $this->h2s($_DB);
-		$_TBS = $this->h2s($_TB);
+		$_TBS = $this->set_name($this->h2s($_TB));
 
 		$RT = [];
 		$RT["DB"] = $_DBS;
 		$RT["TB"] = $_TBS;
 		$RT["CREATE"] = [];
 		$RT["PRI"] = false;
-		$RT["EXCEPT"] = false;
+		
+		$RT["EXCEPT_GEO"] = false;
+		$RT["EXCEPT_BIN"] = false;
+		
 		$RT["VIEW"] = false;
 		$RT["FIELDS"] = [];
 		$RT["RECORDS"] = [];
@@ -265,6 +330,17 @@ Class Manager extends Wr_sql
 		$RT["COUNT"] = 0;
 		$RT["FIELD_ST"] = [];
 		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
+
+		$RT["ALTER_TABLE"] = [
+			"ADD"=>[
+				"ADD PRIMARY KEY (`...`);",
+				"ADD CONSTRAINT `...` \nFOREIGN KEY (`...`) \nREFERENCES `...` (`...`);",
+				"ADD UNIQUE (`...`);",
+				"ADD ... \nFIRST;",
+			],
+			"CHANGE"=>[],
+			"DROP"=>[]
+		];
 
 		$CONSTRAINT = [];
 		$LIST = [];
@@ -281,6 +357,10 @@ Class Manager extends Wr_sql
 		if($CREATE[0])
 		{
 			$RT["CREATE"]["TB"] = $CREATE[1]->fetch_row()[1];
+			
+			$create_tb = explode("\n", $RT["CREATE"]["TB"]);
+			
+			array_unshift($RT["ALTER_TABLE"]["CHANGE"], substr($create_tb[count($create_tb)-1], 2));
 
 			$result = $this->request("SELECT COUNT(*)
 				FROM information_schema.VIEWS where TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$_TB."';", __LINE__);
@@ -290,16 +370,32 @@ Class Manager extends Wr_sql
 				if($row[0] !== "0"){$RT["VIEW"] = true;}
 			}
 
+
 			$result = $this->request("SELECT kc.COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
 				FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kc
 				ON tc.TABLE_SCHEMA = kc.TABLE_SCHEMA AND tc.TABLE_NAME = kc.TABLE_NAME
 				AND tc.CONSTRAINT_NAME = kc.CONSTRAINT_NAME
 				WHERE tc.TABLE_SCHEMA = x'".$_DB."' AND tc.TABLE_NAME = x'".$_TB."';", __LINE__);
 
+
 			while( $row = $result[1]->fetch_row() ){
 
 				$CONSTRAINT[$row[0]][] = $row[2];
+
+				if(trim($row[2]) === "FOREIGN KEY"){
+
+					array_push($RT["ALTER_TABLE"]["DROP"], "DROP FOREIGN KEY `".$row[1]."`;");
+				}
+				elseif(trim($row[2]) === "UNIQUE"){
+
+					array_push($RT["ALTER_TABLE"]["DROP"], "DROP INDEX `".$row[1]."`;");
+				}
+				elseif((trim($row[2]) === "PRIMARY KEY") && (!in_array("DROP PRIMARY KEY;", $RT["ALTER_TABLE"]["DROP"]))){
+
+					array_push($RT["ALTER_TABLE"]["DROP"], "DROP PRIMARY KEY;");
+				}
 			}
+
 
 			$result = $this->request("select
 				COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, COLUMN_KEY, COLUMN_DEFAULT, EXTRA
@@ -310,7 +406,13 @@ Class Manager extends Wr_sql
 			{
 				while($row = $result[1]->fetch_assoc())
 				{
+					array_push($RT["ALTER_TABLE"]["ADD"], "ADD ... \nAFTER `".$row["COLUMN_NAME"]."`;");
+					array_push($RT["ALTER_TABLE"]["CHANGE"], "CHANGE COLUMN `".$row["COLUMN_NAME"]."` \n...\n;");
+					array_push($RT["ALTER_TABLE"]["DROP"], "DROP COLUMN `".$row["COLUMN_NAME"]."`;");
+
 					$RT["FIELDS"][$row["COLUMN_NAME"]] = $row;
+
+					$RT["FIELD_ST"][] = $row["COLUMN_NAME"];
 
 					if(isset($CONSTRAINT[$row["COLUMN_NAME"]])){
 
@@ -318,7 +420,7 @@ Class Manager extends Wr_sql
 					}
 					else{
 
-					$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = [];
+						$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = [];
 					}
 
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_TYPE"] =
@@ -371,15 +473,15 @@ Class Manager extends Wr_sql
 					}
 
 					if($row["COLUMN_KEY"] == "PRI"){$RT["PRI"] = true;}
-					if(in_array( $row["COLUMN_TYPE"], $exceptions)){$RT["EXCEPT"] = true;}
+					if(in_array( $row["DATA_TYPE"], $exceptions["geo"])){$RT["EXCEPT_GEO"] = true;}
+					if(in_array( $row["DATA_TYPE"], $exceptions["bin"])){$RT["EXCEPT_BIN"] = true;}					
 
-					$RT["FIELD_ST"][] =  $row["COLUMN_NAME"];
 
 					if($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "bit"){
 
 						$LIST[] = "BIN(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
 					}
-					elseif(in_array( $row["COLUMN_TYPE"], $exceptions)){
+					elseif(in_array( $row["COLUMN_TYPE"], $exceptions["geo"])){
 
 						if($this->server_version < 80000){
 
@@ -399,7 +501,8 @@ Class Manager extends Wr_sql
 				if(!$RT["VIEW"]){
 
 					if(!$RT["PRI"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_MISSING_PRI; }
-					if($RT["EXCEPT"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_SPATIAL_TYPE_PROCESSED; }
+					if($RT["EXCEPT_GEO"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_SPATIAL_TYPE_PROCESSED; }
+					if($RT["EXCEPT_BIN"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_BIN_TYPE_PROCESSED; }
 				}
 			}
 
@@ -415,6 +518,7 @@ Class Manager extends Wr_sql
 				}
 				else
 				{
+
 					$fl_value_rc = addslashes($nv["fl_value_rc"]);
 
 					$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
@@ -507,13 +611,13 @@ Class Manager extends Wr_sql
 
 				if($result[0])
 				{
-					while($row = $result[1]->fetch_assoc()){
-
+					while($row = $result[1]->fetch_assoc())
+					{
 						$str = "";
 
-						foreach($row as $k=>$v){
-
-							$str = $k.$v;
+						foreach($row as $k=>$v)
+						{
+							$str = $v;
 
 							if(stristr($str, $find)){
 
@@ -536,6 +640,8 @@ Class Manager extends Wr_sql
 	{
 		$_DBS = $this->h2s($_DB);
 		$copy_2bdS = $this->h2s($copy_2bd);
+		
+		$name_new = $this->set_name($name_new);
 
 		if( isset($list_tb) )
 		{
@@ -671,10 +777,12 @@ Class Manager extends Wr_sql
 
 									$row[$k] = "b'".base_convert($row[$k], 10, 2)."'";
 								}
-								elseif(in_array( $field[$k], $exceptions)){
+								elseif(
+									in_array( $field[$k], $exceptions["geo"]) || 
+									in_array( preg_replace("/\([0-9]{1,}\)$/", "", $field[$k]), $exceptions["bin"])
+								){
 
 									$row[$k] = "x'".$this->s2h($row[$k])."'";
-
 								}
 								else{
 
@@ -698,6 +806,22 @@ Class Manager extends Wr_sql
 		return $string;
 	}
 
+	private function export_get($filename, $string)
+	{
+		if(!isset($this->_LOG["MESSAGE"][0]))
+		{
+			ob_start();
+			header("Content-Type: text/html");
+			header("Content-Disposition: attachment; filename=".$filename);
+			header("Content-Transfer-Encoding: binary");
+			header("Expires: 0");
+			header("Cache-Control: no-cache, must-revalidate");
+			header("Pragma: no-cache");
+			header("Content-Length: ".strlen($string));
+			print $string;
+			ob_get_flush();
+		}
+	}
 
 	public function export_db($list_db, $exceptions)
 	{
@@ -708,20 +832,23 @@ Class Manager extends Wr_sql
 
 		foreach($list_db as $value){
 
-			$_DBS = $this->h2s($value);
+			if($value !== $this->s2h("information_schema")){
 
-			$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
-				FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$value."';", __LINE__);
+				$_DBS = $this->h2s($value);
 
-			if($result[0]){
+				$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
+					FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$value."';", __LINE__);
 
-				$schema = $result[1]->fetch_row();
+				if($result[0]){
 
-				$string .= PHP_EOL."CREATE DATABASE `".$_DBS."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";";
+					$schema = $result[1]->fetch_row();
 
-				$string .= PHP_EOL."USE `$_DBS`;";
+					$string .= PHP_EOL."CREATE DATABASE `".$_DBS."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";";
 
-				$string .= PHP_EOL.$this->export($value, $this->get_list_tb($value), $exceptions);
+					$string .= PHP_EOL."USE `$_DBS`;";
+
+					$string .= PHP_EOL.$this->export($value, $this->get_list_tb($value), $exceptions);
+				}
 			}
 		}
 
@@ -769,24 +896,6 @@ Class Manager extends Wr_sql
 		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=1;".PHP_EOL;
 
 		$this->export_get($filename, $string);
-	}
-
-
-	private function export_get($filename, $string)
-	{
-		if(!isset($this->_LOG["MESSAGE"][0]))
-		{
-			ob_start();
-			header("Content-Type: application/octet-stream");
-			header("Content-Disposition: attachment; filename=".$filename);
-			header("Content-Transfer-Encoding: binary");
-			header("Expires: 0");
-			header("Cache-Control: no-cache, must-revalidate");
-			header("Pragma: no-cache");
-			header("Content-Length: ".strlen($string));
-			print $string;
-			ob_get_flush();
-		}
 	}
 
 
@@ -847,37 +956,59 @@ Class Manager extends Wr_sql
 		}
 	}
 
-	public function list_db_filter($nv)
+
+	public function create_sub($_DB, $cl_df)
 	{
-		$A = ["information_schema","mysql","performance_schema"];
+		$_DBS = $this->h2s($_DB);
+		$cl_df = "CREATE ".$cl_df;
 
-		$RT = [];
+		$this->use_db($_DBS);
 
-		$FILTER_EX = ["...","=","<>",">","<","LIKE"];
+		$this->request($cl_df, __LINE__);
+	}
 
-		if(in_array($nv["fl_operator_db"], $FILTER_EX)){
+	public function update_sub($_DB, $cl_tr, $cl_in, $cl_df, $cl_dl)
+	{
+		$_DBS = $this->h2s($_DB);
 
-			$WHERE = ($nv["fl_operator_db"] === "LIKE") ?
-				"WHERE `".$this->h2s($nv["fl_field_db"])."` LIKE '%".addslashes($nv["fl_value_db"])."%'" :
-				"WHERE `".$this->h2s($nv["fl_field_db"])."`".$nv["fl_operator_db"]."'".
-				addslashes($nv["fl_value_db"])."'";
+		$cl_df = "CREATE ".$cl_df;
+		$cl_dl = "CREATE ".$this->h2s($cl_dl);
+
+		$this->use_db($_DBS);
+
+		$this->delete_sub($_DB, $cl_tr, $cl_in);
+
+		$result = $this->request($cl_df, __LINE__);
+
+		if(!$result[0]){
+
+			$this->request($cl_dl, __LINE__);
 		}
-		else{ $WHERE = ""; }
+	}
 
-		$result = $this->request("SELECT  SCHEMA_NAME FROM information_schema.SCHEMATA ".$WHERE.";", __LINE__);
+	public function delete_sub($_DB, $cl_tr, $cl_in)
+	{
+		$_DBS = $this->h2s($_DB);
+		$cl_inS = $this->h2s($cl_in);
 
-		if($result[0]){
+		$this->use_db($_DBS);
 
-			while( $row = $result[1]->fetch_assoc() )
-			{
-				if(($row["SCHEMA_NAME"] !== "") && (!in_array($row["SCHEMA_NAME"], $A))){
+		if($cl_tr === "events"){
 
-					$RT[] = $this->s2h($row["SCHEMA_NAME"]);
-				}
-			}
+			$this->request("DROP EVENT `".$cl_inS."`;", __LINE__);
 		}
+		elseif($cl_tr === "triggers"){
 
-		return $RT;
+			$this->request("DROP TRIGGER `".$cl_inS."`;", __LINE__);
+		}
+		elseif($cl_tr === "procedure"){
+
+			$this->request("DROP PROCEDURE `".$cl_inS."`;", __LINE__);
+		}
+		elseif($cl_tr === "function"){
+
+			$this->request("DROP FUNCTION `".$cl_inS."`;", __LINE__);
+		}
 	}
 
 
@@ -885,13 +1016,14 @@ Class Manager extends Wr_sql
 	{
 		$_DBS = $this->h2s($_DB);
 		$tb_name = $this->h2s($tb_name);
+		
+		$tb_name_new = $this->set_name($tb_name_new);
 
 		$this->use_db($_DBS);
 
-		$this->request("RENAME TABLE `".$tb_name."` TO `".$tb_name_new."`;", __LINE__);
+		$result = $this->request("RENAME TABLE `".$tb_name."` TO `".$tb_name_new."`;", __LINE__);
 
-		if(!isset($this->_LOG["MESSAGE"])){return true;}
-		return false;
+		return $result[0];
 	}
 
 
@@ -907,7 +1039,12 @@ Class Manager extends Wr_sql
 
 				if($val !== ""){
 
-					$this->request("DELETE FROM `$_DBS`.`$valS`;", __LINE__);
+					$result = $this->request("DELETE FROM `$_DBS`.`$valS`;", __LINE__, false);
+
+					if(!$result[0]){
+
+						$this->request("TRUNCATE `$_DBS`.`$valS`;", __LINE__);
+					}
 				}
 			}
 		}
@@ -944,82 +1081,14 @@ Class Manager extends Wr_sql
 	}
 
 
-	public function list_tb_filter($_DB, $nv)
-	{
-		$RT = [];
-
-		if($nv["fl_operator_tb"] !== ""){
-
-			$WHERE = ($nv["fl_operator_tb"] === "LIKE") ?
-				"AND `".$this->h2s($nv["fl_field_tb"])."` LIKE '%".addslashes($nv["fl_value_tb"])."%'" :
-				"AND `".$this->h2s($nv["fl_field_tb"])."`".$nv["fl_operator_tb"]."'".
-				addslashes($nv["fl_value_tb"])."'";
-		}
-		else{ $WHERE = ""; }
-
-		$result = $this->request("SELECT TABLE_NAME
-				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE.";", __LINE__);
-
-		if($result[0]){
-
-			while( $row = $result[1]->fetch_assoc() ){
-
-				$RT[] = $this->s2h($row["TABLE_NAME"]);
-			}
-		}
-
-		return $RT;
-	}
-
-
-	public function insert_cl($_DB, $_TB, $cl_def, $cl_in)
-	{
-		$_DBS = $this->h2s($_DB);
-		$_TBS = $this->h2s($_TB);
-		$cl_in = $this->h2s($cl_in);
-
-		$position = "";
-		if($cl_in == ""){ $position = "FIRST";}
-		else{ $position = "AFTER `$cl_in`"; }
-
-		$this->use_db($_DBS);
-
-		$this->request("ALTER TABLE `".$_TBS."` ADD ".$cl_def." ".$position.";", __LINE__);
-	}
-
-
-	public function update_cl($_DB, $_TB, $cl_change, $cl_def)
-	{
-		$_DBS = $this->h2s($_DB);
-		$_TBS = $this->h2s($_TB);
-		$cl_change = $this->h2s($cl_change);
-
-		$this->use_db($_DBS);
-
-		$this->request("ALTER TABLE `".$_TBS."` CHANGE COLUMN `".$cl_change."` ".$cl_def.";", __LINE__);
-	}
-
-
-	public function delete_cl($_DB, $_TB, $cl_del)
-	{
-		$_DBS = $this->h2s($_DB);
-		$_TBS = $this->h2s($_TB);
-		$cl_del = $this->h2s($cl_del);
-
-		$this->use_db($_DBS);
-
-		$this->request("ALTER TABLE `".$_TBS."` DROP COLUMN `".$cl_del."`;", __LINE__);
-	}
-
-
-	public function update_tb($_DB, $_TB, $tb_def)
+	public function update_tb($_DB, $_TB, $cl_df)
 	{
 		$_DBS = $this->h2s($_DB);
 		$_TBS = $this->h2s($_TB);
 
 		$this->use_db($_DBS);
 
-		$this->request("ALTER TABLE `".$_TBS."` ".$tb_def.";", __LINE__);
+		$this->request("ALTER TABLE `".$_TBS."` ".$cl_df.";", __LINE__);
 	}
 
 
@@ -1291,6 +1360,11 @@ Class Manager extends Wr_sql
 			}
 
 			$this->_LOG["RESULT"][] = $ST;
+		}
+
+		while($this->dbc->more_results()){
+			$this->dbc->next_result();
+			$this->dbc->use_result();
 		}
 	}
 

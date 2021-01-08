@@ -3,11 +3,8 @@
 defined('_EXEC') or die();
 
 
-Class Wr_sql
+trait Wr_sql
 {
-	public function __construct(){}	
-	
-
 	public function connectdb($SERVER)
 	{
 		if(!extension_loaded("mysqli")){
@@ -18,7 +15,7 @@ Class Wr_sql
 			return;
 		}
 
-		$this->dbc = new mysqli($SERVER["host"], $SERVER["user"], $SERVER["pass"], "");
+		$this->dbc = new mysqli($SERVER["host"], $SERVER["user"], $SERVER["pass"], "", $SERVER["port"]);
 
 		if(!mysqli_connect_errno()){
 
@@ -29,7 +26,8 @@ Class Wr_sql
 		else{
 
 			$this->connect = true;
-			$this->_LOG["MESSAGE"][] = _MESSAGE_CONNECTION_DB_ERROR.": ".$this->dbc->connect_errno;
+
+			$this->_LOG["MESSAGE"][] = _MESSAGE_CONNECTION.": ".$SERVER["host"]."@".$SERVER["user"];
 		}
 	}
 
@@ -38,18 +36,18 @@ Class Wr_sql
 		if($db !== ""){ $this->dbc->real_query("USE `".$db."`;"); }
 	}
 
-	protected function request($sql, $line, $error=true)
+	protected function request($sql, $line, $log = true)
 	{
-		$this->_LOG["SQL"][] = $sql;
-
 		$line = "";
+
+		if($log){$this->_LOG["SQL"][] = $sql;}
 
 		$this->dbc->real_query($sql);
 		$result = $this->dbc->store_result();
 
 		if($this->dbc->error){
 
-			if($error){$this->_LOG["MESSAGE"][] = $line.htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
+			if($log){$this->_LOG["MESSAGE"][] = $line.htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
 
 			return [false, false];
 		}
@@ -63,7 +61,7 @@ Class Wr_sql
 		$RT = [];
 
 		$result = $this->request("SELECT ".$target."_NAME
-				FROM information_schema.".$tb." where ".$add." ".$target."_SCHEMA=x'".$_DB."';", __LINE__, false);
+				FROM information_schema.".$tb." WHERE ".$add." ".$target."_SCHEMA=x'".$_DB."';", __LINE__, false);
 
 		if($result[0])
 		{
@@ -80,6 +78,21 @@ Class Wr_sql
 
 		return $RT;
 	}
-	
-	
+
+
+	public function priv($SERVER)
+	{
+		$PRIVILEGES = [];
+
+		$result = $this->request("SELECT ".
+			"Select_priv, Insert_priv, Update_priv, Delete_priv, Create_priv, Drop_priv, Grant_priv ".
+			"FROM `mysql`.`user` ".
+			"WHERE (`Host`='".$SERVER["host"]."' OR `Host`='%') ".
+			"AND `User`='".$SERVER["user"]."';", __LINE__, false);
+
+		if($result[0]){ $PRIVILEGES = $result[1]->fetch_assoc(); }
+
+		return $PRIVILEGES;
+	}
+
 }

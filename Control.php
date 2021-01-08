@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2020 Andrey Lyskov
+Copyright (c) 2018-2021 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -11,7 +11,6 @@ defined("_EXEC") or die();
 
 Class Control
 {
-	private $pass;
 	private $session_key;
 
 	public static $CHECK =
@@ -21,29 +20,32 @@ Class Control
 		key,
 		field,
 		name_new,
-		cl_del,
-		cl_def,
+		cl_sl,
+		cl_dl,
+		cl_df,
 		cl_in,
-		cl_change,
-		tb_def,
+		cl_tr,
 		script";
 
 	private $exceptions = [
 		["action","_EXPORT_DB"],
+		["action","_EXPORT_DB_FILTER"],
 		["action","_EXPORT_TB"],
+		["action","_EXPORT_TB_FILTER"]
 	];
 
 
-	public function __construct($pass)
+	public function __construct(){}
+
+	public function main($PASS)
 	{
-		if(!$this->AT($pass)){ die(); }
+		if(!$this->AT($PASS)){ die(); }
 	}
 
-
-	public function AT($pass)
+	public function AT($PASS)
 	{
-		if($pass === ""){return true;}
-		else{$pass = $this->hashE($pass);}
+		if($PASS === ""){return true;}
+		else{$PASS = $this->hashE($PASS);}
 
 		ini_set('session.use_cookies', 0);
 		session_id($_POST["session"]);
@@ -67,7 +69,7 @@ Class Control
 
 		if(!$update)
 		{
-			$_SESSION["request"] = $this->rs(strlen($pass));
+			$_SESSION["request"] = $this->rs(strlen($PASS));
 			print "<input type='hidden' id='request' class='' value='".$_SESSION["request"]."'/>";
 		}
 
@@ -78,7 +80,7 @@ Class Control
 		}
 		else
 		{
-			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $pass).$this->check_request()))
+			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $PASS).$this->check_request()))
 			{
 				$this->authorize_form(_AT_ERROR);
 				return false;
@@ -101,7 +103,10 @@ Class Control
 		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='message' >".$ms."</div>";
 		print "<form method='post'>";
-		print "<input type='password' id='en_pass' name='' class='int_pass' value='' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
+
+		print "<input type='password' id='en_pass' name='' class='int_pass' value='' 
+			onkeydown='ct.in_stp(event);' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
+
 		print "<br><input type='button' name='' class='btn' value='OK' onclick='ct.get_ps(); '/><br/>";
 		print "</form>";
 	}
@@ -174,7 +179,7 @@ Class Control
 
 					$str = "";
 					foreach($_POST[$value] as $v){ $str .=  $v."&";	}
-					$R[$value] = $str ;
+					$R[$value] = $str;
 				}
 			}
 		}
