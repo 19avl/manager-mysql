@@ -19,26 +19,25 @@ Class Control
 		tb,
 		key,
 		field,
-		name_new,
 		cl_sl,
 		cl_dl,
 		cl_df,
 		cl_in,
 		cl_tr,
 		script";
-
+				
 	private $exceptions = [
-		["action","_EXPORT_DB"],
-		["action","_EXPORT_DB_FILTER"],
-		["action","_EXPORT_TB"],
-		["action","_EXPORT_TB_FILTER"]
+		["action","_EXPORT_DB"], 
+		["action","_EXPORT_TB"], 
 	];
-
 
 	public function __construct(){}
 
 	public function main($PASS)
 	{
+		define("_PROFILE", "ROOT");
+		define("_USR", "");		
+		
 		if(!$this->AT($PASS)){ die(); }
 	}
 
@@ -103,7 +102,7 @@ Class Control
 		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='message' >".$ms."</div>";
 		print "<form method='post'>";
-
+		
 		print "<input type='password' id='en_pass' name='' class='int_pass' value='' 
 			onkeydown='ct.in_stp(event);' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
 

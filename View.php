@@ -7,6 +7,7 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
+
 Class View
 {
 	use Convert;
@@ -213,11 +214,13 @@ Class View
 				[
 				'_DELETE_DB'=>_ACTION_DELETE,
 				'_CLEAR_DB'=>_ACTION_CLEAR,
-				'_EXPORT_DB'=>_ACTION_EXPORT
+				'_EXPORT_DB'=>_ACTION_EXPORT,
 				],
 				false, "list_LD_sl", "", "st_select_value", _NOTE_SELECT,
 					"onchange=\"ms.AL(this.value, 'id_cn_db', 'id_cn_db_request', '', this, this.form, 'list_db[]',
-					'"._NOTE_DATABASE." / "._NOTE_SELECT." / ', ['_DELETE_DB','_CLEAR_DB'], ['_EXPORT_DB'], '"._MESSAGE_DB_CHECK."' ); \"",
+					'"._NOTE_DATABASE." / "._NOTE_SELECT." / ', ['_DELETE_DB','_CLEAR_DB'],
+					['_EXPORT_DB'],
+					'"._MESSAGE_DB_CHECK."' ); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $k;},
 				function($k, $v){return $v;});
@@ -280,6 +283,15 @@ Class View
 		$this->tg_close("div");
 	}
 
+
+	public function stat($stat, $SERVER)
+	{
+		$this->tg("div", "", "", "", "&nbsp;", "");
+		$this->tg("div", "", "", "", $stat, "");
+		$this->tg("div", "", "", "", "&nbsp;", "");
+	}
+
+
 	public function info($info)
 	{
 		foreach($info as $value){
@@ -287,13 +299,6 @@ Class View
 			$this->tg("div", "", "", "", $value, "");
 		}
 
-		$this->tg("div", "", "separator11", "", "", "");
-	}
-
-
-	public function stat($dbc)
-	{
-		$this->tg("div", "", "", "", $dbc->stat, "");
 		$this->tg("div", "", "separator11", "", "", "");
 	}
 
@@ -335,7 +340,7 @@ Class View
 		if(count($RT["EVENTS"]) !== 0)
 		{
 			$this->select(array_keys($RT["EVENTS"]),
-				"", "cl_sl[events]", "", "st_select_value", "events",
+				"", "cl_sl[events]", "", "slc", "events",
 				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->s2h($v);},
@@ -345,7 +350,7 @@ Class View
 		if(count($RT["TRIGGERS"]) !== 0)
 		{
 			$this->select(array_keys($RT["TRIGGERS"]),
-				"", "cl_sl[triggers]", "", "st_select_value", "triggers",
+				"", "cl_sl[triggers]", "", "slc", "triggers",
 				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->s2h($v);},
@@ -355,7 +360,7 @@ Class View
 		if(count($RT["PROCEDURE"]) !== 0)
 		{
 			$this->select(array_keys($RT["PROCEDURE"]),
-				"", "cl_sl[procedure]", "", "st_select_value", "procedure",
+				"", "cl_sl[procedure]", "", "slc", "procedure",
 				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->s2h($v);},
@@ -365,7 +370,7 @@ Class View
 		if(count($RT["FUNCTION"]) !== 0)
 		{
 			$this->select(array_keys($RT["FUNCTION"]),
-				"", "cl_sl[function]", "", "st_select_value", "function",
+				"", "cl_sl[function]", "", "slc", "function",
 				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
 				function($k, $v){return $this->s2h($v);;},
 				function($k, $v){return $this->s2h($v);},
@@ -378,27 +383,35 @@ Class View
 
 		if($RT["SUB"]["SL"] !== "")
 		{
-			$this->textarea("cl_df", "target_id", "rt_value_text", substr($RT["SUB"]["SL"], 7),
-				"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
+			$this->tg_open("div", "target_id_edit", "", "", "");
 
-			$this->btn("", "st_btn", _ACTION_DELETE,
-				"onclick=\"ms.AT('_DELETE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-				ms.get_sub('sub_name_id','')+' / "._ACTION_DELETE."',
-				['_DELETE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
+				$this->textarea("cl_df", "target_id", "rt_value_text", substr($RT["SUB"]["SL"], 7),
+					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
 
-			$this->btn("", "st_btn", _ACTION_UPDATE,
-				"onclick=\"ms.AT('_UPDATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-				ms.get_sub('sub_name_id','')+' / "._ACTION_UPDATE."',
-				['_UPDATE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
+				$this->tg("div", "", "separator3", "", "", "");
 
-			$this->btn("", "st_btn", _ACTION_CREATE,
-				"onclick=\"ms.AT('_CREATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-				ms.get_sub('sub_name_id','')+' / "._ACTION_CREATE."',
-				[], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");				
+				$this->btn("", "st_btn", _ACTION_DELETE,
+					"onclick=\"ms.AT('_DELETE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
+					ms.get_sub('sub_name_id','')+' / "._ACTION_DELETE."',
+					['_DELETE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
+
+				$this->btn("", "st_btn", _ACTION_UPDATE,
+					"onclick=\"ms.AT('_UPDATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
+					ms.get_sub('sub_name_id','')+' / "._ACTION_UPDATE."',
+					['_UPDATE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
+
+				$this->btn("", "st_btn", _ACTION_CREATE,
+					"onclick=\"ms.AT('_CREATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
+					ms.get_sub('sub_name_id','')+' / "._ACTION_CREATE."',
+					[], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
+
+			$this->tg_close("div");
+
+			$this->tg_close("div");
 		}
 
 		$this->form_close();
-		
+
 		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tg_close("div");
@@ -411,7 +424,14 @@ Class View
 
 		$this->tg_open("div", "", "pl_el", "", "");
 
-		$this->input("cl_in", "search_db", "st_value_B", "",
+		$this->select(
+			[_NOTE_SEARCH_M0, _NOTE_SEARCH_M1],
+			"", "cl_df", "", "st_select_value", "", "",
+			function($k, $v){return $v;},
+			function($k, $v){return $k;},
+			function($k, $v){return $v;});
+
+		$this->input("cl_in", "search_db", "st_value_D", "",
 			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 		$this->btn("", "st_btn", _ACTION_FIND,
@@ -482,7 +502,9 @@ Class View
 			],
 			false, "list_LT_sl", "", "st_select_value", _NOTE_SELECT,
 			"onchange=\"ms.AL(this.value, 'id_cn_tbr', 'id_cn_tbr_request', '', this, this.form, 'list_tb[]',
-			'"._NOTE_TABLE." / "._NOTE_SELECT." / ', ['_DELETE_TB','_CLEAR_TB'], ['_EXPORT_TB'], '"._MESSAGE_TB_CHECK."' ); \"",
+			'"._NOTE_TABLE." / "._NOTE_SELECT." / ', ['_DELETE_TB','_CLEAR_TB'],
+			['_EXPORT_TB'],
+			'"._MESSAGE_TB_CHECK."' ); \"",
 			function($k, $v){return $v;},
 			function($k, $v){return $k;},
 			function($k, $v){return $v;});
@@ -508,17 +530,6 @@ Class View
 
 		$this->tg_close("div");
 
-		$this->form_open();
-
-		$this->form_set($_DB, $_TB,
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
-
-		$this->input("display", "", "", "rc_sub", "", "hidden", "");
-
-		$this->dl_confirm("id_cn_st");
-
 		$this->tg_open("div", "", "pl_el", "", "");
 
 		if($display === "rc_sub"){
@@ -529,6 +540,17 @@ Class View
 
 			$this->tg_open("div", "tb_id", "", "display: none;", "");
 		}
+
+		$this->form_open();
+
+		$this->form_set($_DB, $_TB,
+			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+
+		$this->input("display", "", "", "rc_sub", "", "hidden", "");
+
+		$this->dl_confirm("id_cn_st");
 
 		$this->tg("div", "", "separator11", "", "", "");
 
@@ -551,36 +573,35 @@ Class View
 		if(!$RT["VIEW"])
 		{
 			$this->select($RT["ALTER_TABLE"]["ADD"], false, "", "", "slc", "add",
-				"onchange=\"ms.el_va('st_id','');ms.sub_tb('tb_def_id', this); \"",
+				"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $this->html($v);},
 				function($k, $v){return $this->html($v);});
 
 
 			$this->select($RT["ALTER_TABLE"]["CHANGE"], false, "", "", "slc", "change",
-				"onchange=\"ms.el_va('st_id','');ms.sub_tb('tb_def_id', this); \"",
+				"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $this->html($v);},
 				function($k, $v){return $this->html($v);});
 
 
 			$this->select($RT["ALTER_TABLE"]["DROP"], false, "", "", "slc", "drop",
-				"onchange=\"ms.el_va('st_id','');ms.sub_tb('tb_def_id', this); \"",
+				"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $this->html($v);},
-				function($k, $v){return $this->html($v);});	
-
+				function($k, $v){return $this->html($v);});
 
 			$this->tg_open("div", "st_id", "", "display: none;", "");
 
-				$this->textarea("cl_df", "tb_def_id", "rt_value_text", "",
-					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
+			$this->textarea("cl_df", "tb_def_id", "rt_value_text", "",
+				"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
 
-				$this->btn("", "st_btn", _ACTION_ALTER,
-					"onclick=\"ms.AT('_UPDATE_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
-					ms.get_sub('','')+'"._NOTE_TABLE." / "._ACTION_ALTER."',
-					['_UPDATE_TB'], [], 'tb_def_id', '"._MESSAGE_NOT_VALUE."'); \"");
-				
+			$this->btn("", "st_btn", _ACTION_ALTER,
+				"onclick=\"ms.AT('_UPDATE_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
+				ms.get_sub('','')+'"._NOTE_TABLE." / "._ACTION_ALTER."',
+				['_UPDATE_TB'], [], 'tb_def_id', '"._MESSAGE_NOT_VALUE."'); \"");
+
 			$this->tg_close("div");
 		}
 
@@ -609,15 +630,20 @@ Class View
 				'"._NOTE_TABLE." / "._ACTION_COPY."',
 				[], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
-		}		
+		}
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->tg_close("div");
-
-		$this->tg_close("div");
-
 		$this->form_close();
+
+		if(!$RT["VIEW"]){
+
+			$this->rc_data($_DB, $_TB, $RT, $nv, $exceptions, "insert");
+		}
+
+		$this->tg_close("div");
+
+		$this->tg_close("div");
 
 		$this->tg("div", "", "separator11", "", "", "");
 
@@ -630,7 +656,14 @@ Class View
 
 		$this->tg_open("div", "", "pl_el", "", "");
 
-		$this->input("cl_in", "search_tb", "st_value_B", "",
+		$this->select(
+			[_NOTE_SEARCH_M0, _NOTE_SEARCH_M1],
+			"", "cl_df", "", "st_select_value", "", "",
+			function($k, $v){return $v;},
+			function($k, $v){return $k;},
+			function($k, $v){return $v;});
+
+		$this->input("cl_in", "search_tb", "st_value_D", "",
 			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 		$this->btn("", "st_btn", _ACTION_FIND,
@@ -646,15 +679,27 @@ Class View
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->rc_data($_DB, $_TB, $RT, $nv, $exceptions);
+		if($RT["COUNT"] !== 0){
+
+				$this->rc_data($_DB, $_TB, $RT, $nv, $exceptions, "edit");
+		}
 	}
 
 
-	private function rc_data($_DB, $_TB, $RT, $nv, $exceptions)
+	private function rc_data($_DB, $_TB, $RT, $nv, $exceptions, $mod)
 	{
 		$count = "0";
 
-		foreach($RT["RECORDS"] as $value)
+		if($mod === "insert"){
+
+			$RECORDS = $RT["RECORD_NEW"];
+		}
+		else{
+
+			$RECORDS = $RT["RECORDS"];
+		}
+
+		foreach($RECORDS as $value)
 		{
 			$count += 1;
 
@@ -684,7 +729,7 @@ Class View
 
 				$uk = $this->s2h($k);
 
-				if($RT["FIELDS"][$k]["COLUMN_KEY"] == "PRI"){
+				if($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI"){
 
 					$this->input("key[".$uk."]", "", "", $this->s2h($v), "", "hidden", "");
 				}
@@ -694,6 +739,7 @@ Class View
 
 					$constraint .= $vc[0];
 				}
+
 				$this->input("", "", "rt_label_key", $constraint, "", "disabled", "");
 
 				$this->input("", "", "rt_label_name", $this->html("$k"), "", "disabled", "");
@@ -704,12 +750,11 @@ Class View
 					($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
 					($RT["FIELDS"][$k]["FOREIGN"]))
 				{
-
-					$this->tg_open("div", "com".$count.$count_fl.$uk, "", "display: none;", "");
+					$this->tg_open("div", "com".$count.$count_fl.$uk.$mod, "", "display: none;", "");
 
 					$this->tg_open("div", "", "type_value", "", "");
 
-					$this->tg_open("div", "com_sl".$count.$count_fl.$uk, "type_value_sl", "", "");
+					$this->tg_open("div", "com_sl".$count.$count_fl.$uk.$mod, "type_value_sl", "", "");
 
 					foreach($RT["FIELDS"][$k]["COLUMN_VALUE"] as $vst)
 					{
@@ -744,16 +789,16 @@ Class View
 					$this->tg_close("div");
 
 					$this->btn("", "btn", _MESSAGE_CONFIRM_YES,
-						"onclick=\"ms.get_stp('".$count.$uk."', 'com_sl".$count.$count_fl.$uk."', 'com".$count.$count_fl.$uk."');\"");
+						"onclick=\"ms.get_stp('".$count.$uk.$mod."', 'com_sl".$count.$count_fl.$uk.$mod."', 'com".$count.$count_fl.$uk.$mod."');\"");
 
 					$this->btn("", "btn", _MESSAGE_CONFIRM_NO,
-						"onclick=\"ms.el_va('com".$count.$count_fl.$uk."', 'none');\"");
+						"onclick=\"ms.el_va('com".$count.$count_fl.$uk.$mod."', 'none');\"");
 
 					$this->tg_close("div");
 					$this->tg_close("div");
 
 					$this->input("", "", "rt_select_type", $RT["FIELDS"][$k]["DATA_TYPE"]."...",
-						"onclick=\"ms.el_open_com('com".$count.$count_fl.$uk."');\"", "readonly", "");
+						"onclick=\"ms.el_open_com('com".$count.$count_fl.$uk.$mod."');\"", "readonly", "");
 				}
 				else{
 
@@ -765,30 +810,44 @@ Class View
 
 				if(in_array($RT["FIELDS"][$k]["COLUMN_TYPE"], $exceptions["geo"]))
 				{
-					$this->input("", "", "rt_value_input_disabled", $this->html($v), "", "disabled", "");
+					$flag = "";
+					$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
+
+					$this->input("field[".$uk."]", "", "rt_value_input", $this->html($v), "", $flag, "");
 				}
-				elseif($RT["FIELDS"][$k]["DATA_TYPE"] === "varbinary")				
+				elseif($RT["FIELDS"][$k]["DATA_TYPE"] === "varbinary")
 				{
-					$this->input("", "", "rt_value_input_disabled", $this->html($v), "", "disabled", "");					
+					$flag = "";
+					$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
+					if($mod === "edit"){$flag = "disabled";}
+
+					$this->input("field[".$uk."]", "", "rt_value_input_disabled", $this->s2h($v), "", $flag, "");
 				}
 				elseif(preg_match("/blob$/", $RT["FIELDS"][$k]["DATA_TYPE"]))
 				{
 					$this->btn("", "btn_text", "&#8597&nbsp;",
-						"onclick=\"ms.view_text('text".$count.$count_fl.$uk."');\"");
+						"onclick=\"ms.view_text('text".$count.$count_fl.$uk.$mod."');\"");
 
-					$this->textarea("field[".$uk."]", "text".$count.$count_fl.$uk, "rt_value_text", $this->html($v),
-						"onchange=\"ms.check_change(this);\"", "disabled");
+					$flag = "";
+					$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
+					if($mod === "edit"){$flag = "disabled";}
+
+					$this->textarea("field[".$uk."]", "text".$count.$count_fl.$uk.$mod, "rt_value_text", $this->s2h($v),
+						"onchange=\"ms.check_change(this);\"", $flag);
 				}
 				elseif(preg_match("/text$/", $RT["FIELDS"][$k]["DATA_TYPE"]))
 				{
 					$this->btn("", "btn_text", "&#8597&nbsp;",
-						"onclick=\"ms.view_text('text".$count.$count_fl.$uk."');\"");
+						"onclick=\"ms.view_text('text".$count.$count_fl.$uk.$mod."');\"");
 
-					$this->textarea("field[".$uk."]", "text".$count.$count_fl.$uk, "rt_value_text", $this->html($v),
-						"onchange=\"ms.check_change(this);\"", "");
+					$flag = "";
+					$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
+
+					$this->textarea("field[".$uk."]", "text".$count.$count_fl.$uk.$mod, "rt_value_text", $this->html($v),
+						"onchange=\"ms.check_change(this);\"", $flag);
 				}
-				else{
-
+				else
+				{
 					$flag = "";
 					$class = "rt_value_input";
 
@@ -797,20 +856,26 @@ Class View
 
 						$flag = "disabled";
 						$class = "rt_value_input_disabled";
+
 					}
 					elseif(($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") || ($RT["FIELDS"][$k]["DATA_TYPE"] === "set"))
 					{
 						$flag = "readonly";
+						$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
+					}
+					else
+					{
+						$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 					}
 
-					$this->input("field[".$uk."]", $count.$uk, $class, $this->html($v),
+					$this->input("field[".$uk."]", $count.$uk.$mod, $class, $this->html($v),
 						"onchange=\"ms.check_change(this);\"", $flag, "");
 				}
 
 				$this->tg_close("div");
 			}
 
-			$this->dl_confirm("id_cn_rc".$count.$uk);
+			$this->dl_confirm("id_cn_rc".$count.$uk.$mod);
 
 			$this->tg("div", "", "separator3", "", "", "");
 
@@ -820,26 +885,54 @@ Class View
 				{
 					if($RT["PRI"])
 					{
-						if($RT["COUNT"] !== 0)
+						if($mod === "edit")
 						{
 							$this->btn("", "btn", _ACTION_DELETE,
-								"onclick=\"ms.AT('_DELETE_RC', 'id_cn_rc".$count.$uk."', 'id_cn_rc".$count.$uk."_request', '', this, this.form,
+								"onclick=\"ms.AT('_DELETE_RC', 'id_cn_rc".$count.$uk.$mod."', 'id_cn_rc".$count.$uk.$mod."_request', '', this, this.form,
 								'"._NOTE_RECORD." / "._ACTION_DELETE."', ['_DELETE_RC'], []); \"");
 
 							$this->btn("", "btn", _ACTION_UPDATE, "onclick=\"ms.RF('_UPDATE_RC', '', '', this.form, 0);\"");
 						}
 					}
-if(!$RT["EXCEPT_GEO"])
-{
-					$this->btn("", "btn", _ACTION_INSERT, "onclick=\"ms.RF('_INSERT_RC', '', '',this.form, 0);\"");
-}
+
+					if($mod === "insert"){
+
+						$this->btn("", "btn", _ACTION_INSERT, "onclick=\"ms.RF('_INSERT_RC', '', '',this.form, 0);\"");
+					}
+
+					if($mod === "edit"){
+
+						$this->btn("", "btn", _ACTION_COPY, "onclick=\"ms.RF('_INSERT_RC', '', '',this.form, 0);\"");
+					}
 				}
 			}
-
 
 			$this->form_close();
 
 			$this->tg("div", "", "separator11", "", "", "");
+		}
+	}
+
+
+	private function privileges_rc($k, $PRIVILEGES, $mod)
+	{
+		if(!isset($PRIVILEGES["COLUMN_PRIVILEGES"])){}
+		else
+		{
+			if($mod === "edit")
+			{
+				if(!in_array("UPDATE-".$k, $PRIVILEGES["COLUMN_PRIVILEGES"])){
+
+					return "disabled";
+				}
+			}
+			elseif($mod === "insert")
+			{
+				if(!in_array("INSERT-".$k, $PRIVILEGES["COLUMN_PRIVILEGES"])){
+
+					return "disabled";
+				}
+			}
 		}
 	}
 
@@ -852,7 +945,7 @@ if(!$RT["EXCEPT_GEO"])
 
 		print "<input name='action' type='hidden' value=''>";
 
-		print "<input name='bd' type='hidden' value='".$_DB."'>";
+		print "<input name='db' type='hidden' value='".$_DB."'>";
 		print "<input name='tb' type='hidden' value='".$_TB."'>";
 
 		if($page_db != ""){print "<input name='page_db' type='hidden' value='".$page_db."'>";}
@@ -880,11 +973,6 @@ if(!$RT["EXCEPT_GEO"])
 
 		print "<input name='session' type='hidden' value=''>";
 		print "<input name='request' type='hidden' value=''>";
-
-
-
-
-
 	}
 
 
@@ -896,13 +984,15 @@ if(!$RT["EXCEPT_GEO"])
 
 				$this->tg("div", "", "nav_label", "", _NOTE_FIELD, "");
 
+
 				if($pre === "rc"){
 
-					$this->btn("", "slc", "...", "onclick=\"ms.el_open_com('com_field_rc');\"");
+					$this->btn("", "blc", "...", "onclick=\"ms.el_open_com('com_field_rc');\"");
 
 					$this->tg_open("div", "com_field_rc", "type_value", "display: none;", "");
-
 					$this->tg_open("div", "com_sl_field_rc", "type_value_sl", "", "");
+
+					$fl_fl = true;
 
 					foreach($RT["FIELD_ST"] as $vst)
 					{
@@ -917,6 +1007,8 @@ if(!$RT["EXCEPT_GEO"])
 							$checked = (in_array($this->s2h($vst), $nv["field_rc"])) ? "checked" : "";
 						}
 
+						if($checked === ""){$fl_fl = false;}
+
 						$this->checkbox("field_rc[]", "", "", $this->s2h($vst), "", $checked);
 
 						print $this->html("(".$RT["FIELDS"][$vst]["DATA_TYPE"].") ".$vst);
@@ -926,6 +1018,16 @@ if(!$RT["EXCEPT_GEO"])
 						$this->tg("div", "", "separator3", "", "", "");
 					}
 
+					$checked = $fl_fl ? "checked" : "";
+
+					$this->tg_open("div", "", "type_value_sl_k", "", "");
+
+						$this->checkbox("total", "", "", "",
+							"onclick=\"ms.check_sl(this.form,'field_rc[]',this.checked);\"", $checked);
+
+					$this->tg_close("div");
+					$this->tg("div", "", "separator3", "", "", "");
+
 					$this->tg_close("div");
 
 					$this->btn("", "btn", _MESSAGE_CONFIRM_YES, "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
@@ -933,6 +1035,7 @@ if(!$RT["EXCEPT_GEO"])
 					$this->btn("", "btn", _MESSAGE_CONFIRM_NO, "onclick=\"ms.el_va('com_field_rc', 'none');\"");
 
 					$this->tg_close("div");
+
 				}
 				else
 				{
@@ -1009,7 +1112,5 @@ if(!$RT["EXCEPT_GEO"])
 
 		$this->tg("div", "", "separator11", "", _NOTE_TOTAL." [ ".$RT["COUNT"]." ] ", "");
 	}
-
-
 
 }

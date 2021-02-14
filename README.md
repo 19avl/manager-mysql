@@ -5,8 +5,7 @@ Copyright (c) 2018-2021 Andrey Lyskov
 
 #### Description
 
-Web-based administration tool for MYSQL.  
-
+Web-based administration tool for MYSQL. 
 
 #### Features
 
@@ -14,15 +13,15 @@ Web-based administration tool for MYSQL.
 - Browse routines, triggers and events
 - Searching globally in a database or a subset of it
 - Copy, drop, rename, alter tables and fields
-- Create, copy, drop, update records that do not contain Spatial Data Types 
+- Create, copy, drop, update records
 - Execute any SQL command from a text field  
 - Export structure, data, views, triggers, routines, events to SQL 
+
 
 #### Requirements 
 
 PHP (>=5.6) [ mysqli extension ]  
 MySQL (>=5.5)
-
 
 #### Usage
 

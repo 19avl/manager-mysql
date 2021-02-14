@@ -6,7 +6,7 @@ trait Wr_html
 {
 	protected function form_open($class="")
 	{
-		print "<form name='' method='post' action='' class='".$class."' enctype='multipart/form-data' onSubmit='return false;'>";
+		print "<form name='' method='post' action='' class='".$class."' enctype='' onSubmit='return false;'>";
 	}		
 
 

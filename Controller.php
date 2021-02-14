@@ -37,11 +37,11 @@ Class Controller extends Query
 		if($this->manager->connect){
 
 			$this->view->message($this->manager->_LOG);
+
 			return;
 		}
 
 		$this->action();
-
 
 		if(file_exists(__DIR__."/sql.php")){
 
@@ -55,7 +55,7 @@ Class Controller extends Query
 
 		if(($this->_DB !== "") && ($this->_TB !== ""))
 		{
-			$this->DATA = $this->manager->rc( $this->_DB, $this->_TB, $this->nv, $this->exceptions, $LIMIT );
+			$this->DATA = $this->manager->rc( $this->_DB, $this->_TB, $this->nv, $this->exceptions, $LIMIT, "" );
 		}
 		elseif(($this->_DB !== "") && ($this->_TB === ""))
 		{
@@ -70,12 +70,12 @@ Class Controller extends Query
 
 		$this->view->mk($this->_DB, $this->_TB, $this->LIST_SQL, $this->nv, $this->display);
 
+		$this->view->stat($this->manager->status(), $SERVER);
+
 		if($this->_DB === ""){
 
 			$this->view->info($this->manager->info($SERVER["host"]));
 		}
-
-		$this->view->stat($this->manager->dbc);
 
 		$this->view->message($this->manager->_LOG);
 
@@ -129,7 +129,7 @@ Class Controller extends Query
 						$this->list_db[] = $this->_DB;
 					}
 
-					$this->manager->export_db($this->list_db, $this->exceptions);
+					$this->manager->export_sql($this->list_db, [], $this->nv, $this->exceptions, "DB");
 				}
 				break;
 
@@ -183,7 +183,7 @@ Class Controller extends Query
 
 				case "_EXPORT_TB":
 				{
-					$this->manager->export_tb($this->_DB, $this->list_tb, $this->exceptions);
+					$this->manager->export_sql([$this->_DB], $this->list_tb, $this->nv, $this->exceptions, "TB");
 				}
 				break;
 
@@ -196,13 +196,14 @@ Class Controller extends Query
 
 				case "_INSERT_RC":
 				{
-					$this->manager->insert_rc($this->_DB, $this->_TB, $this->field);
+					$this->manager->insert_rc($this->_DB, $this->_TB, $this->field, $this->exceptions);
 				}
 				break;
 
 				case "_UPDATE_RC":
 				{
-					$this->manager->update_rc($this->_DB, $this->_TB, $this->key, $this->field);
+					$this->manager->update_rc(
+						$this->_DB, $this->_TB, $this->key, $this->field, $this->exceptions);
 				}
 				break;
 
@@ -215,13 +216,13 @@ Class Controller extends Query
 
 				case "_FIND_DB":
 				{
-					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->cl_in);
+					$this->manager->searching($this->_DB, $this->manager->get_list_tb($this->_DB), $this->cl_in, $this->cl_df);
 				}
 				break;
 
 				case "_FIND_TB":
 				{
-					$this->manager->searching($this->_DB, [$this->_TB], $this->cl_in);
+					$this->manager->searching($this->_DB, [$this->_TB], $this->cl_in, $this->cl_df);
 				}
 				break;
 

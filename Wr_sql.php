@@ -55,6 +55,80 @@ trait Wr_sql
 		return [true, $result];
 	}
 
+	protected function fetch_assoc($result)
+	{
+		return $result->fetch_assoc();
+	}
+
+	protected function fetch_row($result)
+	{
+		return $result->fetch_row();
+	}
+
+
+	private function sqls_eval($script)
+	{
+		$this->dbc->real_query($script);
+		$result = $this->dbc->store_result();
+
+		if($result)
+		{
+			$ST = "<br><b>"._MESSAGE_EXECUTED."</b><br><br>".
+				preg_replace("/".PHP_EOL."/", "", htmlentities($script))."<br>";
+
+			while($row = $result->fetch_assoc())
+			{
+				$ST .= "<br>";
+				foreach($row as $k=>$v){
+
+					$ST .= htmlentities($k).": ".htmlentities($v, ENT_SUBSTITUTE)."<br>";
+				}
+			}
+
+			$this->_LOG["RESULT"][] = $ST;
+		}
+
+		if($this->dbc->error){
+
+			$script = $this->html($script, "\n", "<br>");
+
+			$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error)."<br>".$script;
+		}
+
+		while($this->dbc->more_results()){
+
+			$this->dbc->next_result();
+			$this->dbc->use_result();
+		}
+	}
+
+
+	public function close($result)
+	{
+		$result->close();
+	}
+
+	protected function client_info()
+	{
+		return $this->dbc->client_info;
+	}
+
+	protected function server_info()
+	{
+		return $this->dbc->server_info;
+	}
+
+	protected function character_name()
+	{
+		return $this->dbc->character_set_name();
+	}
+
+	protected function stat()
+	{
+		return $this->dbc->stat();
+	}
+
+
 
 	protected function get_sub($_DB, $_DBS, $tb, $target, $create, $searching, $add)
 	{
@@ -77,22 +151,6 @@ trait Wr_sql
 		}
 
 		return $RT;
-	}
-
-
-	public function priv($SERVER)
-	{
-		$PRIVILEGES = [];
-
-		$result = $this->request("SELECT ".
-			"Select_priv, Insert_priv, Update_priv, Delete_priv, Create_priv, Drop_priv, Grant_priv ".
-			"FROM `mysql`.`user` ".
-			"WHERE (`Host`='".$SERVER["host"]."' OR `Host`='%') ".
-			"AND `User`='".$SERVER["user"]."';", __LINE__, false);
-
-		if($result[0]){ $PRIVILEGES = $result[1]->fetch_assoc(); }
-
-		return $PRIVILEGES;
 	}
 
 }

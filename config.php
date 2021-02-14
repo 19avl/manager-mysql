@@ -22,6 +22,7 @@ $PASS = "";
 
 $SERVER = ["host"=>"localhost", "port"=>"3306", "user"=>"root", "pass"=>""];
 
+
 /* - Record on page */
 
 $LIMIT = [
@@ -29,9 +30,11 @@ $LIMIT = [
 "TABLES"=>["25", "50", "100"],
 "RECORDS"=>["10", "25", "50"]
 ];
-	
+
 
 /* - LOCALE */
 
-define("_LOCALE", __DIR__."/locale.php");	
+define("_LOCALE", __DIR__."/locale.php");
+
+
 

@@ -2,7 +2,7 @@
 
 defined("_EXEC") or die();
 
-define("_APP", "Manager of database MYSQL");
+define("_APP", "Manager for MYSQL");
 
 define("_AT_ERROR", "Request failed");
 define("_AT_PASSWORD", "Password");
@@ -14,8 +14,7 @@ define("_MESSAGE_ERROR", "ERROR");
 define("_MESSAGE_CONNECTION", "Connection error");
 define("_MESSAGE_MISSING_PRI", "Missing primary key");
 
-define("_MESSAGE_SPATIAL_TYPE_PROCESSED", "Spatial Data Types are not edited");
-define("_MESSAGE_BIN_TYPE_PROCESSED", "Binary are not edited");	
+define("_MESSAGE_BIN_TYPE_PROCESSED", "Binary are not edited");
 
 define("_MESSAGE_EXECUTED", "Executed");
 define("_MESSAGE_DB_CHECK", "Not database is chose");
@@ -46,6 +45,9 @@ define("_NOTE_SELECT", "with chosen");
 define("_NOTE_SELECT_DB", "with database");
 define("_NOTE_SELECT_TB", "with table");
 
+define("_NOTE_SEARCH_M0", "as substring");
+define("_NOTE_SEARCH_M1", "as whole field ");
+
 define("_ACTION_CREATE", "create");
 define("_ACTION_FIND", "find");
 define("_ACTION_RUN", "run");
@@ -53,11 +55,15 @@ define("_ACTION_RELOAD", "reload");
 define("_ACTION_DELETE", "delete");
 define("_ACTION_CLEAR", "clear");
 define("_ACTION_COPY", "copy");
-define("_ACTION_EXPORT", "export");
 define("_ACTION_BACK", "back");
 define("_ACTION_RENAME", "rename");
 define("_ACTION_UPDATE", "update");
 define("_ACTION_INSERT", "insert");
 define("_ACTION_ALTER", "alter");
+
+define("_ACTION_EXPORT", "export");
+
+define("_ACTION_EXIT", "exit");
+
 
 
