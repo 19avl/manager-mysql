@@ -13,9 +13,7 @@ define("_MESSAGE_PL", "Module PHP mysqli is not installed");
 define("_MESSAGE_ERROR", "ERROR");
 define("_MESSAGE_CONNECTION", "Connection error");
 define("_MESSAGE_MISSING_PRI", "Missing primary key");
-
 define("_MESSAGE_BIN_TYPE_PROCESSED", "Binary are not edited");
-
 define("_MESSAGE_EXECUTED", "Executed");
 define("_MESSAGE_DB_CHECK", "Not database is chose");
 define("_MESSAGE_TB_CHECK", "Not table is chose");
@@ -25,8 +23,6 @@ define("_MESSAGE_CONFIRM_NO", "cancel");
 define("_MESSAGE_NOT_VALUE", "Value not defined");
 define("_MESSAGE_FIND_NOT_FOUND", "Value not found:");
 define("_MESSAGE_SEARCHING", "SEARCHING");
-
-define("_NOTE_PLUGINS", "plugins");
 
 define("_NOTE_SERVER", "server");
 define("_NOTE_DATABASE", "database");
@@ -44,7 +40,6 @@ define("_NOTE_ALL", "ALL");
 define("_NOTE_SELECT", "with chosen");
 define("_NOTE_SELECT_DB", "with database");
 define("_NOTE_SELECT_TB", "with table");
-
 define("_NOTE_SEARCH_M0", "as substring");
 define("_NOTE_SEARCH_M1", "as whole field ");
 
@@ -60,10 +55,8 @@ define("_ACTION_RENAME", "rename");
 define("_ACTION_UPDATE", "update");
 define("_ACTION_INSERT", "insert");
 define("_ACTION_ALTER", "alter");
-
 define("_ACTION_EXPORT", "export");
 
-define("_ACTION_EXIT", "exit");
 
 
 

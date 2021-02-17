@@ -7,7 +7,6 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
-
 Class Manager
 {
 	use Convert;
@@ -962,6 +961,7 @@ Class Manager
 		$filename = "dump_".date("d-m-Y").".sql";
 
 		$string = PHP_EOL."SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
+		$string .= PHP_EOL."SET AUTOCOMMIT=0;";
 		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=0;".PHP_EOL;
 
 		foreach($list_db as $value)

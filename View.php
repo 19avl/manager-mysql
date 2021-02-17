@@ -7,7 +7,6 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
-
 Class View
 {
 	use Convert;
@@ -942,37 +941,35 @@ Class View
 		$page_tb, $from_tb, $order_tb, $field_tb,
 		$page_rc, $from_rc, $order_rc, $field_rc)
 	{
+		$this->input("action", "", "", "", "", "hidden", "");		
 
-		print "<input name='action' type='hidden' value=''>";
+		$this->input("db", "", "", $_DB, "", "hidden", "");	
+		$this->input("tb", "", "", $_TB, "", "hidden", "");	
 
-		print "<input name='db' type='hidden' value='".$_DB."'>";
-		print "<input name='tb' type='hidden' value='".$_TB."'>";
+		if($page_db != ""){$this->input("page_db", "", "", $page_db, "", "hidden", "");}
+		if($from_db != ""){$this->input("from_db", "", "", $from_db, "", "hidden", "");}
+		if($order_db != ""){$this->input("order_db", "", "", $order_db, "", "hidden", "");;}
+		if($field_db != ""){$this->input("field_db", "", "", $field_db, "", "hidden", "");}
 
-		if($page_db != ""){print "<input name='page_db' type='hidden' value='".$page_db."'>";}
-		if($from_db != ""){print "<input name='from_db' type='hidden' value='".$from_db."'>";}
-		if($order_db != ""){print "<input name='order_db' type='hidden' value='".$order_db."'>";}
-		if($field_db != ""){print "<input name='field_db' type='hidden' value='".$field_db."'>";}
+		if($page_tb != ""){$this->input("page_tb", "", "", $page_tb, "", "hidden", "");}
+		if($from_tb != ""){$this->input("from_tb", "", "", $from_tb, "", "hidden", "");}
+		if($order_tb != ""){$this->input("order_tb", "", "", $order_tb, "", "hidden", "");}
+		if($field_tb != ""){$this->input("field_tb", "", "", $field_tb, "", "hidden", "");}
 
-		if($page_tb != ""){print "<input name='page_tb' type='hidden' value='".$page_tb."'>";}
-		if($from_tb != ""){print "<input name='from_tb' type='hidden' value='".$from_tb."'>";}
-		if($order_tb != ""){print "<input name='order_tb' type='hidden' value='".$order_tb."'>";}
-		if($field_tb != ""){print "<input name='field_tb' type='hidden' value='".$field_tb."'>";}
-
-		if($page_rc != ""){print "<input name='page_rc' type='hidden' value='".$page_rc."'>";}
-		if($from_rc != ""){print "<input name='from_rc' type='hidden' value='".$from_rc."'>";}
-		if($order_rc != ""){print "<input name='order_rc' type='hidden' value='".$order_rc."'>";}
+		if($page_rc != ""){$this->input("page_rc", "", "", $page_rc, "", "hidden", "");}
+		if($from_rc != ""){$this->input("from_rc", "", "", $from_rc, "", "hidden", "");}
+		if($order_rc != ""){$this->input("order_rc", "", "", $order_rc, "", "hidden", "");}
 
 		if(count($field_rc) !== 0){
 
 			foreach($field_rc as $value){
 
-				print "<input name='field_rc[]' type='hidden' value='".$this->html($value)."'>";
+				$this->input("field_rc[]", "", "", $this->html($value), "", "hidden", "");
 			}
 		}
 
-
-		print "<input name='session' type='hidden' value=''>";
-		print "<input name='request' type='hidden' value=''>";
+		$this->input("session", "", "", "", "", "hidden", "");	
+		$this->input("request", "", "", "", "", "hidden", "");			
 	}
 
 

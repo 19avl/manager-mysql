@@ -128,8 +128,6 @@ trait Wr_sql
 		return $this->dbc->stat();
 	}
 
-
-
 	protected function get_sub($_DB, $_DBS, $tb, $target, $create, $searching, $add)
 	{
 		$RT = [];
@@ -152,5 +150,4 @@ trait Wr_sql
 
 		return $RT;
 	}
-
 }
