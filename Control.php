@@ -13,31 +13,17 @@ Class Control
 {
 	private $session_key;
 
-	public static $CHECK =
-		"action,
-		bd,
-		tb,
-		key,
-		field,
-		cl_sl,
-		cl_dl,
-		cl_df,
-		cl_in,
-		cl_tr,
-		script";
-				
+	public static $CHECK ="action,db,tb,key,field,cl_sl,cl_dl,cl_df,cl_in,cl_tr,script";
+			
 	private $exceptions = [
-		["action","_EXPORT_DB"], 
-		["action","_EXPORT_TB"], 
+		["action","_EXPORT_SQL_DB"],
+		["action","_EXPORT_SQL_TB"],
 	];
 
 	public function __construct(){}
 
 	public function main($PASS)
 	{
-		define("_PROFILE", "ROOT");
-		define("_USR", "");		
-		
 		if(!$this->AT($PASS)){ die(); }
 	}
 
@@ -104,7 +90,7 @@ Class Control
 		print "<form method='post'>";
 		
 		print "<input type='password' id='en_pass' name='' class='int_pass' value='' 
-			onkeydown='ct.in_stp(event);' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
+			onkeydown='ct.in_stp();' autocomplete='off' placeholder='"._AT_PASSWORD."'/>";
 
 		print "<br><input type='button' name='' class='btn' value='OK' onclick='ct.get_ps(); '/><br/>";
 		print "</form>";

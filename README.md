@@ -5,15 +5,17 @@ Copyright (c) 2018-2021 Andrey Lyskov
 
 #### Description
 
-Web-based administration tool for MYSQL. 
+Web-based administration tool for MYSQL.  
+
 
 #### Features
 
 - Browse databases, tables, views, fields and indexes with aggregate, sort and limit results
-- Browse routines, triggers and events
 - Searching globally in a database or a subset of it
+- Copy, drop databases
 - Copy, drop, rename, alter tables and fields
-- Create, copy, drop, update records
+- Create, copy, drop, update records 
+- Manage routines, triggers and events
 - Execute any SQL command from a text field  
 - Export structure, data, views, triggers, routines, events to SQL 
 

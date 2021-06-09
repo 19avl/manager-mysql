@@ -7,13 +7,13 @@ trait Convert
 {
 	protected function s2h($input)
 	{
-		return unpack('H*', "$input")[1];
+		return unpack('H*', "$input")[1];		
 	}
 
 
 	protected function h2s($input)
 	{
-		return pack('H*', $input);
+		return pack('H*', $input);	
 	}
 
 
@@ -32,13 +32,13 @@ trait Convert
 
 	protected function set_value($value)
 	{
-		if(get_magic_quotes_gpc() === 1){
-
-			return stripslashes(trim($value));
+		if(function_exists("get_magic_quotes_gpc") && (get_magic_quotes_gpc() === 1))		
+		{
+			return stripslashes($value);
 		}
-		else{
-
-			return trim($value);
+		else
+		{
+			return $value;
 		}
 	}
 
@@ -49,7 +49,7 @@ trait Convert
 
 		foreach($list as $key=>$value){
 
-				$RT[$key] = $this->set_value($value);
+			$RT[$key] = $this->set_value($value);
 		}
 
 		return $RT;
@@ -64,6 +64,5 @@ trait Convert
 		
 		return $name;		
 	}
-
 
 }

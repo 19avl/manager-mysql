@@ -4,31 +4,23 @@ defined("_EXEC") or die();
 
 trait Wr_html
 {
-	protected function form_open($class="")
-	{
-		print "<form name='' method='post' action='' class='".$class."' enctype='' onSubmit='return false;'>";
-	}		
-
-
-	protected function form_close()
-	{
-		print "</form>";
-	}
-
-
 	protected function tg($name, $id, $class, $style, $value, $event)
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";
-		
-		print "<".$name." ".$id." class='".$class."' style='".$style."' ".$event.">".$value."</".$name.">";
+		$style = ($style !== "") ? "style='".$style."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
+
+		print "<".$name." ".$id." ".$class." ".$style." ".$event.">".$value."</".$name.">";
 	}
 
 
 	protected function tg_open($name, $id, $class, $style, $event)
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";
-		
-		print "<".$name." ".$id." class='".$class."' style='".$style."' ".$event.">";
+		$style = ($style !== "") ? "style='".$style."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
+
+		print "<".$name." ".$id." ".$class." ".$style." ".$event.">";
 	}
 
 
@@ -38,11 +30,34 @@ trait Wr_html
 	}
 
 
-	protected function btn($name, $class, $value, $event)
+	protected function form_open($class="")
 	{
-		print "<input type='button' name='".$name."' class='".$class."' value='".$value."' ".$event.">";
+		print "<form name='' method='post' action='' class='".$class."' enctype='' onSubmit='return false;'>";
 	}
 
+
+	protected function form_close()
+	{
+		print "</form>";
+	}
+
+
+	protected function btn($name, $id, $class, $value, $event)
+	{
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
+
+		print "<input type='button' ".$id." name='".$name."' ".$class." value='".$value."' ".$event.">";
+	}
+
+
+	protected function file($name, $id, $class, $value, $event, $flag)
+	{
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
+
+		print "<input type='file' ".$id." name='".$name."' ".$class." value='".$value."' ".$event." ".$flag.">";
+	}
 
 	protected function input($name, $id, $class, $value, $event, $flag, $placeholder)
 	{
@@ -54,37 +69,46 @@ trait Wr_html
 		}
 
 		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
 
-		print "<input ".$id." name='".$name."' type='".$type."' class='".$class."' value='".$value."' ".
+		print "<input ".$id." name='".$name."' type='".$type."' ".$class." value='".$value."' ".
 			$event." ".$flag." placeholder='".$placeholder."'>";
 	}
 
 
 	protected function checkbox($name, $id, $class, $value, $event, $checked)
 	{
-		print "<input type='checkbox' name='".$name."' class='".$class."' value='".$value."' ".$event." ".$checked.">";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";
+		
+		print "<input ".$id." type='checkbox' name='".$name."' ".$class." value='".$value."' ".$event." ".$checked.">";
 	}
 
 
 	protected function radio($name, $id, $class, $value, $event, $checked)
 	{
-		print "<input type='radio' name='".$name."' value='".$value."' ".$event." ".$checked.">";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";		
+		
+		print "<input ".$id." type='radio' name='".$name."' ".$class." value='".$value."' ".$event." ".$checked.">";
 	}
 
 
 	protected function textarea($name, $id, $class, $value, $event, $flag)
 	{
-		$id = ($id !== "") ? "id='".$id."'" : "";		
-		
-		print "<textarea ".$id." name='".$name."' class='".$class."' ".$event." ".$flag.">".$value."</textarea>";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";	
+
+		print "<textarea ".$id." name='".$name."' ".$class." ".$event." ".$flag.">".$value."</textarea>";
 	}
 
 
 	protected function select($foreach, $selected, $name, $id, $class, $title, $event, $ch, $fk, $fv)
 	{
-		$id = ($id !== "") ? "id='".$id."'" : "";		
-		
-		print "<select ".$id." name='".$name."' class='".$class."' size='1' ".$event.">";
+		$id = ($id !== "") ? "id='".$id."'" : "";
+		$class = ($class !== "") ? "class='".$class."'" : "";	
+
+		print "<select ".$id." name='".$name."' ".$class." size='1' ".$event.">";
 
 		if($title !== ""){print "<OPTION SELECTED value='' disabled> ".$title." </OPTION>";}
 

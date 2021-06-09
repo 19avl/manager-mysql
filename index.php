@@ -2,12 +2,13 @@
 
 define("_EXEC", true);
 
+
+require __DIR__."/locale.php";
 require __DIR__."/config.php";
 require __DIR__."/Wr_sql.php";
 require __DIR__."/Wr_html.php";
 require __DIR__."/Control.php";
 
-require _LOCALE;
 
 
 
