@@ -25,10 +25,14 @@ trait Wr_sql
 			$this->dbc->ssl_set( $SERVER["ssl-key"], $SERVER["ssl-cert"], $SERVER["ssl-ca"], NULL, NULL);
 		}
 
-		$SOCKET = NULL;
-		if(isset($SERVER["socket"]) && ($SERVER["socket"] !== "")){
+		if(!isset($SERVER["port"]) || ($SERVER["port"] === "")){
 
-			$SOCKET = $SERVER["socket"];
+			$SERVER["port"] = 3306;
+		}
+
+		if(!isset($SERVER["socket"]) || ($SERVER["socket"] === "")){
+
+			$SERVER["socket"] = NULL;
 		}
 
 		$CLIENT_SSL = NULL;
@@ -38,13 +42,25 @@ trait Wr_sql
 		}
 
 		$this->dbc->real_connect(
-			$SERVER["host"], $SERVER["user"], $SERVER["pass"], "", $SERVER["port"], $SOCKET, $CLIENT_SSL);
+			$SERVER["host"], $SERVER["user"], $SERVER["pass"], "", $SERVER["port"], $SERVER["socket"], $CLIENT_SSL);
 
 		if(!mysqli_connect_errno()){
 
-			$this->dbc->set_charset("utf8");
-			$this->dbc->query( "SET sql_mode = 'STRICT_ALL_TABLES';" );
-			$this->server_version = $this->server_info();
+			if(isset($SERVER["charset"]) && ($SERVER["charset"] !== "")){
+
+				$this->dbc->set_charset($SERVER["charset"]);
+			}
+
+			$this->character_name = $this->character_name();
+
+			$sql_mode = $this->request("SELECT @@session.sql_mode", __LINE__);
+			if($sql_mode[0]){
+
+				$this->sql_mode = $this->fetch_row($sql_mode[1])[0];
+			}
+
+			$this->client_info = $this->client_info();
+			$this->server_info = $this->server_info();
 		}
 		else{
 
@@ -95,8 +111,7 @@ trait Wr_sql
 
 		if($result)
 		{
-			$ST = "<br><b>"._MESSAGE_EXECUTED."</b><br><br>".
-				preg_replace("/".PHP_EOL."/", "", htmlentities($script))."<br>";
+			$ST = "<br><br><b>".preg_replace("/".PHP_EOL."/", "", htmlentities($script))."</b><br>";
 
 			while($row = $result->fetch_assoc())
 			{
@@ -112,9 +127,9 @@ trait Wr_sql
 
 		if($this->dbc->error){
 
-			$script = $this->html($script, "\n", "<br>");
+			$script = $this->html(trim($script), "\n", "<br>");
 
-			$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error)."<br>".$script;
+			$this->_LOG["MESSAGE"][] = "<br><br><b>".htmlentities($this->dbc->error)."</b><br><br>".$script;
 		}
 
 		while($this->dbc->more_results()){

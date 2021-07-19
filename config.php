@@ -20,7 +20,11 @@ $PASS = "";
 
 /* MYSQL */
 
-$SERVER = ["host"=>"localhost", "port"=>3311, "user"=>"root", "pass"=>"root",
+$SERVER = ["host"=>"localhost", 
+	"port"=>3311, 
+	"user"=>"root", 
+	"pass"=>"root",
+	"charset"=>"utf8mb4",
 	"socket"=>"",
 	"require_secure_transport"=>false,
 	"ssl-key"=>"",

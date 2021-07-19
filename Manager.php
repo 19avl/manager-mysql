@@ -122,9 +122,15 @@ Class Manager
 
 		$RT[] = "&nbsp;";
 
-		$RT[] = "CLIENT_INFO: ".$this->client_info();
-		$RT[] = "SERVER_INFO: ".$this->server_info();
-		$RT[] = "CHARACTER_SET_NAME: ".$this->character_name();
+		$RT[] = "CLIENT_INFO: ".$this->client_info;
+		$RT[] = "SERVER_INFO: ".$this->server_info;
+		$RT[] = "CHARACTER_NAME: ".$this->character_name;
+
+		$sql_mode = $this->request("SELECT @@session.sql_mode", __LINE__);
+		if($sql_mode[0]){
+
+			$RT[] = "SQL_MODE: ".str_replace(",", ", ", $this->fetch_row($sql_mode[1])[0]);
+		}
 
 		$RT[] = "&nbsp;";
 
@@ -485,7 +491,6 @@ Class Manager
 		$RT["FIELD_ST"] = [];
 		$RT["FIELD_ST_NAV"] = [];
 		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
-		$RT["SERVER"] = $this->server_version;
 		$RT["PRIVILEGES"] = [];
 		$RT["DB_LIST"] = [];
 
@@ -523,6 +528,21 @@ Class Manager
 
 			$create_tb = explode("\n", $RT["CREATE"]["TB"]);
 
+			$prc = 0;
+			$fpr = 0;
+			$str = "";
+
+			foreach($create_tb as $v)
+			{
+				if(preg_match("/^\) ENGINE=/", $v) || preg_match("/^\) \/\*\!/", $v) || ($fpr === 1)){
+
+					$fpr = 1;
+					$str .= $v."\n";
+
+					if(preg_match("/^\/\*\![0-9]{5} PARTITION /",$v)){$prc = 1;}
+				}
+			}
+
 			$result = $this->request("SELECT `TABLE_TYPE`, `ENGINE` FROM information_schema.TABLES where
 				TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$_TB."';", __LINE__);
 
@@ -534,7 +554,15 @@ Class Manager
 
 			if($mode === "")
 			{
-				array_unshift($RT["ALTER_TABLE"]["CHANGE"], substr($create_tb[count($create_tb)-1], 2));
+				if($str !== ""){
+
+					array_unshift($RT["ALTER_TABLE"]["CHANGE"], substr($str, 2));
+				}
+
+				if($prc === 1){
+
+					array_push($RT["ALTER_TABLE"]["DROP"], "REMOVE PARTITIONING;");
+				}
 
 				$result = $this->request("SELECT kc.COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
 					FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kc
@@ -562,7 +590,7 @@ Class Manager
 			}
 
 			$result = $this->request("select
-				COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, COLUMN_KEY, COLUMN_DEFAULT, IS_NULLABLE, EXTRA
+				COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, COLUMN_KEY, COLUMN_DEFAULT, IS_NULLABLE, EXTRA, NUMERIC_PRECISION
 				from information_schema.columns where TABLE_SCHEMA=x'".$_DB."'
 				AND table_name = x'".$_TB."' ORDER BY ORDINAL_POSITION;", __LINE__);
 
@@ -589,7 +617,7 @@ Class Manager
 							($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "binary")) &&
 							($RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"] != ""))
 						{
-							if($this->server_version[0] > 5){
+							if($this->server_info[0] > 5){
 
 								$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"] =
 									$this->h2s(preg_replace("/^0x/", "", $RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"]));
@@ -643,14 +671,14 @@ Class Manager
 
 					if(in_array("FOREIGN KEY", $RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"]))
 					{
-						$constraint = $this->request("SELECT
+						$cnt = $this->request("SELECT
 							REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
 							FROM information_schema.KEY_COLUMN_USAGE
 							WHERE TABLE_SCHEMA = x'".$_DB."' AND TABLE_NAME = x'".$_TB."' AND
 							COLUMN_NAME = '".$row['COLUMN_NAME']."' AND
 							CONSTRAINT_NAME <> 'PRIMARY' AND REFERENCED_TABLE_NAME is not null;", __LINE__);
 
-						$row_constraint = $this->fetch_assoc($constraint[1]);
+						$row_constraint = $this->fetch_assoc($cnt[1]);
 
 						$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_VALUE"] = [];
 
@@ -680,7 +708,13 @@ Class Manager
 
 					if($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "bit"){
 
-						$LIST[] = "BIN(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+						$LIST[] = "LPAD(BIN(`".$row["COLUMN_NAME"]."`), ".
+							$RT["FIELDS"][$row["COLUMN_NAME"]]["NUMERIC_PRECISION"].", '0') AS `".
+							$row["COLUMN_NAME"]."`";
+					}
+					elseif($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "float"){
+
+						$LIST[] = "abs(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
 					}
 					elseif(in_array( $row["COLUMN_TYPE"], $exceptions["geo"])){
 
@@ -692,8 +726,7 @@ Class Manager
 					}
 				}
 
-				if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM") &&
-					($mode === "")){
+				if(($RT["TABLE_TYPE"] !== "VIEW") && ($mode === "")){
 
 					if(!$RT["PRI"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_MISSING_PRI; }
 				}
@@ -727,9 +760,11 @@ Class Manager
 			$ORDER_LIST	= array_keys($LIST);
 			unset($ORDER_LIST[0]);
 
+			if(count($ORDER_LIST) === 0){$order_list_st = "1";}
+			else{$order_list_st = ($nv["order_rc"]+1).",".implode(", ", $ORDER_LIST);}
+
 			$result = $this->request("SELECT ".implode(", ",  $LIST).
-				" FROM `".$_DBS."`.`".$_TBS."` ".$WHERE." ORDER BY ".
-				($nv["order_rc"]+1).",".implode(", ", $ORDER_LIST).$LIMIT.";", __LINE__);
+				" FROM `".$_DBS."`.`".$_TBS."` ".$WHERE." ORDER BY ".$order_list_st.$LIMIT.";", __LINE__);
 
 			if($result[0]){
 
@@ -1094,7 +1129,8 @@ Class Manager
 	{
 		$filename = date("d-m-Y").".sql";
 
-		$string = PHP_EOL."SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';";
+		$string = PHP_EOL."SET SQL_MODE = '".$this->sql_mode."';";
+
 		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=0;".PHP_EOL;
 
 		foreach($list_db as $value)
@@ -1105,14 +1141,11 @@ Class Manager
 			{
 				if($mode === "DB"){
 
-					$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
-						FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$value."';", __LINE__);
+					$CREATE = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
 
-					if($result[0]){
+					if($CREATE[0]){
 
-						$schema = $this->fetch_row($result[1]);
-
-						$string .= PHP_EOL."CREATE DATABASE `".$_DBS."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";";
+						$string .= PHP_EOL.$this->fetch_row($CREATE[1])[1].";";
 
 						$string .= PHP_EOL."USE `$_DBS`;";
 					}
@@ -1737,7 +1770,8 @@ Class Manager
 			}
 			elseif(($text_script_temp[$i] == "/") && ($open_value == false)){
 
-				if(isset($text_script_temp[$i+1]) && ($text_script_temp[$i+1] == "*")){
+				if((isset($text_script_temp[$i+1]) && ($text_script_temp[$i+1] === "*"))
+					&&(isset($text_script_temp[$i+2]) && ($text_script_temp[$i+2] !== "!"))){
 
 					while ( ($text_script_temp[$i].$text_script_temp[$i+1] != "*/") && ($i < ($strlen_text_script-1)) ){
 
@@ -1794,6 +1828,10 @@ Class Manager
 				$this->sqls_eval($script);
 			}
 		}
+
+		$this->dbc->query( "SET sql_mode = '".$this->sql_mode."';" );
+
+		$this->dbc->query( "SET names = '".$this->character_name."';" );
 	}
 
 
@@ -1860,30 +1898,43 @@ Class Manager
 	{
 		$WHERE = "";
 
-		if(($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "bit") && preg_match("/^[01]{1,}$/", $nv["fl_value_rc"]))
-		{
-			$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-				"WHERE BIN(`".$this->h2s($nv["fl_field_rc"])."`) LIKE '%".$nv["fl_value_rc"]."%'" :
-				"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
-				$nv["fl_operator_rc"]." b'".$nv["fl_value_rc"]."'";
-		}
-		elseif(in_array($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"], $exceptions["bin"]))
-		{
-			$fl_value_rc = addslashes($nv["fl_value_rc"]);
+		$fl_value_rc = addslashes($nv["fl_value_rc"]);
 
-			$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-				"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($this->h2s($fl_value_rc))."%'" :
+		$FLL = "";
+		if(($nv["fl_operator_rc"] === "LIKE") || ($nv["fl_operator_rc"] === "NOT LIKE"))
+		{
+			$FLL = "LIKE";
+		}
+
+		if(($nv["fl_operator_rc"] === "IS NULL") || ($nv["fl_operator_rc"] === "IS NOT NULL"))
+		{
+			$WHERE = "WHERE `".$this->h2s($nv["fl_field_rc"])."` ".$nv["fl_operator_rc"]." ";
+		}
+		elseif($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "bit")
+		{
+			$WHERE = ($FLL === "LIKE") ?
+				"WHERE LPAD(BIN(`".$this->h2s($nv["fl_field_rc"])."`) , ".
+				$field[$this->h2s($nv["fl_field_rc"])]["NUMERIC_PRECISION"].", '0') ".$nv["fl_operator_rc"].
+				" '%".$nv["fl_value_rc"]."%'" :
+				"WHERE LPAD(BIN(`".$this->h2s($nv["fl_field_rc"])."`), ".
+				$field[$this->h2s($nv["fl_field_rc"])]["NUMERIC_PRECISION"].", '0') ".
+				$nv["fl_operator_rc"]." '".$nv["fl_value_rc"]."'";
+		}
+		elseif($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "float")
+		{
+			$WHERE = ($FLL === "LIKE") ?
+				"WHERE abs(`".$this->h2s($nv["fl_field_rc"])."`) ".$nv["fl_operator_rc"].
+				" '%".$fl_value_rc."%'" :
 				"WHERE `".$this->h2s($nv["fl_field_rc"])."` ".
-				$nv["fl_operator_rc"]." '".$this->h2s($fl_value_rc)."'";
+				$nv["fl_operator_rc"]." '".$fl_value_rc."'";
 		}
 		elseif(in_array($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"], $exceptions["geo"]))
 		{
 			$FNS = "ST_AsText";
 
-			$fl_value_rc = addslashes($nv["fl_value_rc"]);
-
-			$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-				"WHERE ".$FNS."(".$this->h2s($nv["fl_field_rc"]).") LIKE '%".$fl_value_rc."%'" :
+			$WHERE = ($FLL === "LIKE") ?
+				"WHERE ".$FNS."(".$this->h2s($nv["fl_field_rc"]).") ".$nv["fl_operator_rc"].
+				" '%".$fl_value_rc."%'" :
 				"WHERE ".$FNS."(".$this->h2s($nv["fl_field_rc"]).") ".
 				$nv["fl_operator_rc"]." '".$fl_value_rc."'";
 		}
@@ -1896,19 +1947,17 @@ Class Manager
 			($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "longtext")
 		)
 		{
-			$fl_value_rc = addslashes($nv["fl_value_rc"]);
-
-			$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-				"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($fl_value_rc)."%'" :
+			$WHERE = ($FLL === "LIKE") ?
+				"WHERE `".$this->h2s($nv["fl_field_rc"])."` ".$nv["fl_operator_rc"].
+				" '%".$fl_value_rc."%'" :
 				"WHERE CAST(`".$this->h2s($nv["fl_field_rc"])."` AS CHAR) ".
 				$nv["fl_operator_rc"]." '".$fl_value_rc."'";
 		}
 		else
 		{
-			$fl_value_rc = addslashes($nv["fl_value_rc"]);
-
-			$WHERE = ($nv["fl_operator_rc"] === "LIKE") ?
-				"WHERE `".$this->h2s($nv["fl_field_rc"])."` LIKE '%".addslashes($fl_value_rc)."%'" :
+			$WHERE = ($FLL === "LIKE") ?
+				"WHERE `".$this->h2s($nv["fl_field_rc"])."` ".$nv["fl_operator_rc"].
+				" '%".$fl_value_rc."%'" :
 				"WHERE `".$this->h2s($nv["fl_field_rc"])."` ".
 				$nv["fl_operator_rc"]." '".$fl_value_rc."'";
 		}

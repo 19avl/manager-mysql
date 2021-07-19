@@ -19,7 +19,7 @@ define("_MESSAGE_NOT_VALUE", "Value not defined");
 define("_MESSAGE_FIND_NOT_FOUND", "Value not found:");
 define("_MESSAGE_SEARCHING", "SEARCHING");
 
-define("_NOTE_CONFIRM", "Confirm action");
+define("_NOTE_CONFIRM", "Confirmation");
 define("_NOTE_CONFIRM_YES", "ok");
 define("_NOTE_CONFIRM_NO", "cancel");
 define("_NOTE_CONFIRM_UNSET", "unset");

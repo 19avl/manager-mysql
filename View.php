@@ -435,10 +435,14 @@ Class View
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->input("cl_in", "", "st_value_B", $this->html($this->h2s($_DB)), "", "", "");
+
+
+		$this->input("cl_in", "db_name_new_id", "st_value_B", $this->html($this->h2s($_DB)),
+			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 		$this->btn("", "", "st_btn", _ACTION_COPY,
-			"onclick=\"ms.AT('_COPY_DB', 'id_cn_tbt', 'id_cn_stb_request', '', this, this.form, '', [''], []); \"");
+			"onclick=\"ms.AT('_COPY_DB', 'id_cn_tbt', 'id_cn_stb_request', '', this, this.form, '', [''], [],
+			'db_name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 		$this->form_close();
 
@@ -725,7 +729,7 @@ Class View
 
 			$this->dl_confirm("id_cn_st");
 
-			if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM"))
+			if(($RT["TABLE_TYPE"] !== "VIEW"))
 			{
 				$this->select($RT["ALTER_TABLE"]["ADD"], false, "", "", "slc", "add",
 					"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
@@ -760,6 +764,8 @@ Class View
 
 			if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
 			{
+				$this->tg("div", "", "separator11", "", "", "");
+
 				$this->input("cl_in", "", "st_value_B", $_TBS, "", "", "");
 
 				$this->btn("", "", "st_btn", _ACTION_RENAME,
@@ -768,7 +774,6 @@ Class View
 			}
 			else
 			{
-
 				$this->tg("div", "", "separator11", "", "", "");
 
 				$this->select($RT["DB_LIST"],
@@ -794,7 +799,7 @@ Class View
 
 			$this->form_close();
 
-			if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM")){
+			if(($RT["TABLE_TYPE"] !== "VIEW")){
 
 				$this->rc_data($_DB, $_TB, $RT, $nv, $FUNCTION, $exceptions, "insert");
 			}
@@ -1328,7 +1333,7 @@ Class View
 			{
 				if(($count_fl > 0) && ($count_fl_display > 0))
 				{
-					if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM"))
+					if(($RT["TABLE_TYPE"] !== "VIEW"))
 					{
 						if($RT["PRI"])
 						{
