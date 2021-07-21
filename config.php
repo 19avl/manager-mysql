@@ -13,7 +13,7 @@ error_reporting (0);
 
 /* HOST */
 
-define("_URL", "http://".$_SERVER["SERVER_NAME"].parse_url($_SERVER["REQUEST_URI"])["path"]);
+define("_URL", $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].parse_url($_SERVER["REQUEST_URI"])["path"]);
 
 $PASS = "";
 
@@ -21,9 +21,9 @@ $PASS = "";
 /* MYSQL */
 
 $SERVER = ["host"=>"localhost", 
-	"port"=>3311, 
+//	"port"=>3311, 
 	"user"=>"root", 
-	"pass"=>"root",
+	"pass"=>"",
 	"charset"=>"utf8mb4",
 	"socket"=>"",
 	"require_secure_transport"=>false,

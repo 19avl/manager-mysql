@@ -490,7 +490,7 @@ Class Manager
 		$RT["COUNT"] = 0;
 		$RT["FIELD_ST"] = [];
 		$RT["FIELD_ST_NAV"] = [];
-		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE"];
+		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE","NOT LIKE","IS NULL","IS NOT NULL","REGEXP"];		
 		$RT["PRIVILEGES"] = [];
 		$RT["DB_LIST"] = [];
 
