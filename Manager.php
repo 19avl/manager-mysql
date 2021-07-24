@@ -490,7 +490,7 @@ Class Manager
 		$RT["COUNT"] = 0;
 		$RT["FIELD_ST"] = [];
 		$RT["FIELD_ST_NAV"] = [];
-		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE","NOT LIKE","IS NULL","IS NOT NULL","REGEXP"];		
+		$RT["FILTER_EX"] = ["...","=","<>",">","<","LIKE","NOT LIKE","IS NULL","IS NOT NULL","REGEXP"];
 		$RT["PRIVILEGES"] = [];
 		$RT["DB_LIST"] = [];
 
@@ -501,6 +501,7 @@ Class Manager
 				"ADD PRIMARY KEY (`...`);",
 				"ADD CONSTRAINT `...` \nFOREIGN KEY (`...`) \nREFERENCES `...` (`...`);",
 				"ADD UNIQUE (`...`);",
+				"ADD INDEX (`...`);",
 				"ADD\n... \nFIRST;",
 			],
 			"CHANGE"=>[],
@@ -564,23 +565,33 @@ Class Manager
 					array_push($RT["ALTER_TABLE"]["DROP"], "REMOVE PARTITIONING;");
 				}
 
+				$result = $this->request("SELECT INDEX_NAME
+					FROM information_schema.STATISTICS
+					WHERE TABLE_SCHEMA = x'".$_DB."' AND TABLE_NAME = x'".$_TB."';", __LINE__);
+
+				while( $row = $this->fetch_row($result[1]) )
+				{
+					if(trim($row[0]) !== "PRIMARY"){
+
+						array_push($RT["ALTER_TABLE"]["DROP"], "DROP INDEX `".$row[0]."`;");
+					}
+				}
+
 				$result = $this->request("SELECT kc.COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
-					FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kc
-					ON tc.TABLE_SCHEMA = kc.TABLE_SCHEMA AND tc.TABLE_NAME = kc.TABLE_NAME
+					FROM information_schema.TABLE_CONSTRAINTS tc
+					JOIN information_schema.KEY_COLUMN_USAGE kc
+					ON tc.TABLE_SCHEMA = kc.TABLE_SCHEMA
+					AND tc.TABLE_NAME = kc.TABLE_NAME
 					AND tc.CONSTRAINT_NAME = kc.CONSTRAINT_NAME
 					WHERE tc.TABLE_SCHEMA = x'".$_DB."' AND tc.TABLE_NAME = x'".$_TB."';", __LINE__);
 
-				while( $row = $this->fetch_row($result[1]) ){
-
+				while( $row = $this->fetch_row($result[1]) )
+				{
 					$CONSTRAINT[$row[0]][] = $row[2];
 
 					if(trim($row[2]) === "FOREIGN KEY"){
 
 						array_push($RT["ALTER_TABLE"]["DROP"], "DROP FOREIGN KEY `".$row[1]."`;");
-					}
-					elseif(trim($row[2]) === "UNIQUE"){
-
-						array_push($RT["ALTER_TABLE"]["DROP"], "DROP INDEX `".$row[1]."`;");
 					}
 					elseif((trim($row[2]) === "PRIMARY KEY") && (!in_array("DROP PRIMARY KEY;", $RT["ALTER_TABLE"]["DROP"]))){
 
