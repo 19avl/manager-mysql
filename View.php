@@ -716,7 +716,8 @@ Class View
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		if(($this->h2s($_DB) !== "information_schema") && ($this->h2s($_DB) !== "performance_schema"))
+		if(($this->h2s($_DB) !== "information_schema") && ($this->h2s($_DB) !== "performance_schema") &&
+			($RT["CREATE"]["TB"] !== ""))
 		{
 			$this->form_open();
 
@@ -762,7 +763,8 @@ Class View
 				$this->tg_close("div");
 			}
 
-			if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
+		//	if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
+			if(($RT["TABLE_TYPE"] === "VIEW"))
 			{
 				$this->tg("div", "", "separator11", "", "", "");
 

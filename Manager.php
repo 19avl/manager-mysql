@@ -947,82 +947,111 @@ Class Manager
 					}
 				}
 
-				if(($TABLE_TYPE !== "VIEW") && ($ENGINE !== "MRG_MyISAM") && ($ENGINE !== "MRG_MYISAM"))
+				$valS = $this->h2s($val);
+
+				if(($TABLE_TYPE !== "VIEW"))
 				{
-					$valS = $this->h2s($val);
-
-					if($val !== "")
+					if((($ENGINE === "MRG_MyISAM") || ($ENGINE === "MRG_MYISAM")) && ($pre === false))
 					{
-						if($pre === false){
+						$CREATE = $this->request("SHOW CREATE TABLE `".$_DBS."`.`".$valS."`;", __LINE__);
 
-							$tbs_new = $valS;
+						if($CREATE[0]){
 
+							$this->use_db($copy_2bdS);
+
+							$result = $this->request($this->fetch_row($CREATE[1])[1], __LINE__);
 						}
-						elseif($pre === true){
-
-							if(($name_new === $valS)){ $tbs_new = $valS."_copy"; }
-							else{ $tbs_new = $name_new; }
-						}
-
-						$result = $this->request(
-							"CREATE TABLE `".$copy_2bdS."`.`".$tbs_new."` LIKE `".$_DBS."`.`".$valS."`;", __LINE__);
-
-						if($result[0])
+					}
+					else
+					{
+						if($val !== "")
 						{
-							$result = $this->request("SET FOREIGN_KEY_CHECKS=0;", __LINE__);
+							if($pre === false){
 
-							$ex = $this->request("select COLUMN_NAME FROM information_schema.COLUMNS where
-								TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$val."'
-								AND EXTRA<>'STORED GENERATED' AND EXTRA<>'VIRTUAL GENERATED'
-								ORDER BY ORDINAL_POSITION;", __LINE__);
+								$tbs_new = $valS;
+							}
+							elseif($pre === true){
 
-							$_EX = [];
-
-							if($ex[0]){
-
-								while($row_ex = $this->fetch_row($ex[1])){
-
-									$_EX[] = $row_ex[0];
-								}
+								if(($name_new === $valS)){ $tbs_new = $valS."_copy"; }
+								else{ $tbs_new = $name_new; }
 							}
 
-							$this->request(
-								"INSERT INTO `".$copy_2bdS."`.`".$tbs_new."` (`".implode("`,`", $_EX)."`)
-								SELECT `".implode("`,`", $_EX)."` FROM `".$_DBS."`.`".$valS."`;", __LINE__);
+							$result = $this->request(
+								"CREATE TABLE `".$copy_2bdS."`.`".$tbs_new."` LIKE `".$_DBS."`.`".$valS."`;", __LINE__);
 
-							$constraint = $this->request("SELECT
-								COLUMN_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME,
-								REFERENCED_COLUMN_NAME, CONSTRAINT_NAME
-								FROM information_schema.KEY_COLUMN_USAGE
-								WHERE TABLE_SCHEMA = x'".$_DB."' AND TABLE_NAME = x'".$val."' AND
-								CONSTRAINT_NAME <> 'PRIMARY' AND REFERENCED_TABLE_NAME is not null;", __LINE__);
-
-							while($row_constraint = $this->fetch_assoc($constraint[1]))
+							if($result[0])
 							{
-								$referent = $this->request("SELECT UPDATE_RULE, DELETE_RULE
-									FROM information_schema.REFERENTIAL_CONSTRAINTS
-									WHERE CONSTRAINT_SCHEMA = x'".$_DB."'
-									AND TABLE_NAME = x'".$val."'
-									AND CONSTRAINT_NAME='".$row_constraint["CONSTRAINT_NAME"]."';", __LINE__);
+								$result = $this->request("SET FOREIGN_KEY_CHECKS=0;", __LINE__);
 
-								$row_referent = $this->fetch_assoc($referent[1]);
+								$ex = $this->request("select COLUMN_NAME FROM information_schema.COLUMNS where
+									TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$val."'
+									AND EXTRA<>'STORED GENERATED' AND EXTRA<>'VIRTUAL GENERATED'
+									ORDER BY ORDINAL_POSITION;", __LINE__);
 
-								$action = "ON UPDATE ".$row_referent["UPDATE_RULE"]." ON DELETE ".$row_referent["DELETE_RULE"];
+								$_EX = [];
 
-								if(($_DBS !== $copy_2bdS) && ($row_constraint["REFERENCED_TABLE_SCHEMA"] === $_DBS)){
+								if($ex[0]){
 
-									$row_constraint["REFERENCED_TABLE_SCHEMA"] = $copy_2bdS;
+									while($row_ex = $this->fetch_row($ex[1])){
+
+										$_EX[] = $row_ex[0];
+									}
 								}
 
-								$this->request("ALTER TABLE `".$copy_2bdS."`.`".$tbs_new."` ADD CONSTRAINT ".
-								$row_constraint["CONSTRAINT_NAME"]."0 FOREIGN KEY (`".
-								$row_constraint["COLUMN_NAME"]."`) REFERENCES `".
-								$row_constraint["REFERENCED_TABLE_SCHEMA"]."`.`".
-								$row_constraint["REFERENCED_TABLE_NAME"]."` (`".
-								$row_constraint["REFERENCED_COLUMN_NAME"]."`) ".$action.";", __LINE__);
-							}
+								$this->request(
+									"INSERT INTO `".$copy_2bdS."`.`".$tbs_new."` (`".implode("`,`", $_EX)."`)
+									SELECT `".implode("`,`", $_EX)."` FROM `".$_DBS."`.`".$valS."`;", __LINE__);
 
-							$result = $this->request("SET FOREIGN_KEY_CHECKS=1;", __LINE__);
+								$constraint = $this->request("SELECT
+									COLUMN_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME,
+									REFERENCED_COLUMN_NAME, CONSTRAINT_NAME
+									FROM information_schema.KEY_COLUMN_USAGE
+									WHERE TABLE_SCHEMA = x'".$_DB."' AND TABLE_NAME = x'".$val."' AND
+									CONSTRAINT_NAME <> 'PRIMARY' AND REFERENCED_TABLE_NAME is not null;", __LINE__);
+
+								while($row_constraint = $this->fetch_assoc($constraint[1]))
+								{
+									$referent = $this->request("SELECT UPDATE_RULE, DELETE_RULE
+										FROM information_schema.REFERENTIAL_CONSTRAINTS
+										WHERE CONSTRAINT_SCHEMA = x'".$_DB."'
+										AND TABLE_NAME = x'".$val."'
+										AND CONSTRAINT_NAME='".$row_constraint["CONSTRAINT_NAME"]."';", __LINE__);
+
+									$row_referent = $this->fetch_assoc($referent[1]);
+
+									$action = "ON UPDATE ".$row_referent["UPDATE_RULE"]." ON DELETE ".$row_referent["DELETE_RULE"];
+
+									if(($_DBS !== $copy_2bdS) && ($row_constraint["REFERENCED_TABLE_SCHEMA"] === $_DBS)){
+
+										$row_constraint["REFERENCED_TABLE_SCHEMA"] = $copy_2bdS;
+									}
+
+									if($pre === false){
+
+										$_DBST = $row_constraint["REFERENCED_TABLE_SCHEMA"];
+									}
+									else{
+
+										if($copy_2bdS === $row_constraint["REFERENCED_TABLE_SCHEMA"]){
+
+											$_DBST = $_DBS;
+										}
+										else{
+
+											$_DBST = $row_constraint["REFERENCED_TABLE_SCHEMA"];
+										}
+									}
+
+									$this->request("ALTER TABLE `".$copy_2bdS."`.`".$tbs_new."` ADD CONSTRAINT ".
+									$row_constraint["CONSTRAINT_NAME"]."0 FOREIGN KEY (`".
+									$row_constraint["COLUMN_NAME"]."`) REFERENCES `".
+									$_DBST."`.`".
+									$row_constraint["REFERENCED_TABLE_NAME"]."` (`".
+									$row_constraint["REFERENCED_COLUMN_NAME"]."`) ".$action.";", __LINE__);
+								}
+
+								$result = $this->request("SET FOREIGN_KEY_CHECKS=1;", __LINE__);
+							}
 						}
 					}
 				}
@@ -1140,9 +1169,14 @@ Class Manager
 	{
 		$filename = date("d-m-Y").".sql";
 
-		$string = PHP_EOL."SET SQL_MODE = '".$this->sql_mode."';";
+		$crt_view = "";
+		$crt_mrg = "";
 
-		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=0;".PHP_EOL;
+		$str = PHP_EOL." -- Server info: ".$this->server_info.PHP_EOL.PHP_EOL;
+
+		$str .= PHP_EOL."SET SQL_MODE = '".$this->sql_mode."';";
+
+		$str .= PHP_EOL."SET FOREIGN_KEY_CHECKS=0;".PHP_EOL;
 
 		foreach($list_db as $value)
 		{
@@ -1156,9 +1190,9 @@ Class Manager
 
 					if($CREATE[0]){
 
-						$string .= PHP_EOL.$this->fetch_row($CREATE[1])[1].";";
+						$str .= PHP_EOL.$this->fetch_row($CREATE[1])[1].";";
 
-						$string .= PHP_EOL."USE `$_DBS`;";
+						$str .= PHP_EOL."USE `$_DBS`;";
 					}
 
 					$RT = $this->export($value, $this->get_list_tb($value), $nv, $exceptions, $mode, "sql");
@@ -1170,11 +1204,12 @@ Class Manager
 
 				foreach($RT as $k=>$v)
 				{
-					$string .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
 					$row = [];
 
 					if(($v["TABLE_TYPE"] !== "VIEW") && ($v["ENGINE"] !== "MRG_MyISAM") && ($v["ENGINE"] !== "MRG_MYISAM"))
 					{
+						$str .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
+
 						foreach($v["RECORDS"] as $kr=>$vr)
 						{
 							$vrex = [];
@@ -1239,9 +1274,24 @@ Class Manager
 
 						if(count($row) !== 0){
 
-							$string .= PHP_EOL."insert into `".
+							$str .= PHP_EOL."insert into `".
 								$v["TB"]."` (`".implode("`,`", array_keys($vrex))."`) values".
 								PHP_EOL.implode(",".PHP_EOL, $row).";".PHP_EOL;
+						}
+					}
+					else
+					{
+						if($v["TABLE_TYPE"] === "VIEW")
+						{
+							$crt_view .= PHP_EOL."USE `".$_DBS."`;".PHP_EOL;
+
+							$crt_view .= PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
+						}
+						elseif(($v["ENGINE"] === "MRG_MyISAM") || ($v["ENGINE"] === "MRG_MYISAM"))
+						{
+							$crt_mrg .= PHP_EOL."USE `".$_DBS."`;".PHP_EOL;
+
+							$crt_mrg .= PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
 						}
 					}
 				}
@@ -1256,8 +1306,8 @@ Class Manager
 
 					if($trigger !== ";"){
 
-						$string .= PHP_EOL."/* TRIGGER */".PHP_EOL;
-						$string .= PHP_EOL.$trigger.PHP_EOL;
+						$str .= PHP_EOL."/* TRIGGER */".PHP_EOL;
+						$str .= PHP_EOL.$trigger.PHP_EOL;
 					}
 
 					$procedure = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
@@ -1266,8 +1316,8 @@ Class Manager
 
 					if($procedure !== ";"){
 
-						$string .= PHP_EOL."/* PROCEDURES */".PHP_EOL;
-						$string .= PHP_EOL.$procedure.PHP_EOL;
+						$str .= PHP_EOL."/* PROCEDURES */".PHP_EOL;
+						$str .= PHP_EOL.$procedure.PHP_EOL;
 					}
 
 					$function = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
@@ -1276,8 +1326,8 @@ Class Manager
 
 					if($function !== ";"){
 
-						$string .= PHP_EOL."/* FUNCTIONS */".PHP_EOL;
-						$string .= PHP_EOL.$function.PHP_EOL;
+						$str .= PHP_EOL."/* FUNCTIONS */".PHP_EOL;
+						$str .= PHP_EOL.$function.PHP_EOL;
 					}
 
 					$events = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_DBS,
@@ -1285,16 +1335,19 @@ Class Manager
 
 					if($events !== ";"){
 
-						$string .= PHP_EOL."/* EVENTS */".PHP_EOL;
-						$string .= PHP_EOL.$events.PHP_EOL;
+						$str .= PHP_EOL."/* EVENTS */".PHP_EOL;
+						$str .= PHP_EOL.$events.PHP_EOL;
 					}
 				}
 			}
 		}
 
-		$string .= PHP_EOL."SET FOREIGN_KEY_CHECKS=1;".PHP_EOL;
+		$str .= $crt_mrg;
+		$str .= $crt_view;
 
-		$this->export_get($filename, $string);
+		$str .= PHP_EOL."SET FOREIGN_KEY_CHECKS=1;".PHP_EOL;
+
+		$this->export_get($filename, $str);
 	}
 
 
