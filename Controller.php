@@ -79,7 +79,7 @@ Class Controller extends Query
 
 			$this->view->info($this->manager->info());
 		}
-
+		
 		$this->view->message($this->manager->_LOG);
 
 		if(($this->_DB !== "") && ($this->_TB !== ""))

@@ -67,7 +67,7 @@ Class Control
 		{
 			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $PASS).$this->check_request()))
 			{
-				$this->authorize_form(_AT_ERROR);
+				$this->authorize_form(_MESSAGE_CONNECTION);
 				return false;
 			}
 
@@ -86,7 +86,7 @@ Class Control
 		print "<div class='separator11'></div>";
 		print "<div class='app'>"._APP."</div>";
 		print "<div class='separator11'></div>";
-		print "<div id='ms_in' class='message' >".$ms."</div>";
+		print "<div id='ms_in' class='message_at' >".$ms."</div>";
 		print "<form method='post'>";
 		
 		print "<input type='password' id='en_pass' name='' class='int_pass' value='' 
@@ -129,21 +129,21 @@ Class Control
 
 	private function hashE($str)
 	{
-		$M = 25717;
+		$R = "";
+		$H = 1;
 		$L = strlen($str);
+		
+		for ($s = 0; $s < 7; $s++) {
+		
+			for ($i = 1; $i < $L; $i++) {
 
-		return $this->hc(0, $L, 2, $M, $str)."".$this->hc(1, $L, 2, $M, $str);
-	}
+				$H = (( $H % ord($str[$i]) ) << 5) + (( ord($str[$i]) % ord($str[$i-1]) ) << $s);
+			}
 
-
-	private function hc($N, $L, $S, $M, $str)
-	{
-		$H = 0;
-		for ($i = $N; $i < $L; $i=$i+$S) {
-
-			$H = (( $H % $M ) * 10000) + ( ord($str[$i]) % $M );
+			$R .= $H;
 		}
-		return $H;
+		
+		return $R;
 	}
 
 	private function check_request()

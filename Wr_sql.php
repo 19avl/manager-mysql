@@ -6,8 +6,6 @@ trait Wr_sql
 {
 	public function connect($SERVER)
 	{
-		$this->_LOG["MESSAGE"]["connect"] = "";
-
 		if(!extension_loaded("mysqli")){
 
 			$this->connect = true;
@@ -46,9 +44,26 @@ trait Wr_sql
 
 		if(!mysqli_connect_errno()){
 
-			if(isset($SERVER["charset"]) && ($SERVER["charset"] !== "")){
+			if(isset($SERVER["variables"]) && (count($SERVER["variables"]) !== 0)){
 
-				$this->dbc->set_charset($SERVER["charset"]);
+				foreach($SERVER["variables"] as $k=>$v){
+
+					if(strtolower($k) === "names"){
+
+						$this->dbc->set_charset($v);
+					}
+					else{
+
+						if(is_int($v)){
+
+							$this->dbc->query( "SET ".$k." = ".$v.";" );
+						}
+						else{
+
+							$this->dbc->query( "SET ".$k." = '".$v."';" );
+						}
+					}
+				}
 			}
 
 			$this->character_name = $this->character_name();

@@ -21,10 +21,18 @@ $PASS = "";
 /* MYSQL */
 
 $SERVER = ["host"=>"localhost", 
-//	"port"=>3311, 
-	"user"=>"root", 
-	"pass"=>"",
-	"charset"=>"utf8mb4",
+	"port"=>3311, 
+	"user"=>"root_native_password1", 
+	"pass"=>"root",
+	"variables"=>[
+		"names" => "utf8mb4",
+	//	"sql_mode" => "STRICT_ALL_TABLES", 
+	//	"sql_mode" => "ANSI_QUOTES", 
+	//	"sql_mode" => "TRADITIONAL",
+	//	"sql_mode" => "ANSI",		
+	//	"GLOBAL general_log" => 0,
+	//	"GLOBAL log_output" => "TABLE",
+	],
 	"socket"=>"",
 	"require_secure_transport"=>false,
 	"ssl-key"=>"",

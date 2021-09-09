@@ -143,7 +143,9 @@ Class View
 	{
 		if(isset($log["MESSAGE"]))
 		{
-			$this->tg_open("div", "div_message", "res", "", "");
+			$this->tg_open("div", "div_message", "res_message", "", "");
+
+			$this->tg("div", "", "res_message_close", "", "&#10006;", "onclick=\"ms.el_va('div_message', 'none');\"");
 
 			foreach($log["MESSAGE"] as $value){
 
@@ -761,41 +763,27 @@ Class View
 					['_UPDATE_TB'], [], 'tb_def_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 				$this->tg_close("div");
-			}
 
-		//	if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
-			if(($RT["TABLE_TYPE"] === "VIEW"))
-			{
 				$this->tg("div", "", "separator11", "", "", "");
-
-				$this->input("cl_in", "", "st_value_B", $_TBS, "", "", "");
-
-				$this->btn("", "", "st_btn", _ACTION_RENAME,
-					"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
-					'"._NOTE_TABLE." / "._ACTION_RENAME."', ['_RENAME_TB'], []); \"");
 			}
-			else
-			{
-				$this->tg("div", "", "separator11", "", "", "");
 
-				$this->select($RT["DB_LIST"],
-					$_DB, "cl_tr", "", "st_select_db", "", "",
-					function($k, $v){return $this->s2h($v);},
-					function($k, $v){return $this->s2h($v);},
-					function($k, $v){return $this->html($v);});
+			$this->select($RT["DB_LIST"],
+				$_DB, "cl_tr", "", "st_select_db", "", "",
+				function($k, $v){return $this->s2h($v);},
+				function($k, $v){return $this->s2h($v);},
+				function($k, $v){return $this->html($v);});
 
-				$this->input("cl_in", "name_new_id", "st_value_C", $_TBS,
-					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
+			$this->input("cl_in", "name_new_id", "st_value_C", $_TBS,
+				"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
-				$this->btn("", "", "st_btn", _ACTION_RENAME,
-					"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
-					'"._NOTE_TABLE." / "._ACTION_RENAME."',
-					['_RENAME_TB'], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
+			$this->btn("", "", "st_btn", _ACTION_RENAME,
+				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
+				'"._NOTE_TABLE." / "._ACTION_RENAME."',
+				['_RENAME_TB'], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
-				$this->btn("", "", "st_btn", _ACTION_COPY,
-					"onclick=\"ms.AT('_COPY_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form, '',
-					[], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
-			}
+			$this->btn("", "", "st_btn", _ACTION_COPY,
+				"onclick=\"ms.AT('_COPY_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form, '',
+				[], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 			$this->tg("div", "", "separator11", "", "", "");
 
@@ -876,7 +864,7 @@ Class View
 
 			$this->input("view_rc", "", "", "tb", "", "hidden", "");
 
-			$this->btn("", "", "rt_btn_list", "&#9776;", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+			$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
 		$this->form_close();
 
@@ -1010,7 +998,7 @@ Class View
 
 				$this->input("view_rc", "", "", "st", "", "hidden", "");
 
-				$this->btn("", "", "rt_btn_list", "&#9783;", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+				$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
 			$this->form_close();
 

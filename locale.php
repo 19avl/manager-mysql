@@ -4,19 +4,18 @@ defined("_EXEC") or die();
 
 define("_APP", "Manager for MYSQL");
 
-define("_AT_ERROR", "Request failed");
 define("_AT_USER", "User");
 define("_AT_PASSWORD", "Password");
 define("_MESSAGE_SUPPORT", "Application does not support this browser");
 define("_MESSAGE_PL", "Module PHP mysqli is not installed");
 define("_MESSAGE_ERROR", "ERROR");
 define("_MESSAGE_CONNECTION", "Connection error");
-define("_MESSAGE_MISSING_PRI", "Missing primary key");
+define("_MESSAGE_UNIQUE_COLUMN", "Table does not contain a unique column. Edit, Delete features are not available.");
 define("_MESSAGE_EXECUTED", "Executed");
 define("_MESSAGE_DB_CHECK", "No database selected");
 define("_MESSAGE_TB_CHECK", "No table selected");
-define("_MESSAGE_NOT_VALUE", "Value not defined");
-define("_MESSAGE_FIND_NOT_FOUND", "Value not found:");
+define("_MESSAGE_NOT_VALUE", "Value is not defined");
+define("_MESSAGE_FIND_NOT_FOUND", "Is not found");
 define("_MESSAGE_SEARCHING", "SEARCHING");
 
 define("_NOTE_CONFIRM", "Confirmation");

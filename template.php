@@ -92,21 +92,21 @@ var ct =
 	hashE: function(str)
 	{
 		var str = unescape(encodeURIComponent(str));
-
-		var M = 25717;
+		var R = "";
+		var H = 1;
 		var L = str.length;
 
-		return this.hc(0, L, 2, M, str)+""+this.hc(1, L, 2, M, str);
-	},
+		for (var s = 0; s < 7; s++) {
 
-	hc: function(N, L, S, M, str)
-	{
-		var H = 0;
-		for (var i = N; i < L; i=i+S) {
+			for (var i = 1; i < L; i++) {
 
-			H = (( H % M ) * 10000) + ( str.charCodeAt(i) % M );
+				H = (( H % str.charCodeAt(i) ) << 5) + (( str.charCodeAt(i) % str.charCodeAt(i-1) ) << s);
+			}
+
+			R += H;
 		}
-		return H;
+
+		return R;
 	},
 
 	str_request: function(oForm)
@@ -729,8 +729,7 @@ var dl =
 
 		var tr = document.getElementById(document.getElementById(text_id).value);
 
-		if(tr.innerHTML){ tr.innerHTML = ""; }
-		else{ tr.value = ""; }
+		tr.value = "";
 
 		this.close_rcdl();
 	},
@@ -739,42 +738,21 @@ var dl =
 	{
 		var tr = document.getElementById(document.getElementById(text_id).value);
 
-		if(tr.innerHTML)
-		{
-			var inh = tr.innerHTML.replace(/'/g, "\\'").replace(/\\\\'/g, "\\'");
+		var inh = tr.value.replace(/'/g, "\\'").replace(/\\\\'/g, "\\'");
 
-			if((inh !== "") && (count > 1)){
+		if((inh !== "") && (count > 1)){
 
-				tr.innerHTML = val+"('"+inh+"',"+arg_add+")";
-			}
-			else if((inh !== "") && (count == 1)){
-
-				tr.innerHTML = val+"('"+inh+"')";
-			}
-			else if(count == 0){
-
-				tr.innerHTML = val;
-			}
-			else{ tr.innerHTML = val+arg; }
+			tr.value = val+"('"+inh+"',"+arg_add+")";
 		}
-		else
-		{
-			var inh = tr.value.replace(/'/g, "\\'").replace(/\\\\'/g, "\\'");
+		else if((inh !== "") && (count == 1)){
 
-			if((inh !== "") && (count > 1)){
-
-				tr.value = val+"('"+inh+"',"+arg_add+")";
-			}
-			else if((inh !== "") && (count == 1)){
-
-				tr.value = val+"('"+inh+"')";
-			}
-			else if(count == 0){
-
-				tr.value = val;
-			}
-			else{ tr.value = val+arg; }
+			tr.value = val+"('"+inh+"')";
 		}
+		else if(count == 0){
+
+			tr.value = val;
+		}
+		else{ tr.value = val+arg; }
 
 		document.getElementById(document.getElementById(id).value).value = "function";
 
@@ -862,7 +840,12 @@ body{background: #555555; color: #eee; }
 
 .user{color: #f70; font-size: 17px;}
 
-.message{ color: #f70;  }
+.res{}
+.res_message{background: #111;}
+.res_message_close{color: #999; background: #111;}
+
+.message_at{ color: #f70; }
+.message{ color: #f70; }
 
 .result{ color: #eee; }
 
@@ -1059,8 +1042,36 @@ width: 969px;
 max-height: 300px;
 }
 
-.message{
+.res_message{
+z-index: 505;	
+position:fixed; 
+display:inline-block; 
+overflow: auto;
+bottom:0; 
+left: 0px;
+padding: 9px 0px 9px 0px;
+width: 100%;
+max-height: 170px;
+}
+
+.res_message_close{
+z-index: 505;	
+position:fixed; 
+display:inline-block; 
+bottom:0; 
+left: 0px;
+padding: 5px 11px 7px 11px;
+font-size: 17px;
+cursor: pointer;
+max-height: 170px;
+}
+
+.message_at{ 
 padding-bottom: 5px;
+}
+
+.message{
+padding: 2px 0px 2px 37px;
 }
 
 .result{

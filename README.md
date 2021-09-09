@@ -17,7 +17,7 @@ Web-based administration tool for MYSQL.
 - Create, copy, drop, update records 
 - Manage routines, triggers and events
 - Execute any SQL command from a text field  
-- Export structure, data, views, triggers, routines, events to SQL 
+- Export structure, data, views, triggers, routines, events to SQL
 
 
 #### Requirements 

@@ -6,6 +6,7 @@ defined("_EXEC") or die();
 $SQL = [
 "plugins" => "SHOW PLUGINS;",
 "collation" => "SHOW COLLATION;",
+"character_set" => "SHOW VARIABLES LIKE 'char%';",
 "engines" => "SHOW ENGINES;",
 "processlist" => "SHOW PROCESSLIST;",
 "privileges" => "SHOW PRIVILEGES;",
@@ -15,8 +16,8 @@ SHOW OPEN TABLES WHERE In_use>0;
 SHOW OPEN TABLES;",
 
 "user" => "
-SELECT user, host FROM mysql.user where Grant_priv='Y';
-SELECT user, host, Password FROM mysql.user;",
+SELECT user, host FROM mysql.user WHERE Grant_priv='Y';
+SELECT user, host FROM mysql.user WHERE Host='%';",
 
 ];
 
