@@ -66,7 +66,7 @@ trait Wr_sql
 				}
 			}
 
-			$this->character_name = $this->character_name();
+			$this->character_name = $this->dbc->character_set_name();
 
 			$sql_mode = $this->request("SELECT @@session.sql_mode", __LINE__);
 			if($sql_mode[0]){
@@ -74,8 +74,9 @@ trait Wr_sql
 				$this->sql_mode = $this->fetch_row($sql_mode[1])[0];
 			}
 
-			$this->client_info = $this->client_info();
-			$this->server_info = $this->server_info();
+			$this->client_info = $this->dbc->client_info;
+			
+			$this->server_info = $this->dbc->server_info;
 		}
 		else{
 
@@ -85,15 +86,8 @@ trait Wr_sql
 		}
 	}
 
-	protected function use_db($db)
-	{
-		if($db !== ""){ $this->dbc->real_query("USE `".$db."`;"); }
-	}
-
 	protected function request($sql, $line, $log = true)
 	{
-		$line = "";
-
 		if($log){$this->_LOG["SQL"][] = $sql;}
 
 		$this->dbc->real_query($sql);
@@ -101,9 +95,9 @@ trait Wr_sql
 
 		if($this->dbc->error){
 
-			if($log){$this->_LOG["MESSAGE"][] = $line.htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
+			if($log){$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
 
-			return [false, false];
+			return [false, $this->dbc->errno];
 		}
 
 		return [true, $result];
@@ -124,10 +118,10 @@ trait Wr_sql
 		$this->dbc->real_query($script);
 		$result = $this->dbc->store_result();
 
+		$ST = "<b>".htmlentities($script)."</b><br>";
+
 		if($result)
 		{
-			$ST = "<br><br><b>".preg_replace("/".PHP_EOL."/", "", htmlentities($script))."</b><br>";
-
 			while($row = $result->fetch_assoc())
 			{
 				$ST .= "<br>";
@@ -136,9 +130,9 @@ trait Wr_sql
 					$ST .= htmlentities($k).": ".htmlentities($v, ENT_SUBSTITUTE)."<br>";
 				}
 			}
-
-			$this->_LOG["RESULT"][] = $ST;
 		}
+		
+		$this->_LOG["RESULT"][] = $ST;
 
 		if($this->dbc->error){
 
@@ -158,21 +152,6 @@ trait Wr_sql
 	public function close($result)
 	{
 		$result->close();
-	}
-
-	protected function client_info()
-	{
-		return $this->dbc->client_info;
-	}
-
-	protected function server_info()
-	{
-		return $this->dbc->server_info;
-	}
-
-	protected function character_name()
-	{
-		return $this->dbc->character_set_name();
 	}
 
 	protected function stat()

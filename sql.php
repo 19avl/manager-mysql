@@ -23,13 +23,8 @@ SELECT user, host FROM mysql.user WHERE Host='%';",
 
 
 $FUNCTION = [
-"PASSWORD" => ["'str'"],
 "AES_ENCRYPT" => ["'str'", "'key'"],
 "AES_DECRYPT" => ["'crypt_str'", "'key'"],
-"DES_ENCRYPT" => ["'str'", "'key'"],
-"DES_DECRYPT" => ["'crypt_str'", "'key'"],
-"ASCII" => ["'str'"],
-"ORD" => ["'str'"],
 "CHAR" => ["int", "..."],
 "CONCAT" => ["'str1'", "'str2'", "'...'"],
 "REPLACE" => ["'str'", "'from_str'", "'to_str'"],

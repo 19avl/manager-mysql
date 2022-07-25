@@ -16,18 +16,9 @@ defined("_EXEC") or die();
 
 var ct =
 {
-	st_event: function()
-	{
-		var event = event || window.event;
-		event.preventDefault = event.preventDefault || function(){this.returnValue = false}
-		event.stopPropagation = event.stopPropagaton || function(){this.cancelBubble = true}
-
-		return event;
-	},
-
 	in_stp: function(usr){
 
-		var event = this.st_event();
+		var event = ms.st_event();
 
 		if(event.keyCode === 13){
 
@@ -35,7 +26,6 @@ var ct =
 			event.preventDefault();
 		}
 	},
-
 
 	get_ps: function(){
 
@@ -113,30 +103,16 @@ var ct =
 	{
 		var A = (<?php echo json_encode(Control::$CHECK); ?>).replace(/\s{1,}/g, "").split(",");
 
-		var R = [];
+		var str_check = "";
 
 		for(var i in A)
 		{
 			for(var c in oForm)
 			{
-				if (c === A[i]){
+				if ((c === A[i]) || (new RegExp('\^'+A[i]+'\\[')).test(c)){
 
-						R[A[i]] = oForm[c]+"&";
+					str_check += oForm[c]+"&";
 				}
-				else if((new RegExp('\^'+A[i]+'\\[')).test(c)){
-
-					if(R[A[i]]){ R[A[i]] += oForm[c]+"&"; }
-					else{ R[A[i]] = oForm[c]+"&"; }
-				}
-			}
-		}
-
-		var str_check = "";
-		for(i in A){
-
-			if(R[A[i]]){
-
-				if(typeof R[A[i]] === "string"){ str_check += R[A[i]]; }
 			}
 		}
 
@@ -147,15 +123,6 @@ var ct =
 
 var ms =
 {
-	st_event: function()
-	{
-		var event = event || window.event;
-		event.preventDefault = event.preventDefault || function(){this.returnValue = false}
-		event.stopPropagation = event.stopPropagaton || function(){this.cancelBubble = true}
-
-		return event;
-	},
-
 	pst: function(data)
 	{
 		var container = "content";
@@ -195,6 +162,9 @@ var ms =
 
 						window.scrollTo(0,0);
 					}
+
+					ms.wdf();
+					ms.rdf();
 				}
 			}
 			else{
@@ -233,14 +203,27 @@ var ms =
 						if(form[i].checked){
 
 							data += encodeURIComponent(form[i].name)+"="+encodeURIComponent(form[i].value)+"&";
-							oForm[form[i].name] = form[i].value;
+
+							if(oForm[form[i].name])	{
+
+								oForm[form[i].name] += "&"+form[i].value;
+							}
+							else{
+
+								oForm[form[i].name] = form[i].value;
+							}
 						}
 					}
-					else
+					else if(!form[i].disabled)
 					{
-						if(!form[i].disabled){
+						data += encodeURIComponent(form[i].name)+"="+encodeURIComponent(form[i].value)+"&";
 
-							data += encodeURIComponent(form[i].name)+"="+encodeURIComponent(form[i].value)+"&";
+						if(oForm[form[i].name])	{
+
+							oForm[form[i].name] += "&"+form[i].value;
+						}
+						else{
+
 							oForm[form[i].name] = form[i].value;
 						}
 					}
@@ -485,35 +468,6 @@ var ms =
 		document.getElementById(id).value = vl;
 	},
 
-	"com": "",
-
-	el_open_com: function(id)
-	{
-		if(this.com !== ""){
-
-			if(document.getElementById(this.com)){
-
-				document.getElementById(this.com).style.display = "none";
-			}
-		}
-
-		this.com = id;
-
-		document.getElementById(id).style.display = "block";
-
-		var event = this.st_event();
-
-		event.stopPropagation();
-	},
-
-
-	el_stop_com: function()
-	{
-		var event = this.st_event();
-
-		event.stopPropagation();
-	},
-
 
 	view_wr: function(id, id_close)
 	{
@@ -529,49 +483,6 @@ var ms =
 		}
 
 		window.scrollTo(0,0);
-
-		this.rdf();
-	},
-
-
-	rdf: function()
-	{
-		var script_text = "";
-
-		if (window.File && window.FileReader && window.FileList && window.Blob &&
-			(script_text = document.getElementById('script_text'))) {
-
-			script_text.addEventListener('dragover', handleDragOver, false);
-			script_text.addEventListener('drop', handleFileDrag, false);
-		}
-
-		function handleFileDrag(evt) {
-
-			evt.stopPropagation();
-			evt.preventDefault();
-
-			var files = evt.dataTransfer.files;
-			var file = files[0];
-			var reader = new FileReader();
-
-			reader.onloadend = function(evt) {
-
-				if (evt.target.readyState == FileReader.DONE){
-
-					document.getElementById("script_text").innerHTML =
-						decodeURIComponent(escape(evt.target.result) );
-				}
-			};
-
-			reader.readAsBinaryString(file);
-		}
-
-		function handleDragOver(evt) {
-
-			evt.stopPropagation();
-			evt.preventDefault();
-			evt.dataTransfer.dropEffect = 'copy';
-		}
 	},
 
 
@@ -640,32 +551,191 @@ var ms =
 	},
 
 
-	dr2: function()
+	st_event: function()
 	{
-		if (document.body.addEventListener){
+		var event = event || window.event;
+		event.preventDefault = event.preventDefault || function(){this.returnValue = false}
+		event.stopPropagation = event.stopPropagaton || function(){this.cancelBubble = true}
 
-			document.body.addEventListener('dragover', handleF, false);
-			document.body.addEventListener('drop', handleF, false);
+		return event;
+	},
 
-			document.body.addEventListener('click', el_close_com, false);
+
+	rdf: function()
+	{
+		var script_text = "";
+
+		document.body.addEventListener('dragover', handleDragOver, false);
+		document.body.addEventListener('drop', handleDragOver, false);
+
+		if (window.File && window.FileReader && window.FileList && window.Blob &&
+			(script_text = document.getElementById('script_text'))) {
+
+			script_text.addEventListener('drop', handleFileDrag, false);
 		}
-		else {
 
-			document.body.attachEvent("ondragover", handleF);
-			document.body.attachEvent("ondrop", handleF);
-
-
-			document.body.attachEvent("onclick", el_close_com);
-		}
-
-		function handleF() {
+		function handleFileDrag() {
 
 			var evt = ms.st_event();
 
 			evt.stopPropagation();
 			evt.preventDefault();
-			return false;
+
+			var files = evt.dataTransfer.files;
+
+			ms.get_files(files);
 		}
+
+		function handleDragOver() {
+
+			var evt = ms.st_event();
+
+			evt.stopPropagation();
+			evt.preventDefault();
+			evt.dataTransfer.dropEffect = 'copy';
+		}
+	},
+
+
+	get_files: function(files)
+	{
+		var str = "";
+
+		for (var i = 0, f; f = files[i]; i++)
+		{
+			(function(e) {
+
+				var reader = new FileReader();
+
+				reader.onloadend = function(){
+
+					if (reader.readyState == FileReader.DONE) {
+
+						str += reader.result;
+
+						if(e === (files["length"]-1)){
+
+							document.getElementById("script_text_file").innerText = window.btoa(str);
+
+							ms.RF('_FILE_SQL', '', '', document.getElementById("script_text_file").form, 0);
+						}
+
+					}
+				};
+
+				reader.readAsBinaryString(f);
+
+			})(i);
+		}
+	},
+
+
+	get_rcul_file: function(files, tr, fn, pr, blob_ch_id, prev_name_id)
+	{
+		var name = "";
+		var str = "";
+		var prev = "";		
+		
+		for (var i = 0, f; f = files[i]; i++)
+		{
+			(function(e) {
+				
+				var reader = new FileReader();
+
+				reader.onloadend = function(){
+
+					if (reader.readyState == FileReader.DONE) {
+
+						name += files[e].name.replace (/\\/g, "/").split ('/').pop ()+"; ";
+
+						str += reader.result;
+
+						if(e === (files["length"]-1)){
+
+							document.getElementById(fn).value = name;	
+						
+							document.getElementById(tr).innerText = window.btoa(str);	
+	
+							document.getElementById(pr).innerText = "";	
+							document.getElementById(pr).hidden = "hidden";
+
+							document.getElementById(blob_ch_id).value = "2";	
+
+							document.getElementById(prev_name_id).style.display = "none";							
+						}
+					}
+				};
+
+				reader.readAsBinaryString(f);
+				
+			})(i);				
+		}
+	},
+
+
+	reset_rcul_file: function(files_id, file_name_id, text_name_id, blob_ch_id, prev_name_id)
+	{
+		document.getElementById(files_id).innerText = "";	
+		
+		document.getElementById(file_name_id).value = "";
+		
+		document.getElementById(text_name_id).innerText = "";	
+		document.getElementById(text_name_id).hidden = "none";
+
+		document.getElementById(blob_ch_id).value = "2";	
+
+		document.getElementById(prev_name_id).style.display = "none";		
+	},
+
+
+	get_rcul_text: function(files_id, file_name_id, text_name_id, blob_ch_id, prev_name_id)
+	{
+		document.getElementById(files_id).innerText = "";	
+
+		document.getElementById(file_name_id).value = "";
+		
+		document.getElementById(text_name_id).innerText = "";
+		document.getElementById(text_name_id).hidden = "";
+
+		document.getElementById(blob_ch_id).value = "2";	
+	
+		document.getElementById(prev_name_id).style.display = "none";	
+	},
+
+
+	"com": "",
+
+	el_open_com: function(id)
+	{
+		if(this.com !== ""){
+
+			if(document.getElementById(this.com)){
+
+				document.getElementById(this.com).style.display = "none";
+			}
+		}
+
+		this.com = id;
+
+		document.getElementById(id).style.display = "block";
+
+		var event = this.st_event();
+
+		event.stopPropagation();
+	},
+
+
+	el_stop_com: function()
+	{
+		var event = this.st_event();
+
+		event.stopPropagation();
+	},
+
+
+	wdf: function()
+	{
+		document.body.addEventListener('click', el_close_com, false);
 
 		function el_close_com()
 		{
@@ -677,15 +747,13 @@ var ms =
 				}
 			}
 		}
-
 	},
 };
 
 
 var dl =
 {
-
-	creat_rcdl: function(this_id, function_id, file_id, text_id, mod_id)
+	creat_rcdl: function(this_id, text_id, mod_id, title)
 	{
 		document.getElementById(mod_id).style.display = '';
 
@@ -693,34 +761,15 @@ var dl =
 		document.getElementById('rcDl_window').style.display = '';
 		document.getElementById('rcDl_buf_id').value = this_id;
 
-		if(function_id !== ''){
-
-			document.getElementById('function_id').value = function_id;
-		}
-
-		if(file_id !== ''){
-
-			document.getElementById('file_id').value = file_id;
-		}
-
-		if(text_id !== ''){
-
-			document.getElementById('text_id').value = text_id;
-		}
+		document.getElementById('text_id').value = text_id;
+		document.getElementById('note_function').innerHTML = title;
 	},
 
 	close_rcdl: function()
 	{
 		document.getElementById('rcDl_ground').style.display = 'none';
 		document.getElementById('rcDl_window').style.display = 'none';
-
 		document.getElementById('function_dv').style.display = 'none';
-		document.getElementById('file_dv').style.display = 'none';
-
-		document.getElementById('file_id').value = "";
-		document.getElementById('file_prev').innerHTML = "";
-
-		document.getElementById('input_file_id').value = "";
 	},
 
 	unset_rcdl_function: function(id, text_id)
@@ -759,77 +808,6 @@ var dl =
 		this.close_rcdl();
 	},
 
-	set_rcdl_file: function(id, val, file_id, function_id)
-	{
-		document.getElementById(document.getElementById(id).value).value = val;
-
-		document.getElementById(document.getElementById(file_id).value).value = "";
-
-		document.getElementById(document.getElementById(function_id).value).disabled = "";
-
-		document.getElementById(document.getElementById('rcDl_buf_id').value).value = "<?php print _NOTE_FILE.'...'; ?>";
-
-		this.close_rcdl();
-	},
-
-
-
-	strtv: function(str)
-	{
-		var hex = "";
-		for(var i=0; i<str.length; i++) {
-
-			if((str.codePointAt(i) > 31) && (str.codePointAt(i) < 127)){
-
-				hex += str[i];
-			}
-			else{
-
-				hex += ".";
-			}
-		}
-		return hex;
-	},
-
-
-	get_rcdl_file: function(files)
-	{
-		document.getElementById('file_prev').innerHTML = "";
-
-		for (var i = 0, f; f = files[i]; i++){
-
-			var reader = new FileReader();
-
-			reader.onloadend = function(){
-
-				if (reader.readyState == FileReader.DONE) {
-
-					document.getElementById(document.getElementById('file_id').value).value =
-						window.btoa(reader.result);
-
-					try {
-
-						document.getElementById('file_prev').innerHTML +=
-							decodeURIComponent(escape(reader.result)).replace(/</g, "&lt;").replace(/>/g, "&gt;")+'<br><br>';
-					}
-					catch (err) {
-
-						document.getElementById('file_prev').innerHTML += dl.strtv(reader.result)+'<br><br>';
-					}
-				}
-			};
-
-			reader.readAsBinaryString(f);
-		}
-
-		var fileName = files[0].name.replace (/\\/g, "/").split ('/').pop ();
-
-		document.getElementById(document.getElementById('rcDl_buf_id').value).value = fileName;
-
-		document.getElementById(document.getElementById('function_id').value).value = "";
-
-		document.getElementById(document.getElementById('function_id').value).disabled = "yes";
-	},
 }
 
 </script>
@@ -841,8 +819,8 @@ body{background: #555555; color: #eee; }
 .user{color: #f70; font-size: 17px;}
 
 .res{}
-.res_message{background: #111;}
-.res_message_close{color: #999; background: #111;}
+.res_message{background: #222;}
+.res_message_close{color: #999; background: #222;}
 
 .message_at{ color: #f70; }
 .message{ color: #f70; }
@@ -876,6 +854,12 @@ border: 2px solid #333;
 background:#333;
 color: #eee;
 border: 1px solid #333;
+}
+
+.slc_list{
+background:#333; 
+color: #eee;
+border: 1px solid #333; 
 }
 
 .int, .int_pass{
@@ -1004,6 +988,26 @@ border-bottom: 3px solid #555;
 }
 
 
+.file_ul{
+color: #eee;
+}
+
+.file_ul:hover{
+color: #999;
+}
+
+
+.file_dl_a{
+color: #eee;
+}
+
+.file_dl_a:hover{
+color: #999;
+}
+
+
+
+
 html{height:100%;}
 
 body{
@@ -1043,11 +1047,11 @@ max-height: 300px;
 }
 
 .res_message{
-z-index: 505;	
-position:fixed; 
-display:inline-block; 
+z-index: 505;
+position:fixed;
+display:inline-block;
 overflow: auto;
-bottom:0; 
+bottom:0;
 left: 0px;
 padding: 9px 0px 9px 0px;
 width: 100%;
@@ -1055,10 +1059,10 @@ max-height: 170px;
 }
 
 .res_message_close{
-z-index: 505;	
-position:fixed; 
-display:inline-block; 
-bottom:0; 
+z-index: 505;
+position:fixed;
+display:inline-block;
+bottom:0;
 left: 0px;
 padding: 5px 11px 7px 11px;
 font-size: 17px;
@@ -1066,7 +1070,7 @@ cursor: pointer;
 max-height: 170px;
 }
 
-.message_at{ 
+.message_at{
 padding-bottom: 5px;
 }
 
@@ -1075,7 +1079,6 @@ padding: 2px 0px 2px 37px;
 }
 
 .result{
-font-size: 14px;
 padding-bottom: 11px;
 }
 
@@ -1133,6 +1136,13 @@ text-align: left;
 width: 125px;
 padding: 7px;
 margin: 3px 2px 2px 0px;
+outline: none;
+text-align: left;
+}
+
+.slc_list{ 
+width: 45px;
+padding: 7px;
 outline: none;
 text-align: left;
 }
@@ -1277,6 +1287,14 @@ width: 278px;
 .type_value_sl_k{
 display:inline-block;
 white-space: nowrap;
+}
+
+.rt_list_tb{
+border-spacing: 0;
+}
+
+.rt_list_tb td{
+padding: 0 2px 2px 0;
 }
 
 #script_text{
@@ -1557,28 +1575,22 @@ padding: 3px;
 }
 
 
-.rcDl_file-upload{
-position: relative;
-overflow: hidden;
-width: 30px;
-height: 20px;
-background: #333;
-padding: 5px;
-color: #555;
-text-align: center;
-color: #eee;
+
+
+
+.file_ul{
+position: relative; 
+overflow: hidden; 
+width: 171px; 
+height: 41px;
+line-height: 39px;
 }
 
-.rcDl_file-upload:hover{
-color: #777;
-}
-
-.rcDl_file-upload input[type="file"]{
+.file_ul input[type="file"]{
 display: none;
 }
 
-.rcDl_file-upload label{
-display: block;
+.file_ul label{
 position: absolute;
 top: 0;
 left: 0;
@@ -1587,17 +1599,28 @@ height: 100%;
 cursor: pointer;
 }
 
-.rcDl_file-upload span{
-line-height: 31px;
+.file_ul span{
+padding: 0px 11px 0px 0px;	
+font-size: 15px;
 }
 
 
+.file_dl{
+margin: 0px;
+padding: 0px 11px 0px 0px;	
+display:inline-block; 
+line-height: 39px;
+}
+
+.file_dl_a{
+font-size: 15px;
+text-decoration: none;
+}
 
 </style>
 
-
 </head>
-<body onload="ms.pst('session=<?php echo _SESSION; ?>');ms.dr2();">
+<body onload="ms.pst('session=<?php echo _SESSION; ?>');">
 
 <?php Control::storage(); ?>
 

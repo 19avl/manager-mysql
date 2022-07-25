@@ -1,7 +1,7 @@
 
 ## Manager for MySQL
 
-Copyright (c) 2018-2021 Andrey Lyskov
+Copyright (c) 2018-2022 Andrey Lyskov
 
 #### Description
 
@@ -22,7 +22,7 @@ Web-based administration tool for MYSQL.
 
 #### Requirements 
 
-PHP (>=5.6) [ mysqli extension ]  
+PHP (>=7.0) [ mysqli extension ]  
 MySQL (>=5.5)
 
 #### Usage

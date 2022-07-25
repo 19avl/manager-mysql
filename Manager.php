@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2021 Andrey Lyskov
+Copyright (c) 2018-2022 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -17,25 +17,30 @@ Class Manager
 	{
 		$this->_LOG = [];
 		$this->connect = false;
-	}
 
+		$this->DS = [];
+
+		$this->ext = [
+			"geo" => ["geometry", "point", "linestring", "polygon",
+				"multipoint", "multilinestring", "multipolygon","geomcollection","geometrycollection"],
+			"blob" => ["tinyblob", "blob", "mediumblob", "longblob"],
+			"binary" => ["varbinary", "binary"],
+			"text" => ["tinytext", "text", "mediumtext", "longtext"],
+			"char" => ["varchar", "char"],
+		];
+	}
 
 	public function mk($script_id, $_sql)
 	{
-		$RT = [];
-		$RT["LIST"] =  [];
-		$RT["SCRIPT"] = "";
-
-		$RT["LIST"] = array_keys($_sql);
+		$SQL_SL = "";
 
 		if($script_id !== ""){
 
-			$RT["SCRIPT"] = $_sql[$script_id];
+			$SQL_SL = $_sql[$script_id];
 		}
 
-		return $RT;
+		return $SQL_SL;
 	}
-
 
 	public function db($nv, $LIMIT)
 	{
@@ -44,15 +49,18 @@ Class Manager
 		$RT["COUNT"] = "";
 		$RT["FROM"] = [];
 		$RT["ON_PAGE"] = $LIMIT["SCHEMA"];
-		$RT["FIELD_ST"] = ["SCHEMA_NAME", "DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
-		$RT["FIELD_ST_NAV"] = ["SCHEMA_NAME", "DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
-		$RT["FIELD_SE"] = ["DEFAULT_CHARACTER_SET_NAME", "DEFAULT_COLLATION_NAME"];
+
+		$RT["FIELD_ST"] = ["SCHEMA_NAME", "DEFAULT_COLLATION_NAME"];
+		$RT["FIELD_ST_NAV"] = ["SCHEMA_NAME", "DEFAULT_COLLATION_NAME", "DEFAULT_CHARACTER_SET_NAME"];
+
+		$RT["FIELD_SE"] = ["DEFAULT_COLLATION_NAME", "DEFAULT_CHARACTER_SET_NAME"];
+
 		$RT["FILTER_EX"] = [];
 
 		if($nv["page_db"] === "0"){$nv["page_db"] = $RT["ON_PAGE"][0];}
 
 		$WHERE = "";
-		$RT["FILTER_EX"] = $this->get_wr($nv, [], [], "db", $WHERE);
+		$RT["FILTER_EX"] = $this->get_wr($nv, [], "db", $WHERE);
 
 		$result = $this->request("SELECT COUNT(*) FROM information_schema.SCHEMATA ".$WHERE.";", __LINE__);
 
@@ -66,7 +74,7 @@ Class Manager
 		$result = $this->request("SELECT
 			SCHEMA_NAME, DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
 			FROM information_schema.SCHEMATA ".$WHERE." ORDER BY ".
-			($nv["order_db"]+1)." LIMIT ".$nv["from_db"].", ".$nv["page_db"].";", __LINE__);
+			($RT["FIELD_ST"][$nv["order_db"]])." LIMIT ".$nv["from_db"].", ".$nv["page_db"].";", __LINE__);
 
 		if($result[0]){
 
@@ -119,11 +127,7 @@ Class Manager
 		$RT[] = "SERVER_INFO: ".$this->server_info;
 		$RT[] = "CHARACTER_NAME: ".$this->character_name;
 
-		$sql_mode = $this->request("SELECT @@session.sql_mode", __LINE__);
-		if($sql_mode[0]){
-
-			$RT[] = "SQL_MODE: ".str_replace(",", ", ", $this->fetch_row($sql_mode[1])[0]);
-		}
+		$RT[] = "SQL_MODE: ".$this->sql_mode;
 
 		$RT[] = "&nbsp;";
 
@@ -176,47 +180,6 @@ Class Manager
 			}
 		}
 
-		$result = $this->request("SELECT PRIVILEGE_TYPE, TABLE_SCHEMA
-			FROM `information_schema`.`SCHEMA_PRIVILEGES`
-			WHERE `GRANTEE` = '\'".$_user[0]."\'@\'".$_user[1]."\'';", __LINE__);
-
-		if($result[0]){
-
-			while( $row = $this->fetch_assoc($result[1]) ){
-
-				$RT[] = $this->html($row["TABLE_SCHEMA"]).": ".$row["PRIVILEGE_TYPE"];
-			}
-		}
-
-		$result = $this->request("SELECT PRIVILEGE_TYPE, TABLE_SCHEMA, TABLE_NAME
-			FROM `information_schema`.`TABLE_PRIVILEGES`
-			WHERE `GRANTEE` = '\'".$_user[0]."\'@\'".$_user[1]."\'';", __LINE__);
-
-		if($result[0]){
-
-			while( $row = $this->fetch_assoc($result[1]) ){
-
-				$RT[] = $this->html($row["TABLE_SCHEMA"])." . ".
-					$this->html($row["TABLE_NAME"]).": ".
-					$row["PRIVILEGE_TYPE"];
-			}
-		}
-
-		$result = $this->request("SELECT PRIVILEGE_TYPE, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
-			FROM `information_schema`.`COLUMN_PRIVILEGES`
-			WHERE `GRANTEE` = '\'".$_user[0]."\'@\'".$_user[1]."\'';", __LINE__);
-
-		if($result[0]){
-
-			while( $row = $this->fetch_assoc($result[1]) ){
-
-				$RT[] = $this->html($row["TABLE_SCHEMA"])." . ".
-					$this->html($row["TABLE_NAME"])." . ".
-					$this->html($row["COLUMN_NAME"]).": ".
-					$row["PRIVILEGE_TYPE"];
-			}
-		}
-
 		return $RT;
 	}
 
@@ -244,17 +207,16 @@ Class Manager
 		$RT["FROM"] = [];
 		$RT["ON_PAGE"] = $LIMIT["TABLES"];
 
-		$RT["FIELD_ST"] = ["table_name", "create_time", "update_time", "engine", "table_collation", "table_type"];
-		$RT["FIELD_ST_NAV"] = ["table_name", "create_time", "update_time", "engine", "table_collation", "table_type"];
+		$RT["FIELD_ST"] = ["table_name", "create_time", "update_time", "engine", "table_collation", "table_type", "row_format"];
+		$RT["FIELD_ST_NAV"] = ["table_name", "create_time", "update_time", "engine", "table_collation", "table_type", "row_format"];
 
 		$RT["FIELD_SE"] = ["CREATE_TIME", "UPDATE_TIME", "ENGINE", "TABLE_COLLATION",
-			"TABLE_TYPE", "DATA_LENGTH", "ROW_FORMAT", "TABLE_COMMENT", "AUTO_INCREMENT"];
+			"TABLE_TYPE", "ROW_FORMAT", "DATA_LENGTH", "TABLE_COMMENT", "AUTO_INCREMENT"];
 
 		$RT["FILTER_EX"] = [];
 
 		$RT["PRIVILEGES"] = [];
 
-		$VIEW = [];
 		$OPEN_TABLES = [];
 
 		$SUB_PR = [];
@@ -267,14 +229,14 @@ Class Manager
 		{
 			$RT["CREATE"]["DB"] = $this->fetch_row($CREATE[1])[1];
 
-			$this->use_db($_DBS);
+			$this->request("USE `".$_DBS."`;", __LINE__);
 
 			$result = $this->request("SELECT TABLE_NAME
 				FROM information_schema.VIEWS WHERE TABLE_SCHEMA=x'".$_DB."';", __LINE__, false);
 
 			if($result[0])
 			{
-				while( $row = $result[1]->fetch_assoc() ){
+				while( $row = $this->fetch_assoc($result[1]) ){
 
 					$CREATE = $this->request("SHOW CREATE TABLE `$_DBS`.`".$row["TABLE_NAME"]."`;", __LINE__);
 
@@ -282,8 +244,6 @@ Class Manager
 
 						$RT["VIEWS"][$row["TABLE_NAME"]] = $this->fetch_row($CREATE[1])[1];
 					}
-
-					$VIEW[] = $row["TABLE_NAME"];
 				}
 			}
 
@@ -403,7 +363,7 @@ Class Manager
 			if($nv["page_tb"] === "0"){$nv["page_tb"] = $RT["ON_PAGE"][0];}
 
 			$WHERE = "";
-			$RT["FILTER_EX"] = $this->get_wr($nv, [], [], "tb", $WHERE);
+			$RT["FILTER_EX"] = $this->get_wr($nv, [], "tb", $WHERE);
 
 			$result = $this->request("SELECT COUNT(*)
 				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE." ;", __LINE__);
@@ -417,9 +377,9 @@ Class Manager
 
 			$result = $this->request("SELECT
 				TABLE_NAME, CREATE_TIME, UPDATE_TIME, ENGINE, TABLE_COLLATION,
-				TABLE_TYPE, DATA_LENGTH, ROW_FORMAT, TABLE_COMMENT, AUTO_INCREMENT
+				TABLE_TYPE, ROW_FORMAT, DATA_LENGTH, TABLE_COMMENT, AUTO_INCREMENT
 				FROM information_schema.TABLES where TABLE_SCHEMA=x'".$_DB."' ".$WHERE." ORDER BY ".
-				($nv["order_tb"]+1)." LIMIT ".$nv["from_tb"].", ".$nv["page_tb"].";", __LINE__);
+				($RT["FIELD_ST"][$nv["order_tb"]])." LIMIT ".$nv["from_tb"].", ".$nv["page_tb"].";", __LINE__);
 
 			if($result[0]){
 
@@ -457,7 +417,7 @@ Class Manager
 	}
 
 
-	public function rc($_DB, $_TB, $nv, $exceptions, $LIMIT, $mode)
+	public function rc($_DB, $_TB, $nv, $LIMIT, $mode)
 	{
 		$_DBS = $this->h2s($_DB);
 		$_TBS = $this->set_name($this->h2s($_TB));
@@ -467,8 +427,6 @@ Class Manager
 		$RT["TB"] = $_TBS;
 		$RT["CREATE"] = [];
 		$RT["PRI"] = false;
-		$RT["EXCEPT_GEO"] = false;
-		$RT["EXCEPT_BIN"] = false;
 		$RT["TABLE_TYPE"] = "";
 		$RT["ENGINE"] = "";
 		$RT["FIELDS"] = [];
@@ -491,15 +449,22 @@ Class Manager
 				"ADD CONSTRAINT `...` \nFOREIGN KEY (`...`) \nREFERENCES `...` (`...`);",
 				"ADD UNIQUE (`...`);",
 				"ADD INDEX (`...`);",
-				"ADD\n... \nFIRST;",
 			],
 			"CHANGE"=>[],
 			"DROP"=>[]
 			];
+
+			if($this->server_info[0] > 5){
+
+				array_push($RT["ALTER_TABLE"]["ADD"], "ADD CHECK (...);");
+			}
+
+			array_push($RT["ALTER_TABLE"]["ADD"],"ADD\n... \nFIRST;");
 		}
 
 		$CONSTRAINT = [];
 		$LIST = [];
+		$LIST_KEY = [];
 
 		$CREATE = $this->request("SHOW CREATE DATABASE `$_DBS`", __LINE__);
 
@@ -568,7 +533,7 @@ Class Manager
 
 				$result = $this->request("SELECT kc.COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
 					FROM information_schema.TABLE_CONSTRAINTS tc
-					JOIN information_schema.KEY_COLUMN_USAGE kc
+					LEFT JOIN information_schema.KEY_COLUMN_USAGE kc
 					ON tc.TABLE_SCHEMA = kc.TABLE_SCHEMA
 					AND tc.TABLE_NAME = kc.TABLE_NAME
 					AND tc.CONSTRAINT_NAME = kc.CONSTRAINT_NAME
@@ -576,7 +541,10 @@ Class Manager
 
 				while( $row = $this->fetch_row($result[1]) )
 				{
-					$CONSTRAINT[$row[0]][] = $row[2];
+					if($row[0] !== NULL){
+
+						$CONSTRAINT[$row[0]][] = $row[2];
+					}
 
 					if(trim($row[2]) === "FOREIGN KEY"){
 
@@ -585,6 +553,10 @@ Class Manager
 					elseif((trim($row[2]) === "PRIMARY KEY") && (!in_array("DROP PRIMARY KEY;", $RT["ALTER_TABLE"]["DROP"]))){
 
 						array_push($RT["ALTER_TABLE"]["DROP"], "DROP PRIMARY KEY;");
+					}
+					elseif(trim($row[2]) === "CHECK"){
+
+						array_push($RT["ALTER_TABLE"]["DROP"], "DROP CHECK `".$row[1]."`;");
 					}
 				}
 			}
@@ -606,7 +578,8 @@ Class Manager
 						array_push($RT["ALTER_TABLE"]["CHANGE"], "CHANGE COLUMN `".$row["COLUMN_NAME"]."` \n...\n;");
 						array_push($RT["ALTER_TABLE"]["DROP"], "DROP COLUMN `".$row["COLUMN_NAME"]."`;");
 
-						if(!in_array( $row["DATA_TYPE"], $exceptions["bin"])){
+						if(!in_array( $row["DATA_TYPE"], $this->ext["blob"]) &&
+							!in_array( $row["DATA_TYPE"], $this->ext["binary"])){
 
 							$RT["FIELD_ST_NAV"][] = $row["COLUMN_NAME"];
 						}
@@ -701,10 +674,12 @@ Class Manager
 						}
 					}
 
-					if($row["COLUMN_KEY"] == "PRI"){$RT["PRI"] = true;}
+					if(($row["COLUMN_KEY"] === "PRI") || ($row["COLUMN_KEY"] === "UNI")){
 
-					if(in_array( $row["DATA_TYPE"], $exceptions["geo"])){$RT["EXCEPT_GEO"] = true;}
-					if(in_array( $row["DATA_TYPE"], $exceptions["bin"])){$RT["EXCEPT_BIN"] = true;}
+						$RT["PRI"] = true;
+
+						$LIST_KEY[] = $row['COLUMN_NAME'];
+					}
 
 					if($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "bit"){
 
@@ -716,7 +691,7 @@ Class Manager
 
 						$LIST[] = "abs(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
 					}
-					elseif(in_array( $row["COLUMN_TYPE"], $exceptions["geo"])){
+					elseif(in_array( $row["COLUMN_TYPE"], $this->ext["geo"])){
 
 						$LIST[] = "ST_AsText(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
 					}
@@ -726,17 +701,17 @@ Class Manager
 					}
 				}
 
-				if(($RT["TABLE_TYPE"] !== "VIEW") && ($mode === "")){
+				if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["TABLE_TYPE"] !== "SYSTEM VIEW") && ($mode === "")){
 
-					if(!$RT["PRI"]){ $this->_LOG["MESSAGE"][] = _MESSAGE_UNIQUE_COLUMN; }
+					if(!$RT["PRI"]){ $this->_LOG["RESULT"][] = _MESSAGE_UNIQUE_COLUMN; }
 				}
 			}
 
 			$WHERE = "";
-			$RT["FILTER_EX"] = $this->get_wr($nv, $RT["FIELDS"], $exceptions, "rc", $WHERE);
+			$RT["FILTER_EX"] = $this->get_wr($nv, $RT["FIELDS"], "rc", $WHERE);
 
 			if($nv["page_rc"] === "0"){$nv["page_rc"] = $RT["ON_PAGE"][0];}
-			elseif($nv["page_rc"] === "1"){array_push($RT["ON_PAGE"], "1");}
+			elseif(($nv["page_rc"] === "1") && !in_array("1", $RT["ON_PAGE"])){array_unshift($RT["ON_PAGE"], "1");}
 
 			$result = $this->request("SELECT COUNT(*)
 				FROM `$_DBS`.`$_TBS` ".$WHERE." ;", __LINE__);
@@ -752,7 +727,7 @@ Class Manager
 
 			if($mode !== ""){$LIMIT = "";}
 
-			$this->use_db($_DBS);
+			$this->request("USE `".$_DBS."`;", __LINE__);
 
 			$ORDER_LIST	= array_keys($LIST);
 			unset($ORDER_LIST[0]);
@@ -763,10 +738,20 @@ Class Manager
 			$result = $this->request("SELECT ".implode(", ",  $LIST).
 				" FROM `".$_DBS."`.`".$_TBS."` ".$WHERE." ORDER BY ".$order_list_st.$LIMIT.";", __LINE__);
 
-			if($result[0]){
-
+			if($result[0])
+			{
 				while($res = $this->fetch_assoc($result[1])){
 
+					$RT["RECORDS"][] = $res;
+				}
+			}
+			elseif(($result[1] === 1038) && (count($LIST_KEY)) !== 0)
+			{
+				$result = $this->request("SELECT ".implode(", ",  $LIST_KEY).
+					" FROM `".$_DBS."`.`".$_TBS."` ".$WHERE." ORDER BY ".$order_list_st[0].$LIMIT.";", __LINE__);
+
+				while($res = $this->fetch_assoc($result[1]))
+				{
 					$RT["RECORDS"][] = $res;
 				}
 			}
@@ -810,7 +795,23 @@ Class Manager
 
 			while( $row = $this->fetch_assoc($result[1]) ){
 
-				$RT["PRIVILEGES"]["COLUMN_PRIVILEGES"][] = $row["PRIVILEGE_TYPE"]."-".$row["COLUMN_NAME"];
+				$RT["PRIVILEGES"]["COLUMN_PRIVILEGES"][$row["PRIVILEGE_TYPE"]][] = $row["COLUMN_NAME"];
+			}
+		}
+
+		if(!isset($RT["PRIVILEGES"]["COLUMN_PRIVILEGES"]))
+		{
+			$result = $this->request("SELECT PRIVILEGE_TYPE
+				FROM `information_schema`.`TABLE_PRIVILEGES`
+				WHERE `GRANTEE` = '\'".$_user[0]."\'@\'".$_user[1]."\''
+				AND TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME=x'".$_TB."';", __LINE__);
+
+			if($result[0]){
+
+				while( $row = $this->fetch_assoc($result[1]) ){
+
+					$RT["PRIVILEGES"]["TABLE_PRIVILEGES"][] = $row["PRIVILEGE_TYPE"];
+				}
 			}
 		}
 
@@ -862,9 +863,40 @@ Class Manager
 		{
 			foreach($list_tb as $val)
 			{
+				$field = [];
+
+				$result = $this->request("select COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION
+					from information_schema.columns where TABLE_SCHEMA=x'".$_DB."'
+					AND table_name = x'".$val."' ORDER BY ORDINAL_POSITION;", __LINE__);
+
+				if($result[0]){
+
+					while($row = $this->fetch_assoc($result[1])){
+
+						if($row["DATA_TYPE"] === "float"){
+
+							$field[] = "abs(`".$row["COLUMN_NAME"]."`)";
+						}
+						elseif($row["DATA_TYPE"] === "bit"){
+
+							$field[] = "LPAD(BIN(`".$row["COLUMN_NAME"]."`), ".$row["NUMERIC_PRECISION"].", '0')";
+						}
+						elseif(in_array($row["DATA_TYPE"], $this->ext["geo"])){
+
+							$field[] = "ST_AsText(`".$row["COLUMN_NAME"]."`)";
+						}
+						else{
+
+							$field[] = "`".$row["COLUMN_NAME"]."`";
+						}
+					}
+				}
+
+				$tc = implode(",", $field);
+
 				$valS = $this->h2s($val);
 
-				$result = $this->request("SELECT * FROM `$_DBS`.`$valS`;", __LINE__);
+				$result = $this->request("SELECT ".$tc." FROM `$_DBS`.`$valS`;", __LINE__);
 
 				if($result[0])
 				{
@@ -961,7 +993,7 @@ Class Manager
 
 						if($CREATE[0]){
 
-							$this->use_db($copy_2bdS);
+							$this->request("USE `".$copy_2bdS."`;", [], __LINE__, false);
 
 							$result = $this->request($this->fetch_row($CREATE[1])[1], __LINE__);
 						}
@@ -1037,11 +1069,12 @@ Class Manager
 									}
 
 									$this->request("ALTER TABLE `".$copy_2bdS."`.`".$tbs_new."` ADD CONSTRAINT ".
-									$row_constraint["CONSTRAINT_NAME"]."0 FOREIGN KEY (`".
+									$row_constraint["CONSTRAINT_NAME"].time()." FOREIGN KEY (`".
 									$row_constraint["COLUMN_NAME"]."`) REFERENCES `".
 									$_DBST."`.`".
 									$row_constraint["REFERENCED_TABLE_NAME"]."` (`".
 									$row_constraint["REFERENCED_COLUMN_NAME"]."`) ".$action.";", __LINE__);
+
 								}
 
 								$result = $this->request("SET FOREIGN_KEY_CHECKS=1;", __LINE__);
@@ -1051,30 +1084,13 @@ Class Manager
 				}
 				else
 				{
-					$infview = $this->request("SELECT * FROM information_schema.VIEWS
-						WHERE TABLE_SCHEMA=x'".$_DB."' AND TABLE_NAME='".addslashes($valS)."';", __LINE__);
+					$listview = $this->request("SHOW CREATE TABLE `".$_DBS."`.`".$valS."`;", __LINE__);
 
-					if($infview[0])
-					{
-						if($pre === false)
-						{
-							$_TBST = $valS;
-						}
-						else
-						{
-							$_TBST = $tbs_new;
-						}
+					if($listview[0]){
 
-						$listview = $this->request("SHOW CREATE TABLE `".$_DBS."`.`".$valS."`;", __LINE__);
+						$CT = $this->get_view_tr($this->fetch_row($listview[1])[1], $_DBS, $valS, $copy_2bdS, $tbs_new);
 
-						if($listview[0])
-						{
-							$CT = $this->fetch_row($listview[1])[1];
-
-							$CT = $this->get_view_tr($CT, $_DBS, $valS, $copy_2bdS, $_TBST);
-
-							$this->request($CT, __LINE__);
-						}
+						$this->request($CT, __LINE__);
 					}
 				}
 			}
@@ -1096,19 +1112,25 @@ Class Manager
 
 		$db_new = $this->s2h($dbs_new);
 
-		$result = $this->request("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
-			FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$_db."';", __LINE__);
+		$result = $this->request("SELECT * FROM information_schema.SCHEMATA where SCHEMA_NAME=x'".$_db."';", __LINE__);
 
 		if($result[0])
 		{
-			$schema = $this->fetch_row($result[1]);
+			$schema = $this->fetch_assoc($result[1]);
+
+			$ENCRYPTION = "";
+			if(isset($schema["DEFAULT_ENCRYPTION"])){
+
+				$ENCRYPTION = " ENCRYPTION='".$schema["DEFAULT_ENCRYPTION"][0]."' ";
+			}
 
 			$result = $this->request(
-				"CREATE DATABASE `".$dbs_new."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";", __LINE__);
+				"CREATE DATABASE `".$dbs_new."` CHARACTER SET ".$schema["DEFAULT_CHARACTER_SET_NAME"].
+				" COLLATE ".$schema["DEFAULT_COLLATION_NAME"].$ENCRYPTION.";", __LINE__);
 
 			if($result[0])
 			{
-				$this->use_db($dbs_new);
+				$this->request("USE `".$dbs_new."`;", __LINE__);
 
 				$this->copy_tb($_db, $this->get_list_tb($_db), $db_new, "", false);
 
@@ -1116,24 +1138,6 @@ Class Manager
 					"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER", "SQL Original Statement", "");
 
 				foreach($triggers as $vt){$result = $this->request($vt, __LINE__);}
-
-				$procedure = $this->get_sub($_db, $valueS,
-					"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE", "Create Procedure",
-					"ROUTINE_TYPE='PROCEDURE' AND");
-
-				foreach($procedure as $vt){$result = $this->request($vt, __LINE__);}
-
-				$function = $this->get_sub($_db, $valueS,
-					"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION", "Create Function",
-					"ROUTINE_TYPE='FUNCTION' AND");
-
-				foreach($function as $vt){$result = $this->request($vt, __LINE__);}
-
-
-				$events = $this->get_sub($_db, $valueS,
-					"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "");
-
-				foreach($events as $vt){$result = $this->request($vt, __LINE__);}
 			}
 		}
 	}
@@ -1155,37 +1159,19 @@ Class Manager
 	}
 
 
-	public function export($_DB, $list_tb, $nv, $exceptions, $mode, $type)
+	public function export($_DB, $list_tb, $nv, $mode, $type)
 	{
 		$RT = [];
 
 		foreach($list_tb as $val)
 		{
-			$RT[] = $this->rc( $_DB, $val, $nv, $exceptions, ["RECORDS"=>["1"]], $mode );
+			$RT[] = $this->rc( $_DB, $val, $nv, ["RECORDS"=>["1"]], $mode );
 		}
 
 		return $RT;
 	}
 
-
-	private function default_value($column_default, $value)
-	{
-		if(($column_default === NULL) && ($value === NULL)){
-
-			return 'NULL';
-		}
-		elseif($column_default === "0"){
-
-			return 0;
-		}
-		else{
-
-			return "''";
-		}
-	}
-
-
-	public function export_sql($list_db, $list_tb, $nv, $exceptions, $mode)
+	public function export_sql($list_db, $list_tb, $nv, $mode)
 	{
 		$filename = date("d-m-Y").".sql";
 
@@ -1212,11 +1198,11 @@ Class Manager
 					$str .= PHP_EOL."USE `$_DBS`;";
 				}
 
-				$RT = $this->export($value, $this->get_list_tb($value), $nv, $exceptions, $mode, "sql");
+				$RT = $this->export($value, $this->get_list_tb($value), $nv, $mode, "sql");
 			}
 			else{
 
-				$RT = $this->export($value, $list_tb, $nv, $exceptions, $mode, "sql");
+				$RT = $this->export($value, $list_tb, $nv, $mode, "sql");
 			}
 
 			foreach($RT as $k=>$v)
@@ -1236,25 +1222,23 @@ Class Manager
 							if(($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED") ||
 									($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED")){
 							}
-							elseif(in_array($v["FIELDS"][$kf]["COLUMN_TYPE"], $exceptions["geo"])){
+							elseif(in_array($v["FIELDS"][$kf]["COLUMN_TYPE"], $this->ext["geo"])){
 
-								$geo_function = "ST_GeomFromText";
+								if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
 
-								if(($vf === "") || ($vf === "0") || ($vf == NULL)){
-
-									$vrex[$kf] = $this->default_value($v["FIELDS"][$kf]["COLUMN_DEFAULT"], $vf);
+									$vrex[$kf] = "NULL";
 								}
 								else{
 
-									$vrex[$kf] = $geo_function."('".$vf."')";
+									$vrex[$kf] = "ST_GeomFromText('".$vf."')";
 								}
 							}
 							elseif(($v["FIELDS"][$kf]["DATA_TYPE"] === "varbinary") ||
 								preg_match("/blob$/", $v["FIELDS"][$kf]["DATA_TYPE"])){
 
-								if(($vf === "") || ($vf === "0") || ($vf == NULL)){
+								if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
 
-									$vrex[$kf] = $this->default_value($v["FIELDS"][$kf]["COLUMN_DEFAULT"], $vf);
+									$vrex[$kf] = "NULL";
 								}
 								else{
 
@@ -1263,9 +1247,9 @@ Class Manager
 							}
 							elseif($v["FIELDS"][$kf]["DATA_TYPE"] === "bit"){
 
-								if(($vf === "") || ($vf === "0") || ($vf == NULL)){
+								if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
 
-									$vrex[$kf] = $this->default_value($v["FIELDS"][$kf]["COLUMN_DEFAULT"], $vf);
+									$vrex[$kf] = "NULL";
 								}
 								else{
 
@@ -1274,9 +1258,9 @@ Class Manager
 							}
 							else{
 
-								if(($vf === "") || ($vf === "0") || ($vf == NULL)){
+								if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
 
-									$vrex[$kf] = $this->default_value($v["FIELDS"][$kf]["COLUMN_DEFAULT"], $vf);
+									$vrex[$kf] = "NULL";
 								}
 								else{
 
@@ -1315,7 +1299,7 @@ Class Manager
 
 						if($result[0])
 						{
-							while($row = $result[1]->fetch_assoc()){
+							while( $row = $this->fetch_assoc($result[1]) ){
 
 								$RT[] = $row["COLUMN_NAME"];
 							}
@@ -1329,7 +1313,11 @@ Class Manager
 
 							if($mode !== "DB"){
 
-								$this->use_db("mysql");
+								$this->request("USE `mysql`;", __LINE__);
+							}
+							else{
+
+								$this->request("USE `".$_DBS."`;", __LINE__);
 							}
 
 							$listview = $this->request("SHOW CREATE TABLE `".$_DBS."`.`".$v["TB"]."`;", __LINE__);
@@ -1356,7 +1344,7 @@ Class Manager
 
 			if($mode === "DB")
 			{
-				$this->use_db($_DBS);
+				$this->request("USE `".$_DBS."`;", __LINE__);
 
 				$str .= PHP_EOL."USE `".$_DBS."`;".PHP_EOL;
 
@@ -1414,7 +1402,7 @@ Class Manager
 	}
 
 
-	public function clear_db($list_db, $DS)
+	public function clear_db($list_db)
 	{
 		foreach($list_db as $val){
 
@@ -1429,7 +1417,7 @@ Class Manager
 
 				$CREATE = "CREATE DATABASE `".$valS."` CHARACTER SET ".$schema[0]." COLLATE ".$schema[1].";";
 
-				if(($val !== "") && (!in_array($valS, $DS))){
+				if(($val !== "") && (!in_array($valS, $this->DS))){
 
 					$this->request("DROP DATABASE `$valS`;", __LINE__);
 
@@ -1440,13 +1428,13 @@ Class Manager
 	}
 
 
-	public function delete_db($list_db, $DS)
+	public function delete_db($list_db)
 	{
 		foreach($list_db as $val)
 		{
 			$valS = $this->h2s($val);
 
-			if(($val !== "") && (!in_array($valS, $DS))){
+			if(($val !== "") && (!in_array($valS, $this->DS))){
 
 				$this->request("DROP DATABASE `$valS`;", __LINE__);
 			}
@@ -1459,10 +1447,11 @@ Class Manager
 		$_DBS = $this->h2s($_DB);
 		$cl_df = "CREATE ".$cl_df;
 
-		$this->use_db($_DBS);
+		$this->request("USE `".$_DBS."`;", __LINE__);
 
 		$this->request($cl_df, __LINE__);
 	}
+
 
 	public function update_sub($_DB, $cl_tr, $cl_in, $cl_df, $cl_dl)
 	{
@@ -1471,7 +1460,7 @@ Class Manager
 		$cl_df = "CREATE ".$cl_df;
 		$cl_dl = "CREATE ".$this->h2s($cl_dl);
 
-		$this->use_db($_DBS);
+		$this->request("USE `".$_DBS."`;", __LINE__);
 
 		$this->delete_sub($_DB, $cl_tr, $cl_in);
 
@@ -1483,12 +1472,13 @@ Class Manager
 		}
 	}
 
+
 	public function delete_sub($_DB, $cl_tr, $cl_in)
 	{
 		$_DBS = $this->h2s($_DB);
 		$cl_inS = $this->h2s($cl_in);
 
-		$this->use_db($_DBS);
+		$this->request("USE `".$_DBS."`;", __LINE__);
 
 		if($cl_tr === "views"){
 
@@ -1513,17 +1503,17 @@ Class Manager
 	}
 
 
-	public function rename_tb($_DB, $tb_name, $tb_name_new, $DS)
+	public function rename_tb($_DB, $tb_name, $tb_name_new)
 	{
 		$_DBS = $this->h2s($_DB);
 
-		if(!in_array($_DBS, $DS))
+		if(!in_array($_DBS, $this->DS))
 		{
 			$tb_name = $this->h2s($tb_name);
 
 			$tb_name_new = $this->set_name($tb_name_new);
 
-			$this->use_db($_DBS);
+			$this->request("USE `".$_DBS."`;", __LINE__);
 
 			$result = $this->request("RENAME TABLE `".$tb_name."` TO `".$tb_name_new."`;", __LINE__);
 
@@ -1532,11 +1522,11 @@ Class Manager
 	}
 
 
-	public function clear_tb($_DB, $list_tb, $DS)
+	public function clear_tb($_DB, $list_tb)
 	{
 		$_DBS = $this->h2s($_DB);
 
-		if(!in_array($_DBS, $DS))
+		if(!in_array($_DBS, $this->DS))
 		{
 			if( isset($list_tb) )
 			{
@@ -1554,11 +1544,11 @@ Class Manager
 	}
 
 
-	public function delete_tb($_DB, $list_tb, $DS)
+	public function delete_tb($_DB, $list_tb)
 	{
 		$_DBS = $this->h2s($_DB);
 
-		if(!in_array($_DBS, $DS))
+		if(!in_array($_DBS, $this->DS))
 		{
 			$VIEW = [];
 
@@ -1578,7 +1568,7 @@ Class Manager
 				else{ $B[] = "`".$valS."`"; }
 			}
 
-			$this->use_db($_DBS);
+			$this->request("USE `".$_DBS."`;", __LINE__);
 
 			if(count($A) > 0){ $this->request("DROP VIEW ".implode(", ", $A).";", __LINE__); }
 
@@ -1592,226 +1582,232 @@ Class Manager
 		$_DBS = $this->h2s($_DB);
 		$_TBS = $this->h2s($_TB);
 
-		$this->use_db($_DBS);
+		$this->request("USE `".$_DBS."`;", __LINE__);
 
-		$this->request("ALTER TABLE `".$_TBS."` ".$cl_df.";", __LINE__);
+		$this->request("ALTER TABLE `".$_TBS."` ".$cl_df, __LINE__);
 	}
 
 
-	public function insert_rc($_DB, $_TB, $field, $file, $function, $exceptions)
+	public function update_rc($_DB, $_TB, $key, $field, $file, $blob_ch, $function, $action)
 	{
 		$type = [];
 		$this->check_field($_DB, $_TB, $type);
+		$tk = array_keys($type);
 
 		$_DBS = $this->h2s($_DB);
 		$_TBS = $this->h2s($_TB);
 
-		$t = [];
-		foreach($field as $k=>$v){
-
-			$t[$this->h2s($k)] = addslashes("$v");
-		}
-		$field = $t;
-
-		$f = [];
-		foreach($function as $k=>$v){
-
-			$f[$this->h2s($k)] = $v;
-		}
-		$function = $f;
-
+		$sfC = [];
+		$sfV = [];
 		$sfK = [];
-		$sfV = [];
 
-		foreach($field as $k=>$v)
+		foreach($key as $kh=>$vh)
 		{
-			$v = html_entity_decode($v, ENT_QUOTES);
+			$k = $this->h2s($kh);
+			$v = $this->dbc->real_escape_string($this->h2s($vh));
 
+			if($type[$k]["DATA_TYPE"] == "bit"){
+
+				$sfK[] = "`".$k."`=b'".$v."' ";
+			}
+			elseif(in_array($k, $tk)){
+
+				$sfK[] = "`".$k."`='".$v."' ";
+			}
+			else{ return; }
+		}
+
+		$this->request("USE `".$_DBS."`;", __LINE__);
+
+		foreach($field as $kh=>$vh)
+		{
+			$k = $this->h2s($kh);
+			$v = $this->dbc->real_escape_string($vh);
+			
 			$PRE = "";
 
-			$this->check_type($k, $v, $type, $PRE);
+			if($type[$k]["DATA_TYPE"] === "bit"){
 
-			if(in_array($type[$k]["DATA_TYPE"], $exceptions["geo"]) && ($v !== ""))
-			{
-				$sfK[] = "`".$k."`";
-
-				$geo_function = "ST_GeomFromText";
-
-				$sfV[] = $geo_function."('".$v."')";
+				$PRE = "b";
 			}
-			elseif(in_array($type[$k]["DATA_TYPE"], $exceptions["bin"]))
+
+			if(in_array($type[$k]["DATA_TYPE"], $this->ext["geo"]) && ($v !== ""))
 			{
-				if(($type[$k]["DATA_TYPE"] !== "varbinary") && ($type[$k]["DATA_TYPE"] !== "binary"))
+				if($action === "_UPDATE_RC")
 				{
-					if(isset($file[$this->s2h($k)]) && ($file[$this->s2h($k)] !== "")){
+					if($v != ""){
 
-						$sfK[] = "`".$k."`";
-
-						$sfV[] = "x'".$this->s2h(base64_decode($file[$this->s2h($k)]))."'";
-					}
-				}
-				elseif($v !== "")
-				{
-					$sfK[] = "`".$k."`";
-
-					if(isset($function[$k]) && ($function[$k] !== "")){
-
-						$sfV[] = "(".stripslashes($v).")";
-					}
-					elseif($file[$this->s2h($k)] === $v){
-
-						$sfV[] = "x'".$v."'";
-					}
-					else{
-
-						$sfV[] = "'".$v."'";
-					}
-				}
-			}
-			elseif($v !== "")
-			{
-				$sfK[] = "`".$k."`";
-
-				if(isset($function[$k]) && ($function[$k] !== "")){
-
-					$sfV[] = "(".stripslashes($v).")";
-				}
-				else{
-
-					$sfV[] = $PRE."'".$v."'";
-				}
-			}
-			else
-			{
-				$sfK[] = "`".$k."`";
-				$sfV[] = "NULL";
-			}
-		}
-
-		$this->use_db($_DBS);
-
-		$this->request("INSERT INTO `".$_TBS."` (".implode(", ", $sfK).") VALUES (".implode(", ", $sfV).");", __LINE__);
-
-		if(($_DBS === "mysql") && (($_TBS === "user") || ($_TBS === "db") || ($_TBS === "tables_priv") || ($_TBS === "columns_priv")))
-		{
-			$this->request("FLUSH PRIVILEGES;", __LINE__);
-		}
-	}
-
-
-	public function update_rc($_DB, $_TB, $key, $field, $file, $function, $exceptions)
-	{
-		$type = [];
-		$this->check_field($_DB, $_TB, $type);
-
-		$_DBS = $this->h2s($_DB);
-		$_TBS = $this->h2s($_TB);
-
-		$t = [];
-		foreach($key as $k=>$v){
-
-			$t[$this->h2s($k)] = $this->h2s($v);
-		}
-		$key = $t;
-
-		$t = [];
-		foreach($field as $k=>$v){
-
-			$t[$this->h2s($k)] = addslashes("$v");
-		}
-		$field = $t;
-
-		$f = [];
-		foreach($function as $k=>$v){
-
-			$f[$this->h2s($k)] = $v;
-		}
-		$function = $f;
-
-		$sfV = [];
-		foreach($field as $k=>$v)
-		{
-			$v = html_entity_decode($v, ENT_QUOTES);
-
-			$PRE = "";
-
-			$this->check_type($k, $v, $type, $PRE);
-
-			if(in_array($type[$k]["DATA_TYPE"], $exceptions["geo"]) && ($v !== ""))
-			{
-				if($v != ""){
-
-					$geo_function = "ST_GeomFromText";
-
-					$sfV[] = "`".$k."`=".$geo_function."('".$v."')";
-				}
-				else{
-
-					$sfV[] = "`".$k."`=NULL";
-				}
-			}
-			elseif(in_array($type[$k]["DATA_TYPE"], $exceptions["bin"]))
-			{
-				if(($type[$k]["DATA_TYPE"] !== "varbinary") && ($type[$k]["DATA_TYPE"] !== "binary"))
-				{
-					if(isset($file[$this->s2h($k)]) && ($file[$this->s2h($k)] !== "")){
-
-						$sfV[] = "`".$k."`=x'".$this->s2h(base64_decode($file[$this->s2h($k)]))."'";
+						$sfV[] = "`".$k."`=ST_GeomFromText('".$v."')";
 					}
 					else{
 
 						$sfV[] = "`".$k."`=NULL";
 					}
 				}
-				elseif($v !== "")
+				elseif(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
 				{
-					if(isset($function[$k]) && ($function[$k] !== "")){
+					$sfC[] = "`".$k."`";
+
+					$sfV[] = "ST_GeomFromText('".$v."')";
+				}
+			}
+			elseif(in_array($type[$k]["DATA_TYPE"], $this->ext["blob"]))
+			{
+				if($action === "_UPDATE_RC")
+				{
+					if(isset($blob_ch[$kh]) && ($blob_ch[$kh] === "2"))
+					{
+						if(isset($file[$kh]) && ($file[$kh] !== "")){
+
+							$sfV[] = "`".$k."`=x'".$this->s2h(base64_decode($file[$kh]))."'";
+						}
+						elseif(isset($field[$kh]) && ($field[$kh] !== "")){
+
+							$sfV[] = "`".$k."`=x'".$this->s2h($v)."'";
+						}
+						else{
+
+							$sfV[] = "`".$k."`=NULL";
+						}
+					}
+				}
+				elseif(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
+				{
+					if(isset($blob_ch[$kh]) && ($blob_ch[$kh] === "2"))
+					{
+						if(isset($file[$kh]) && ($file[$kh] !== "")){
+
+							$sfC[] = "`".$k."`";
+
+							$sfV[] = "x'".$this->s2h(base64_decode($file[$this->s2h($k)]))."'";
+						}
+						elseif(isset($field[$kh]) && ($field[$kh] !== "")){
+
+							$sfC[] = "`".$k."`";
+
+							$sfV[] = "x'".$this->s2h($v)."'";
+						}
+					}
+					elseif((isset($blob_ch[$kh]) && ($blob_ch[$kh] === "1")) &&
+						($action === "_COPY_RC"))
+					{
+						$sfC[] = "`".$k."`";
+
+						$result = $this->request(
+							"SELECT `".$k."` FROM `".$_TBS."` WHERE ".implode(" AND ", $sfK)." LIMIT 1;", __LINE__);
+
+						if($result[0]){
+
+							$res = $this->fetch_assoc($result[1]);
+
+							$sfV[] = "x'".$this->s2h($res[$k])."'";
+						}
+					}
+				}
+			}
+			elseif(($type[$k]["DATA_TYPE"] === "varbinary") || ($type[$k]["DATA_TYPE"] === "binary"))
+			{
+				if($v !== "")
+				{
+					if($action === "_UPDATE_RC")
+					{
+						if(isset($function[$kh]) && ($function[$kh] !== "")){
+
+							$sfV[] = "`".$k."`=(".stripslashes($v).")";
+						}
+						elseif(($file[$this->s2h($k)] === $v) && ($v !== "")){
+
+							$sfV[] = "`".$k."`=x'".$v."'";
+						}
+						else{
+
+							$sfV[] = "`".$k."`=x'".$this->s2h($v)."'";
+						}
+					}
+					elseif(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
+					{
+						$sfC[] = "`".$k."`";
+
+						if(isset($function[$kh]) && ($function[$kh] !== "")){
+
+							$sfV[] = "(".stripslashes($v).")";
+						}
+						elseif($file[$this->s2h($k)] === $v){
+
+							$sfV[] = "x'".$v."'";
+						}
+						else{
+
+							$sfV[] = "'".$v."'";
+						}
+					}
+				}
+			}
+			elseif(in_array($k, $tk) && ($v !== ""))
+			{
+				if($action === "_UPDATE_RC")
+				{
+					if(isset($function[$kh]) && ($function[$kh] !== "")){
 
 						$sfV[] = "`".$k."`=(".stripslashes($v).")";
 					}
-					elseif(($file[$this->s2h($k)] === $v) && ($v !== "")){
+					else{
 
-						$sfV[] = "`".$k."`=x'".$v."'";
+						$sfV[] = "`".$k."`=".$PRE."'".$v."'";
+					}
+				}
+				elseif(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
+				{
+					$sfC[] = "`".$k."`";
+
+					if(isset($function[$kh]) && ($function[$kh] !== "")){
+
+						$sfV[] = "(".stripslashes($v).")";
 					}
 					else{
 
-						$sfV[] = "`".$k."`=x'".$this->s2h($v)."'";
+						$sfV[] = $PRE."'".$v."'";
 					}
 				}
 			}
-			elseif($v !== "")
+			elseif(in_array($k, $tk) && ($v === ""))
 			{
-				if(isset($function[$k]) && ($function[$k] !== "")){
+				if($action === "_UPDATE_RC"){
 
-					$sfV[] = "`".$k."`=(".stripslashes($v).")";
+					$sfV[] = "`".$k."`=NULL";
 				}
-				else{
+				elseif(($action === "_COPY_RC") || ($action === "_INSERT_RC")){
 
-					$sfV[] = "`".$k."`=".$PRE."'".$v."'";
+					$sfC[] = "`".$k."`";
+					$sfV[] = "NULL";
 				}
 			}
-			else
-			{
-				$sfV[] = "`".$k."`=NULL";
-			}
-
+			else{ return; }
 		}
 
-		$sfK = [];
-		foreach($key as $k=>$v)
+		if(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
 		{
-			$PRE = "";
+			if(count($sfC) !== 0){
 
-			$this->check_type($k, $v, $type, $PRE);
-
-			$sfK[] = "`".$k."`=".$PRE."'".addslashes($v)."' ";
+				$this->request(
+					"INSERT INTO `".$_TBS."` (".implode(", ", $sfC).") VALUES (".implode(", ", $sfV).");",
+					__LINE__);
+			}
 		}
+		else
+		{
+			$WHERE = "";
+			if(count($sfK) !== 0){
 
-		$this->use_db($_DBS);
+				$WHERE = "WHERE ".implode(" AND ", $sfK);
+			}
 
-		if(count($sfV) !== 0){
+			if(count($sfV) !== 0){
 
-			$this->request("UPDATE `".$_TBS."` SET ".implode(", ", $sfV)." WHERE ".implode(" AND ", $sfK)." LIMIT 1;", __LINE__);
+				$this->request(
+					"UPDATE `".$_TBS."` SET ".implode(", ", $sfV)." ".$WHERE." LIMIT 1;",
+					__LINE__);
+			}
 		}
 
 		if(($_DBS === "mysql") && (($_TBS === "user") || ($_TBS === "db") || ($_TBS === "tables_priv") || ($_TBS === "columns_priv")))
@@ -1821,11 +1817,11 @@ Class Manager
 	}
 
 
-	public function delete_rc($_DB, $_TB, $key, $DS)
+	public function delete_rc($_DB, $_TB, $key)
 	{
 		$_DBS = $this->h2s($_DB);
 
-		if(!in_array($_DBS, $DS))
+		if(!in_array($_DBS, $this->DS))
 		{
 			$type = [];
 			$this->check_field($_DB, $_TB, $type);
@@ -1833,24 +1829,23 @@ Class Manager
 			$_DBS = $this->h2s($_DB);
 			$_TBS = $this->h2s($_TB);
 
-			$t = [];
-			foreach($key as $k=>$v){
-
-				$t[$this->h2s($k)] = $this->h2s($v);
-			}
-			$key = $t;
-
 			$sfK = [];
-			foreach($key as $k=>$v)
+			foreach($key as $kh=>$vh)
 			{
-				$PRE = "";
+				$k = $this->h2s($kh);
+				$v = $this->dbc->real_escape_string($this->h2s($vh));				
+				
+				if($type[$k]["DATA_TYPE"] == "bit"){
 
-				$this->check_type($k, $v, $type, $PRE);
+					$sfK[] = "`".$k."`=b'".$v."' ";
+				}
+				else{
 
-				$sfK[] = "`".$k."`=".$PRE."'".addslashes($v)."'";
+					$sfK[] = "`".$k."`='".$v."' ";
+				}
 			}
 
-			$this->use_db($_DBS);
+			$this->request("USE `".$_DBS."`;", __LINE__);
 
 			$this->request("DELETE FROM `$_TBS` WHERE ".implode(" AND ", $sfK).";", __LINE__);
 		}
@@ -1941,7 +1936,7 @@ Class Manager
 			$this->_LOG["MESSAGE"][] = "Error in your SQL syntax near<br>".$this->html($string);
 		}
 
-		$this->use_db($use);
+		if($use !== ""){ $this->request("USE `".$use."`;", __LINE__); }
 
 		foreach($list_script as $script)
 		{
@@ -1976,23 +1971,6 @@ Class Manager
 	}
 
 
-	private function check_type($k, &$v, $type, &$PRE)
-	{
-		if(isset($type[$k]["DATA_TYPE"]))
-		{
-			if($type[$k]["DATA_TYPE"] == "bit"){
-
-				$PRE = "b";
-			}
-
-			if($type[$k]["DATA_TYPE"] == "year"){
-
-				$v = base_convert("$v", 10, 2);
-				$PRE = "b";
-			}
-		}
-	}
-
 	private function get_sub($_DB, $_DBS, $tb, $target, $create, $searching, $add)
 	{
 		$RT = [];
@@ -2002,11 +1980,11 @@ Class Manager
 
 		if($result[0])
 		{
-			while( $row = $result[1]->fetch_assoc() ){
+			while( $row = $this->fetch_assoc($result[1]) ){
 
 				$trigger = $this->request($create." `$_DBS`.`".$row[$target."_NAME"]."`;", __LINE__);
 
-				while( $row_trigger = $trigger[1]->fetch_assoc() ){
+				while( $row_trigger = $this->fetch_assoc($trigger[1]) ){
 
 					$RT[$row[$target."_NAME"]] = $row_trigger[$searching];
 				}
@@ -2048,7 +2026,7 @@ Class Manager
 	}
 
 
-	private function get_wr($nv, $field, $exceptions, $fl, &$WHERE)
+	private function get_wr($nv, $field, $fl, &$WHERE)
 	{
 		if($fl === "rc")
 		{
@@ -2061,22 +2039,18 @@ Class Manager
 				$_COLUMN = $this->h2s($nv["fl_field_rc"]);
 			}
 
-			if((in_array($field[$_COLUMN]["DATA_TYPE"], $exceptions["geo"])) ||
-				($field[$_COLUMN]["DATA_TYPE"] === "char") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "varchar") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "tinytext") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "text") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "mediumtext") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "longtext") ||
+			if(in_array($field[$_COLUMN]["DATA_TYPE"], $this->ext["geo"]) ||
+				in_array($field[$_COLUMN]["DATA_TYPE"], $this->ext["char"]) ||
+				in_array($field[$_COLUMN]["DATA_TYPE"], $this->ext["text"]) ||
 				($field[$_COLUMN]["DATA_TYPE"] === "set") ||
-				($field[$_COLUMN]["DATA_TYPE"] === "enum")){
-
-				$FILTER_EX = ["...","=","<>","LIKE %...%","NOT LIKE","IS NULL","IS NOT NULL","REGEXP","NOT REGEXP"];
+				($field[$_COLUMN]["DATA_TYPE"] === "enum")
+			){
+				$FILTER_EX = ["...","=","<>","LIKE %...%","NOT LIKE","REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
 				$PRE = "";
 			}
 			else
 			{
-				$FILTER_EX = ["...","=","<>",">","<","LIKE %...%","NOT LIKE","IS NULL","IS NOT NULL","REGEXP","NOT REGEXP"];
+				$FILTER_EX = ["...","=","<>",">","<","LIKE %...%","NOT LIKE","REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
 				$PRE = "";
 			}
 		}
@@ -2101,12 +2075,12 @@ Class Manager
 			if($nv["fl_operator_".$fl] === "LIKE %...%"){
 
 				$nv["fl_operator_".$fl] = "LIKE";
-				$nv["fl_value_".$fl] = "%".addslashes(quotemeta($nv["fl_value_".$fl]))."%";
+				$nv["fl_value_".$fl] = "%".addslashes($nv["fl_value_".$fl])."%";
 			}
 			elseif($nv["fl_operator_".$fl] === "NOT LIKE"){
 
 				$nv["fl_operator_".$fl] = "NOT LIKE";
-				$nv["fl_value_".$fl] = "%".addslashes(quotemeta($nv["fl_value_".$fl]))."%";
+				$nv["fl_value_".$fl] = "%".addslashes($nv["fl_value_".$fl])."%";
 			}
 			else{
 
@@ -2135,18 +2109,14 @@ Class Manager
 				$WHERE = "WHERE abs(`".$this->h2s($nv["fl_field_rc"])."`) ".
 					$nv["fl_operator_rc"]." '".$nv["fl_value_rc"]."'";
 			}
-			elseif(in_array($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"], $exceptions["geo"]))
+			elseif(in_array($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"], $this->ext["geo"]))
 			{
 				$WHERE = "WHERE ST_AsText(".$this->h2s($nv["fl_field_rc"]).") ".
 					$nv["fl_operator_rc"]." '".$nv["fl_value_rc"]."'";
 			}
 			elseif(
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "char") ||
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "varchar") ||
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "tinytext") ||
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "text") ||
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "mediumtext") ||
-				($field[$this->h2s($nv["fl_field_rc"])]["DATA_TYPE"] === "longtext")
+				in_array($field[$_COLUMN]["DATA_TYPE"], $this->ext["char"]) ||
+				in_array($field[$_COLUMN]["DATA_TYPE"], $this->ext["text"])
 			)
 			{
 				$WHERE = (($nv["fl_operator_rc"] === "LIKE") || ($nv["fl_operator_rc"] === "NOT LIKE")) ?

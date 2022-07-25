@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2021 Andrey Lyskov
+Copyright (c) 2018-2022 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -13,8 +13,18 @@ Class Control
 {
 	private $session_key;
 
-	public static $CHECK ="action,db,tb,key,field,cl_sl,cl_dl,cl_df,cl_in,cl_tr,script";
-			
+	public static $CHECK =
+		"actiondb,tb,key,field,blob_ch,display,list_db,list_tb,
+		page_db,from_db,order_db,field_db,
+		page_rc,from_rc,order_rc,field_rc,
+		page_tb,from_tb,order_tb,field_tb,
+		fl_field_db,fl_value_db,fl_operator_db,
+		fl_field_tb,fl_value_tb,fl_operator_tb,
+		fl_field_rc,fl_value_rc,fl_operator_rc,
+		view_rc,function,file,	
+		cl_sl,cl_dl,cl_df,cl_in,cl_tr,
+		script";
+
 	private $exceptions = [
 		["action","_EXPORT_SQL_DB"],
 		["action","_EXPORT_SQL_TB"],
@@ -65,7 +75,7 @@ Class Control
 		}
 		else
 		{
-			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $PASS).$this->check_request()))
+			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $PASS).$this->str_request()))
 			{
 				$this->authorize_form(_MESSAGE_CONNECTION);
 				return false;
@@ -146,11 +156,12 @@ Class Control
 		return $R;
 	}
 
-	private function check_request()
+
+	private function str_request()
 	{
 		$A = explode(",", preg_replace("/\s{1,}/","",Control::$CHECK));
 
-		$R = [];
+		$str = "";
 
 		foreach($A as $value){
 
@@ -158,26 +169,19 @@ Class Control
 
 				if(!is_array($_POST[$value])){
 
-					$R[$value] = $_POST[$value]."&";
+					$str .= $_POST[$value]."&";
 				}
 				else{
 
-					$str = "";
-					foreach($_POST[$value] as $v){ $str .=  $v."&";	}
-					$R[$value] = $str;
+					$t = "";
+					foreach($_POST[$value] as $v){ $t .=  $v."&";	}
+					$str .= $t;
 				}
 			}
 		}
 
-		$str = "";
-
-		foreach($A as $value){
-
-			if(isset($R[$value])){$str .= $R[$value];}
-		}
-
 		return $str;
-	}
+	}	
 
 
 

@@ -7,13 +7,13 @@ trait Convert
 {
 	protected function s2h($input)
 	{
-		return unpack('H*', "$input")[1];		
+		return unpack('H*', "$input")[1];
 	}
 
 
 	protected function h2s($input)
 	{
-		return pack('H*', $input);	
+		return pack('H*', $input);
 	}
 
 
@@ -32,14 +32,7 @@ trait Convert
 
 	protected function set_value($value)
 	{
-		if(function_exists("get_magic_quotes_gpc") && (get_magic_quotes_gpc() === 1))		
-		{
-			return stripslashes($value);
-		}
-		else
-		{
-			return $value;
-		}
+		return $value;
 	}
 
 
@@ -58,11 +51,32 @@ trait Convert
 	protected function set_name($name)
 	{
 		if((substr($name, 0, 1) === "`") && (substr($name, (strlen ($name)-1), 1) === "`")){
-			
+
 			$name = str_replace("`", "", $name);
 		}
-		
-		return $name;		
+
+		return $name;
 	}
 
+	protected function strTV($str)
+	{
+		$hex = "";
+
+		$l = strlen($str);
+
+		for ($i=0; $i<$l; $i++){
+
+			if((ord($str[$i]) > 31) && (ord($str[$i]) < 127)){
+
+				$hex = $hex.$str[$i];
+			}
+			else{
+
+				$hex = $hex.'.';
+			}
+		}
+
+
+		return $hex;
+	}
 }
