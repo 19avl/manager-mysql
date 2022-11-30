@@ -109,6 +109,67 @@ Class View
 	}
 
 
+	public function dl_nav($_DB, $_TB, $nv)
+	{
+		$this->tg_open("div", "id_nav_message", "altDl", "display: none;", "");
+
+		$this->btn("", "", "btn_nav_first", "...", "onclick=\"ms.el_va('id_nav_message', 'none');\"");
+
+		if(($_DB !== "") && ($_TB !== ""))
+		{
+			$this->form_open("nav_main_form");
+
+			$this->form_set("", "",
+				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+				"", "", "", []);
+
+			$this->filter_set($nv, "db");
+
+			$this->filter_set($nv, "tb");
+
+			$this->btn("", "", "btn_nav", _ACTION_BACK,
+							"onclick=\"ms.RF('VIEW', '".$_DB."', '', this.form, 0);\"");
+
+			$this->form_close();
+		}
+		elseif(($_DB !== "") && ($_TB === ""))
+		{
+			$this->form_open("nav_main_form");
+
+			$this->form_set("", "",
+				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+				"", "", "", "", "", "", "", []);
+
+			$this->filter_set($nv, "db");
+
+			$this->btn("", "", "btn_nav", _ACTION_BACK,
+				"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+
+			$this->form_close();
+		}
+
+		$this->form_open("nav_main_form");
+
+		$this->form_set($_DB, $_TB,
+			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+			"", "", "", [], $nv["view_rc"]);
+
+
+		$this->filter_set($nv, "db");
+
+		$this->filter_set($nv, "tb");
+
+		$this->btn("", "", "btn_nav", _ACTION_RELOAD,
+			"onclick=\"ms.RF('VIEW', '', '".$_TB."', this.form, 0);\"");
+
+		$this->form_close();
+
+		$this->tg_close("div");
+	}
+
+
 	public function message($log)
 	{
 		if(isset($log["MESSAGE"]))
@@ -149,63 +210,13 @@ Class View
 
 		$this->tg_open("div", "", "nav_main", "", "");
 
-		$this->tg_open("ul", "", "nav_main_sub", "", "");
+			$this->btn("", "", "btn_nav_first", "...", "onclick=\"ms.el_va('id_nav_message', '');\"");
 
-			$this->tg_open("li", "", "", "", "");
+			$this->btn("", "", "btn_nav", _NOTE_DATABASES,
+				"onclick=\"ms.view_wr('id_wr_db', 'id_wr_script');\"");
 
-				$this->btn("", "", "btn_nav_first", "...", "");
-
-				$this->tg_open("ul", "", "", "", "");
-
-					if(($_DB !== "") && ($_TB !== "")){
-
-						$this->form_open("nav_main_form");
-
-						$this->form_set("", "",
-							$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-							$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-							"", "", "", []);
-
-						$this->btn("", "", "btn_nav_sub", _ACTION_BACK, "onclick=\"ms.RF('', '".$_DB."', '', this.form, 0);\"");
-
-						$this->form_close();
-					}
-					elseif(($_DB !== "") && ($_TB === "")){
-
-						$this->form_open("nav_main_form");
-
-						$this->form_set("", "",
-							$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-							"", "", "", "", "", "", "", []);
-
-						$this->btn("", "", "btn_nav_sub", _ACTION_BACK, "onclick=\"ms.RF('', '', '', this.form, 0);\"");
-
-						$this->form_close();
-					}
-
-					$this->form_open("nav_main_form");
-
-					$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", [], $nv["view_rc"]);
-
-					$this->btn("", "", "btn_nav_sub", _ACTION_RELOAD, "onclick=\"ms.RF('', '', '".$_TB."', this.form, 0);\"");
-
-					$this->form_close();
-
-				$this->tg_close("ul");
-
-			$this->tg_close("li");
-
-			$this->tg_open("li", "", "", "", "");
-				$this->btn("", "", "btn_nav", _NOTE_DATABASES,
-					"onclick=\"ms.view_wr('id_wr_db', 'id_wr_script');\"");
-			$this->tg_close("li");
-
-			$this->tg_open("li", "", "", "", "");
-				$this->btn("", "", "btn_nav", _NOTE_SQL,
-					"onclick=\"ms.view_wr('id_wr_script', 'id_wr_db');\"");
-			$this->tg_close("li");
-
-		$this->tg_close("ul");
+			$this->btn("", "", "btn_nav", _NOTE_SQL,
+				"onclick=\"ms.view_wr('id_wr_script', 'id_wr_db');\"");
 
 		$this->tg_close("div");
 	}
@@ -245,6 +256,8 @@ Class View
 				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
 				"", "", "", "", "", "", "", []);
 
+			$this->filter_set($nv, "db");
+
 			$this->tg_open("div", "", "ct_row", "", "");
 
 			$this->tg_open("div", "", "pl_el", "", "");
@@ -254,7 +267,7 @@ Class View
 
 			$this->input("", "", "ct_name_title", _NOTE_DATABASES, "", "disabled", "");
 
-			$this->input("", "", "ct_info_A", "ROWS", "", "readonly", "");
+			$this->input("", "", "ct_info_A", "COUNT", "", "readonly", "");
 
 			$this->input("", "", "ct_info_D", $RT["FIELD_SE"][$nv["field_db"]], "", "readonly", "");
 
@@ -327,12 +340,16 @@ Class View
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
+		$this->filter_set($nv, "db");
+
+		$this->filter_set($nv, "tb");
+
 		$this->input("display", "", "", "sql", "", "hidden", "");
 
 		$this->tg_open("div", "", "ct_row", "", "");
 
 			$this->select(array_keys($LIST_SQL), "", "script_id", "", "slc", _NOTE_SCRIPT,
-				"onchange=\"ms.RF('', '', '', this.form, 0);\"",
+				"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 				function($k, $v){return $v;},
 				function($k, $v){return $v;},
 				function($k, $v){return $v;});
@@ -343,7 +360,14 @@ Class View
 
 		$this->form_open();
 
-		$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", []);
+		$this->form_set($_DB, $_TB,
+			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+
+		$this->filter_set($nv, "db");
+
+		$this->filter_set($nv, "tb");
 
 		$this->textarea("script", "script_text", "", $SQL_SL, "", "title='"._NOTE_SCRIPT_DROP."'");
 
@@ -369,14 +393,10 @@ Class View
 
 	public function info($info)
 	{
-		$this->tg_open("div", "", "rt_list", "", "");
-
 		foreach($info as $value){
 
-			$this->tg("div", "", "", "", $value, "");
+			$this->tg("div", "", "", "rt_list", $value, "");
 		}
-
-		$this->tg_close("div");
 
 		$this->tg("div", "", "separator11", "", "", "");
 	}
@@ -413,8 +433,6 @@ Class View
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-
-
 		$this->input("cl_in", "db_name_new_id", "st_value_B", $this->html($this->h2s($_DB)),
 			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
@@ -432,6 +450,10 @@ Class View
 			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			"", "", "", []);
+
+		$this->filter_set($nv, "db");
+
+		$this->filter_set($nv, "tb");
 
 		$this->input("display", "", "", "tb_sub", "", "hidden", "");
 
@@ -578,6 +600,10 @@ Class View
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			"", "", "", []);
 
+		$this->filter_set($nv, "db");
+
+		$this->filter_set($nv, "tb");
+
 		$this->tg_open("div", "", "ct_row", "", "");
 
 		$this->tg_open("div", "", "pl_el", "", "");
@@ -587,7 +613,7 @@ Class View
 
 		$this->input("", "", "ct_name_title", _NOTE_TABLES, "", "disabled", "");
 
-		$this->input("", "", "ct_info_A", "ROWS", "", "readonly", "");
+		$this->input("", "", "ct_info_A", "COUNT", "", "readonly", "");
 
 		$this->input("", "", "ct_info_D", $RT["FIELD_SE"][$nv["field_tb"]], "", "readonly", "");
 
@@ -600,7 +626,6 @@ Class View
 			$this->tg_open("div", "", "pl_el", "", "");
 
 			$this->checkbox("list_tb[]", "", "ct_check", $uk, "onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
-
 
 			$flag = "";
 			if($value["COUNT"] === "IN USE"){
@@ -693,6 +718,10 @@ Class View
 				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+
+			$this->filter_set($nv, "db");
+
+			$this->filter_set($nv, "tb");
 
 			$this->input("display", "", "", "rc_sub", "", "hidden", "");
 
@@ -830,15 +859,15 @@ Class View
 						$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 						$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-						$this->input("fl_field_rc", "", "", $nv["fl_field_rc"], "", "hidden", "");
+					$this->filter_set($nv, "db");
 
-						$this->input("fl_value_rc", "", "", $this->html($nv["fl_value_rc"]), "", "hidden", "");
+					$this->filter_set($nv, "tb");
 
-						$this->input("fl_operator_rc", "", "", $nv["fl_operator_rc"], "", "hidden", "");
+					$this->filter_set($nv, "rc");
 
-						$this->input("view_rc", "", "", "tb", "", "hidden", "");
+					$this->input("view_rc", "", "", "tb", "", "hidden", "");
 
-						$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+					$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
 					$this->form_close();
 
@@ -900,11 +929,11 @@ Class View
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-			$this->input("fl_field_rc", "", "", $nv["fl_field_rc"], "", "hidden", "");
+			$this->filter_set($nv, "db");
 
-			$this->input("fl_value_rc", "", "", $this->html($nv["fl_value_rc"]), "", "hidden", "");
+			$this->filter_set($nv, "tb");
 
-			$this->input("fl_operator_rc", "", "", $nv["fl_operator_rc"], "", "hidden", "");
+			$this->filter_set($nv, "rc");
 
 			$this->input("view_rc", "", "", "st", "", "hidden", "");
 
@@ -915,9 +944,9 @@ Class View
 					$this->tg_open("td", "", "", "", "");
 
 						$this->btn("", "", "rt_btn_list", "...",
-							"onclick=\"this.form.page_rc.value='1'; this.form.from_rc.value='".$from_rc."'; this.form.view_rc.value='tb'; 
+							"onclick=\"this.form.page_rc.value='1'; this.form.from_rc.value='".$from_rc."'; this.form.view_rc.value='tb';
 							ms.RF('VIEW', '', '', this.form, 0);\"");
-							
+
 						$from_rc = $from_rc+1;
 
 					$this->tg_close("td");
@@ -937,7 +966,7 @@ Class View
 
 						$uk = $this->s2h($k);
 
-						if(($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI") || 
+						if(($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI") ||
 							($RT["FIELDS"][$k]["COLUMN_KEY"] === "UNI")){
 
 							$this->input("key[".$uk."]", "", "", $this->s2h($v), "", "hidden", "");
@@ -956,6 +985,10 @@ Class View
 								$this->input("", "", $class, $this->s2h($v), "", $data_flag, "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["blob"]))
+							{
+								$this->input("", "", $class, $this->get_seze($v), "", $data_flag, "");
+							}
+							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["text"]))
 							{
 								$this->input("", "", $class, $this->get_seze($v), "", $data_flag, "");
 							}
@@ -1003,15 +1036,15 @@ Class View
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-				$this->input("fl_field_rc", "", "", $nv["fl_field_rc"], "", "hidden", "");
+			$this->filter_set($nv, "db");
 
-				$this->input("fl_value_rc", "", "", $this->html($nv["fl_value_rc"]), "", "hidden", "");
+			$this->filter_set($nv, "tb");
 
-				$this->input("fl_operator_rc", "", "", $nv["fl_operator_rc"], "", "hidden", "");
+			$this->filter_set($nv, "rc");
 
-				$this->input("view_rc", "", "", "st", "", "hidden", "");
+			$this->input("view_rc", "", "", "st", "", "hidden", "");
 
-				$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+			$this->btn("", "", "rt_btn_list", "...", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
 			$this->form_close();
 
@@ -1040,6 +1073,12 @@ Class View
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				"", "", $nv["order_rc"], $nv["field_rc"]);
 
+			$this->filter_set($nv, "db");
+
+			$this->filter_set($nv, "tb");
+
+			$this->filter_set($nv, "rc");
+
 			$count_fl = 0;
 			$count_fl_display = 0;
 
@@ -1059,7 +1098,7 @@ Class View
 
 				$uk = $this->s2h($k);
 
-				if(($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI") || 
+				if(($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI") ||
 					($RT["FIELDS"][$k]["COLUMN_KEY"] === "UNI")){
 
 					$this->input("key[".$uk."]", "", "", $this->s2h($v), "", "hidden", "");
@@ -1081,7 +1120,7 @@ Class View
 				$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 
 				$is_extra = $RT["FIELDS"][$k]["EXTRA"];
-				
+
 				$not_null = "";
 
 				if($RT["FIELDS"][$k]["IS_NULLABLE"] === "NO"){
@@ -1165,9 +1204,8 @@ Class View
 				$function_class = "rt_value_function";
 
 				$function_onclick =
-					"onclick=\"dl.creat_rcdl(this.id, 'text".$count.$count_fl.$uk.$mod."', 
+					"onclick=\"dl.creat_rcdl(this.id, 'text".$count.$count_fl.$uk.$mod."',
 						'function_dv', '".$this->html(addslashes("$k"))."');\"";
-
 
 				$function_flag = "autocomplete='off'";
 
@@ -1451,7 +1489,6 @@ Class View
 	}
 
 
-
 	private function get_seze($v)
 	{
 		$size = strlen($v);
@@ -1568,11 +1605,43 @@ Class View
 	}
 
 
+
+	private function filter_set($nv, $fl)
+	{
+		foreach($nv["fl_and_".$fl] as $v){
+
+			$this->input("fl_and_".$fl."[]", "", "", $v, "", "hidden", "");
+		}
+		foreach($nv["fl_field_".$fl] as $v){
+
+			$this->input("fl_field_".$fl."[]", "", "", $this->html($v), "", "hidden", "");
+		}
+		foreach($nv["fl_operator_".$fl] as $v){
+
+			$this->input("fl_operator_".$fl."[]", "", "", $v, "", "hidden", "");
+		}
+		foreach($nv["fl_value_".$fl] as $v){
+
+			$this->input("fl_value_".$fl."[]", "", "", $this->html($v), "", "hidden", "");
+		}
+	}
+
+
 	private function nav($RT, $nv, $pre)
 	{
-		$this->tg_open("div", "", "nav", "", "");
+		$this->tg_open("table", "", "nav_wrap_m", "", "");
 
-			$this->tg_open("div", "", "nav_wrap", "", "");
+			$this->tg_open("tr", "", "", "", "");
+
+			$this->tg_open("td", "", "nav_wrap", "", "");
+
+				$this->tg("div", "", "nav_label", "", _NOTE_FILTER, "");
+
+				$this->btn("", "", "blc", "...", "onclick=\"ms.el_vb('flc_".$pre."');\"");
+
+			$this->tg_close("td");
+
+			$this->tg_open("td", "", "nav_wrap", "", "");
 
 				$this->tg("div", "", "nav_label", "", _NOTE_FIELD, "");
 
@@ -1580,7 +1649,8 @@ Class View
 				{
 					$this->btn("", "", "blc", "...", "onclick=\"ms.el_open_com('com_field_rc');\"");
 
-					$this->tg_open("div", "com_field_rc", "type_value", "display: none;", "onclick=\"ms.el_stop_com();\"");
+					$this->tg_open("div", "com_field_rc", "type_value", "display: none;",
+						"onclick=\"ms.el_stop_com();\"");
 
 					$this->tg_open("div", "com_sl_field_rc", "type_value_sl", "", "");
 
@@ -1631,7 +1701,6 @@ Class View
 					$this->btn("", "", "btn", _NOTE_CONFIRM_NO, "onclick=\"ms.el_va('com_field_rc', 'none');\"");
 
 					$this->tg_close("div");
-
 				}
 				else
 				{
@@ -1642,32 +1711,9 @@ Class View
 						function($k, $v){return $this->html($v);});
 				}
 
-			$this->tg_close("div");
+			$this->tg_close("td");
 
-			$this->tg_open("div", "", "nav_wrap_filter", "", "");
-
-				$this->tg("div", "", "nav_label", "", _NOTE_FILTER, "");
-
-				$this->tg("div", "", "separator0", "", "", "");
-
-				$this->select($RT["FIELD_ST_NAV"], $nv["fl_field_".$pre], "fl_field_".$pre, "", "slc", "",
-					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
-					function($k, $v){return $this->s2h($v);},
-					function($k, $v){return $this->s2h($v);},
-					function($k, $v){return $this->html($v);});
-
-				$this->input("fl_value_".$pre, "", "nav_value", $this->html($nv["fl_value_".$pre]),
-					"onchange=\"ms.check_change(this);\"", "", "value");
-
-				$this->select($RT["FILTER_EX"], $nv["fl_operator_".$pre], "fl_operator_".$pre, "ex_".$pre, "slc", "",
-					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
-					function($k, $v){return $v;},
-					function($k, $v){return $v;},
-					function($k, $v){return $v;});
-
-			$this->tg_close("div");
-
-			$this->tg_open("div", "", "nav_wrap", "", "");
+			$this->tg_open("td", "", "nav_wrap", "", "");
 
 				$this->tg("div", "", "nav_label", "", _NOTE_LIMIT, "");
 
@@ -1677,9 +1723,9 @@ Class View
 					function($k, $v){return $v;},
 					function($k, $v){return $v;});
 
-			$this->tg_close("div");
+			$this->tg_close("td");
 
-			$this->tg_open("div", "", "nav_wrap", "", "");
+			$this->tg_open("td", "", "nav_wrap", "", "");
 
 				$this->tg("div", "", "nav_label", "", _NOTE_FROM, "");
 
@@ -1689,9 +1735,9 @@ Class View
 					function($k, $v){return $v;},
 					function($k, $v){return $v;});
 
-			$this->tg_close("div");
+			$this->tg_close("td");
 
-			$this->tg_open("div", "", "nav_wrap", "", "");
+			$this->tg_open("td", "", "", "", "");
 
 				$this->tg("div", "", "nav_label", "", _NOTE_ORDER_BY, "");
 
@@ -1701,7 +1747,131 @@ Class View
 					function($k, $v){return $k;},
 					function($k, $v){return $this->html($v);});
 
-			$this->tg_close("div");
+				if($nv["order_desc_".$pre] === "DESC"){
+
+					$this->checkbox("order_desc_".$pre, "", "ct_check", "",
+						"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "checked");
+				}
+				else{
+
+					$this->checkbox("order_desc_".$pre, "", "ct_check", "desc",
+						"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "");
+				}
+
+
+				$this->tg("label", "", "", "", "DESC", "");
+
+			$this->tg_close("td");
+
+			$this->tg_close("tr");
+
+		$this->tg_close("table");
+
+		if($pre === "tb"){
+
+			$this->filter_set($nv, "db");
+		}
+		if($pre === "rc"){
+
+			$this->filter_set($nv, "db");
+
+			$this->filter_set($nv, "tb");
+		}
+
+		$fl_display = "display: none;";
+
+		foreach($nv["fl_value_".$pre] as $k=>$v)
+		{
+			if((($nv["fl_operator_".$pre][$k] !== _NOTE_FILTER_OPERATOR) && ($v !== "")) ||
+					($nv["fl_operator_".$pre][$k] === "IS NULL") ||
+					($nv["fl_operator_".$pre][$k] === "IS NOT NULL")
+			){
+					$fl_display = "";
+			}
+		}
+
+		$this->tg_open("div", "flc_".$pre."", "", $fl_display, "");
+
+		$this->tg_open("div", "", "res", "", "");
+
+		$this->tg("div", "", "separator3", "", "", "");
+
+		$this->tg_open("table", "", "nav_wrap_f", "", "");
+
+		foreach($RT["FIELD_ST_NAV"] as $k=>$v)
+		{
+			$add_fl_value = "";
+			if(isset($nv["fl_value_".$pre][$k])){
+
+				$add_fl_value = $nv["fl_value_".$pre][$k];
+			}
+
+			$add_fl_operator = "";
+			if(isset($nv["fl_operator_".$pre][$k])){
+
+				$add_fl_operator = $nv["fl_operator_".$pre][$k];
+			}
+
+			$add_fl_operator_and = "";
+			if(isset($nv["fl_and_".$pre][$k])){
+
+				$add_fl_operator_and = $nv["fl_and_".$pre][$k];
+			}
+
+			$this->tg_open("tr", "", "", "", "");
+
+			$this->tg_open("td", "", "nav_wrap_filter", "", "");
+
+			if($k === 0){
+
+				$this->input("fl_and_".$pre."[]", "", "nav_value", "", "", "hidden", "");
+			}
+			else{
+
+				$this->select(["AND", "OR"], $add_fl_operator_and,
+					"fl_and_".$pre."[]", "", "slc", "", "",
+					function($k, $v){return $v;},
+					function($k, $v){return $v;},
+					function($k, $v){return $v;});
+			}
+
+			$this->tg_close("td");
+			$this->tg_open("td", "", "", "", "");
+
+			$this->input("fl_field_".$pre."[]", "", "nav_value",
+				$this->html($RT["FIELD_ST_NAV"][$k]), "", "readonly", "");
+
+			$this->tg_close("td");
+			$this->tg_open("td", "", "nav_wrap_filter", "", "");
+
+			$this->select($RT["FILTER_EX"][$v], $add_fl_operator,
+				"fl_operator_".$pre."[]", "", "slc", "", "",
+				function($k, $v){return $v;},
+				function($k, $v){return $v;},
+				function($k, $v){return $v;});
+
+			$this->tg_close("td");
+			$this->tg_open("td", "", "", "", "");
+
+			$this->input("fl_value_".$pre."[]", "", "nav_value",
+				$this->html($add_fl_value), "", "", _NOTE_FILTER_VALUE);
+
+			$this->tg_close("td");
+
+			$this->tg_close("tr");
+		}
+
+		$this->tg_close("table");
+
+		$this->tg("div", "", "separator3", "", "", "");
+
+		$this->tg_close("div");
+
+		$this->btn("", "", "btn", "OK", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+
+		$this->btn("", "", "btn", "RESET", "onclick=\"ms.RF('_RESET_FILTER_".$pre."', '', '', this.form, 0);\"");
+
+		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tg_close("div");
 

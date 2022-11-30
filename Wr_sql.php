@@ -68,7 +68,7 @@ trait Wr_sql
 
 			$this->character_name = $this->dbc->character_set_name();
 
-			$sql_mode = $this->request("SELECT @@session.sql_mode", __LINE__);
+			$sql_mode = $this->request("SELECT @@session.sql_mode", "", [], __LINE__);
 			if($sql_mode[0]){
 
 				$this->sql_mode = $this->fetch_row($sql_mode[1])[0];
@@ -86,7 +86,7 @@ trait Wr_sql
 		}
 	}
 
-	protected function request($sql, $line, $log = true)
+	protected function request($sql, $type, $value, $line, $log = true)
 	{
 		if($log){$this->_LOG["SQL"][] = $sql;}
 
@@ -159,4 +159,8 @@ trait Wr_sql
 		return $this->dbc->stat();
 	}
 
+	protected function escape($v)
+	{
+		return $this->dbc->real_escape_string($v);
+	}
 }

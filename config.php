@@ -7,7 +7,7 @@ This project is licensed under the MIT License - see the LICENSE.md file
 
 defined("_EXEC") or die();
 
-set_time_limit(0);
+//set_time_limit(0);
 error_reporting (0);
 
 
@@ -21,9 +21,9 @@ $PASS = "";
 /* MYSQL */
 
 $SERVER = ["host"=>"localhost", 
-	//"port"=>3311,  
+	//"port"=>3311, 
 	"user"=>"root", 
-	"pass"=>"root",
+	"pass"=>"",
 
 	"variables"=>[
 		"names" => "utf8mb4",

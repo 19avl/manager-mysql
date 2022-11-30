@@ -10,14 +10,12 @@ Class Controller extends Query
 	private $manager;
 	private $view;
 
-
 	private $DATA_DB;
 	private $DATA;
 
-
 	public function __construct($SERVER, $LIMIT, $PASS)
 	{
-		$this->request();
+		$this->query();
 
 		$this->control = new Control();
 		$this->control->main($PASS);
@@ -28,8 +26,8 @@ Class Controller extends Query
 
 		if($this->manager->connect){
 
-			$this->control->authorize_form($this->manager->_LOG["MESSAGE"]["connect"]);
-
+			$this->control->ms($this->manager->_LOG["MESSAGE"]["connect"]);
+			
 			return;
 		}
 
@@ -59,9 +57,11 @@ Class Controller extends Query
 			$this->DATA = $this->manager->tb( $this->_DB, $this->nv, $this->cl_sl, $LIMIT);
 		}
 
-		$this->view->dl_message();
-
 		$this->view->main($this->_DB, $this->_TB, $this->nv, $SQL);
+
+		$this->view->dl_nav($this->_DB, $this->_TB, $this->nv);
+
+		$this->view->dl_message();
 
 		$this->view->db($this->DATA_DB, $this->_DB, $this->_TB, $this->nv, $this->display);
 
@@ -73,7 +73,7 @@ Class Controller extends Query
 
 		if($this->_DB === ""){
 
-			$this->view->info($manager_info);	
+			$this->view->info($manager_info);
 		}
 
 		if(($this->_DB !== "") && ($this->_TB !== ""))
@@ -94,6 +94,33 @@ Class Controller extends Query
 		{
 			switch($this->action)
 			{
+				case "_RESET_FILTER_db":
+				{
+					$this->nv["fl_field_db"] = [];
+					$this->nv["fl_value_db"] = [];
+					$this->nv["fl_operator_db"] = [];
+					$this->nv["fl_and_db"] = [];
+				}
+				break;
+
+				case "_RESET_FILTER_tb":
+				{
+					$this->nv["fl_field_tb"] = [];
+					$this->nv["fl_value_tb"] = [];
+					$this->nv["fl_operator_tb"] = [];
+					$this->nv["fl_and_tb"] = [];
+				}
+				break;
+
+				case "_RESET_FILTER_rc":
+				{
+					$this->nv["fl_field_rc"] = [];
+					$this->nv["fl_value_rc"] = [];
+					$this->nv["fl_operator_rc"] = [];
+					$this->nv["fl_and_rc"] = [];
+				}
+				break;
+
 				case "_FILE_SQL":
 				{
 					$this->manager->sqls_eval_list(base64_decode($this->script_file), $this->_DB);

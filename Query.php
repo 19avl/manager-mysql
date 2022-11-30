@@ -32,7 +32,7 @@ Class Query
 
 	public function __construct(){}
 
-	protected function request()
+	protected function query()
 	{
 		if(isset($_POST["action"])){ $this->action = $this->set_value($_POST["action"]); }
 
@@ -59,23 +59,13 @@ Class Query
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_db"]))) ?
 				$this->set_value($_POST["order_db"]) : "0";
 
+		$this->nv["order_desc_db"] = (isset($_POST["order_desc_db"]) &&
+			($_POST["order_desc_db"] === "desc")) ? "DESC" : "";
+
 		$this->nv["field_db"] = (isset($_POST["field_db"]) &&
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["field_db"]))) ?
 				$this->set_value($_POST["field_db"]) : "0";
 
-		$this->nv["page_rc"] = (isset($_POST["page_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_rc"]))) ?
-				$this->set_value($_POST["page_rc"]) : "0";
-
-		$this->nv["from_rc"] = (isset($_POST["from_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_rc"]))) ?
-				$this->set_value($_POST["from_rc"]) : "0";
-
-		$this->nv["order_rc"] = (isset($_POST["order_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_rc"]))) ?
-				$this->set_value($_POST["order_rc"]) : "0";
-
-		$this->nv["field_rc"] = (isset($_POST["field_rc"])) ? $this->set_value_list($_POST["field_rc"]) : [];
 
 		$this->nv["page_tb"] = (isset($_POST["page_tb"]) &&
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_tb"]))) ?
@@ -89,33 +79,84 @@ Class Query
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_tb"]))) ?
 				$this->set_value($_POST["order_tb"]) : "0";
 
+		$this->nv["order_desc_tb"] = (isset($_POST["order_desc_tb"]) &&
+			($_POST["order_desc_tb"] === "desc")) ? "DESC" : "";
+
 		$this->nv["field_tb"] = (isset($_POST["field_tb"]) &&
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["field_tb"]))) ?
 				$this->set_value($_POST["field_tb"]) : "0";
 
-		$this->nv["fl_field_db"] = isset($_POST["fl_field_db"]) ? $this->set_value($_POST["fl_field_db"]) : "";
 
-		$this->nv["fl_value_db"] = isset($_POST["fl_value_db"]) ? $this->set_value($_POST["fl_value_db"]) : "";
+		$this->nv["page_rc"] = (isset($_POST["page_rc"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_rc"]))) ?
+				$this->set_value($_POST["page_rc"]) : "0";
 
-		$this->nv["fl_operator_db"] = (isset($_POST["fl_operator_db"]) &&
-			($this->set_value($_POST["fl_operator_db"])) !== "..." ) ?
-				$this->set_value($_POST["fl_operator_db"]) : "";
+		$this->nv["from_rc"] = (isset($_POST["from_rc"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_rc"]))) ?
+				$this->set_value($_POST["from_rc"]) : "0";
 
-		$this->nv["fl_field_tb"] = isset($_POST["fl_field_tb"]) ? $this->set_value($_POST["fl_field_tb"]) : "";
+		$this->nv["order_rc"] = (isset($_POST["order_rc"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_rc"]))) ?
+				$this->set_value($_POST["order_rc"]) : "0";
 
-		$this->nv["fl_value_tb"] = isset($_POST["fl_value_tb"]) ? $this->set_value($_POST["fl_value_tb"]) : "";
+		$this->nv["order_desc_rc"] = (isset($_POST["order_desc_rc"]) &&
+			($_POST["order_desc_rc"] === "desc")) ? "DESC" : "";
 
-		$this->nv["fl_operator_tb"] = (isset($_POST["fl_operator_tb"]) &&
-			($this->set_value($_POST["fl_operator_tb"])) !== "..." ) ?
-				$this->set_value($_POST["fl_operator_tb"]) : "";
+		$this->nv["field_rc"] = (isset($_POST["field_rc"])) ? $this->set_value_list($_POST["field_rc"]) : [];
 
-		$this->nv["fl_field_rc"] = isset($_POST["fl_field_rc"]) ? $this->set_value($_POST["fl_field_rc"]) : "";
 
-		$this->nv["fl_value_rc"] = isset($_POST["fl_value_rc"]) ? $this->set_value($_POST["fl_value_rc"]) : "";
 
-		$this->nv["fl_operator_rc"] = (isset($_POST["fl_operator_rc"]) &&
-			($this->set_value($_POST["fl_operator_rc"]) !== "...")) ?
-				$this->set_value($_POST["fl_operator_rc"]) : "";
+		$this->nv["fl_field_db"] = [];
+		if(isset($_POST["fl_field_db"])){ $this->nv["fl_field_db"] =
+			$this->set_value_list($_POST["fl_field_db"]); }
+
+		$this->nv["fl_value_db"] = [];
+		if(isset($_POST["fl_value_db"])){ $this->nv["fl_value_db"] =
+			$this->set_value_list($_POST["fl_value_db"]); }
+
+		$this->nv["fl_operator_db"] = [];
+		if(isset($_POST["fl_operator_db"])){ $this->nv["fl_operator_db"] =
+			$this->set_value_list($_POST["fl_operator_db"]); }
+
+		$this->nv["fl_and_db"] = [];
+		if(isset($_POST["fl_and_db"])){ $this->nv["fl_and_db"] =
+			$this->set_value_list($_POST["fl_and_db"]); }
+
+
+		$this->nv["fl_field_tb"] = [];
+		if(isset($_POST["fl_field_tb"])){ $this->nv["fl_field_tb"] =
+			$this->set_value_list($_POST["fl_field_tb"]); }
+
+		$this->nv["fl_value_tb"] = [];
+		if(isset($_POST["fl_value_tb"])){ $this->nv["fl_value_tb"] =
+			$this->set_value_list($_POST["fl_value_tb"]); }
+
+		$this->nv["fl_operator_tb"] = [];
+		if(isset($_POST["fl_operator_tb"])){ $this->nv["fl_operator_tb"] =
+			$this->set_value_list($_POST["fl_operator_tb"]); }
+
+		$this->nv["fl_and_tb"] = [];
+		if(isset($_POST["fl_and_tb"])){ $this->nv["fl_and_tb"] =
+			$this->set_value_list($_POST["fl_and_tb"]); }
+
+
+		$this->nv["fl_field_rc"] = [];
+		if(isset($_POST["fl_field_rc"])){ $this->nv["fl_field_rc"] =
+			$this->set_value_list($_POST["fl_field_rc"]); }
+
+		$this->nv["fl_value_rc"] = [];
+		if(isset($_POST["fl_value_rc"])){ $this->nv["fl_value_rc"] =
+			$this->set_value_list($_POST["fl_value_rc"]); }
+
+		$this->nv["fl_operator_rc"] = [];
+		if(isset($_POST["fl_operator_rc"])){ $this->nv["fl_operator_rc"] =
+			$this->set_value_list($_POST["fl_operator_rc"]); }
+
+		$this->nv["fl_and_rc"] = [];
+		if(isset($_POST["fl_and_rc"])){ $this->nv["fl_and_rc"] =
+			$this->set_value_list($_POST["fl_and_rc"]); }
+
+
 
 		$this->nv["view_rc"] = (isset($_POST["view_rc"])) ? $this->set_value($_POST["view_rc"]) : "";
 
@@ -133,10 +174,10 @@ Class Query
 			$this->file = $this->set_value_list($_POST["file"]);
 		}
 
-if(isset($_POST["blob_ch"])){
+		if(isset($_POST["blob_ch"])){
 
-	$this->blob_ch = $this->set_value_list($_POST["blob_ch"]);
-}
+			$this->blob_ch = $this->set_value_list($_POST["blob_ch"]);
+		}
 
 		if(isset($_POST["cl_sl"])){ $this->cl_sl = $this->set_value_list($_POST["cl_sl"]); }
 

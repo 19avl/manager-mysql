@@ -13,17 +13,15 @@ Class Control
 {
 	private $session_key;
 
-	public static $CHECK =
-		"actiondb,tb,key,field,blob_ch,display,list_db,list_tb,
+	public static $CHECK ="action,jump_sv,sv,db,tb,key,field,
+		blob_ch,display,list_db,list_tb,
 		page_db,from_db,order_db,field_db,
 		page_rc,from_rc,order_rc,field_rc,
 		page_tb,from_tb,order_tb,field_tb,
-		fl_field_db,fl_value_db,fl_operator_db,
-		fl_field_tb,fl_value_tb,fl_operator_tb,
-		fl_field_rc,fl_value_rc,fl_operator_rc,
-		view_rc,function,file,	
-		cl_sl,cl_dl,cl_df,cl_in,cl_tr,
-		script";
+		fl_field_db,fl_value_db,fl_operator_db,fl_and_db,
+		fl_field_tb,fl_value_tb,fl_operator_tb,fl_and_tb,
+		fl_field_rc,fl_value_rc,fl_operator_rc,fl_and_rc,
+		view_rc,function,file,cl_sl,cl_dl,cl_df,cl_in,cl_tr,script";
 
 	private $exceptions = [
 		["action","_EXPORT_SQL_DB"],
@@ -56,7 +54,8 @@ Class Control
 
 		foreach($this->exceptions as $k=>$v)
 		{
-			if(isset($_POST[$this->exceptions[$k][0]]) && ($_POST[$this->exceptions[$k][0]] == $this->exceptions[$k][1])){
+			if(isset($_POST[$this->exceptions[$k][0]]) && 
+				($_POST[$this->exceptions[$k][0]] == $this->exceptions[$k][1])){
 
 				$update = true;
 			}
@@ -83,12 +82,20 @@ Class Control
 
 			return true;
 		}
-	}
 
+	}
 
 	static public function storage()
 	{
 		print "<div id='pass' class='' style='display: none;'>...</div>";
+	}
+
+	static public function ms($ms)
+	{
+		print "<div class='separator11'></div>";
+		print "<div class='app'>"._APP."</div>";
+		print "<div class='separator11'></div>";
+		print "<div id='ms_in' class='message_at' >".$ms."</div>";
 	}
 
 	static public function authorize_form($ms)
@@ -163,24 +170,25 @@ Class Control
 
 		$str = "";
 
-		foreach($A as $value){
-
-			if(isset($_POST[$value])){
-
+		foreach($A as $value)
+		{
+			if(isset($_POST[$value]))
+			{
 				if(!is_array($_POST[$value])){
-
-					$str .= $_POST[$value]."&";
+					
+					$str .= $_POST[$value];
 				}
-				else{
+				else
+				{
+					foreach($_POST[$value] as $v){
 
-					$t = "";
-					foreach($_POST[$value] as $v){ $t .=  $v."&";	}
-					$str .= $t;
+						$str .= $v;
+					}
 				}
 			}
 		}
 
-		return $str;
+		return preg_replace("/&/", "", $str);
 	}	
 
 

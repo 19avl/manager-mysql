@@ -111,12 +111,12 @@ var ct =
 			{
 				if ((c === A[i]) || (new RegExp('\^'+A[i]+'\\[')).test(c)){
 
-					str_check += oForm[c]+"&";
+					str_check += oForm[c];
 				}
 			}
 		}
 
-		return str_check;
+		return str_check.replace(/\&{1,}/g, "");
 	},
 };
 
@@ -184,7 +184,6 @@ var ms =
 	RF: function(action, db, table, form, request)
 	{
 		if(action !== ""){form.action.value=action;}
-
 
 		if(db !== ""){form.db.value=db;}
 		if(table !== ""){form.tb.value=table;}
@@ -350,7 +349,7 @@ var ms =
 		{
 			for (var i=0; i < el.length; i++) {
 
-				if(el[i].value === el.value){ text = el[i].innerHTML+text; }
+				if(el[i].value === el.value){ text += el[i].innerHTML; }
 			}
 
 			var warning = 0;
@@ -508,6 +507,7 @@ var ms =
 			document.getElementById(id).style.display = display;
 	},
 
+
 	el_vb: function(id)
 	{
 		if(document.getElementById(id).style.display === "none"){
@@ -634,12 +634,12 @@ var ms =
 	{
 		var name = "";
 		var str = "";
-		var prev = "";		
-		
+		var prev = "";
+
 		for (var i = 0, f; f = files[i]; i++)
 		{
 			(function(e) {
-				
+
 				var reader = new FileReader();
 
 				reader.onloadend = function(){
@@ -652,54 +652,54 @@ var ms =
 
 						if(e === (files["length"]-1)){
 
-							document.getElementById(fn).value = name;	
-						
-							document.getElementById(tr).innerText = window.btoa(str);	
-	
-							document.getElementById(pr).innerText = "";	
+							document.getElementById(fn).value = name;
+
+							document.getElementById(tr).innerText = window.btoa(str);
+
+							document.getElementById(pr).innerText = "";
 							document.getElementById(pr).hidden = "hidden";
 
-							document.getElementById(blob_ch_id).value = "2";	
+							document.getElementById(blob_ch_id).value = "2";
 
-							document.getElementById(prev_name_id).style.display = "none";							
+							document.getElementById(prev_name_id).style.display = "none";
 						}
 					}
 				};
 
 				reader.readAsBinaryString(f);
-				
-			})(i);				
+
+			})(i);
 		}
 	},
 
 
 	reset_rcul_file: function(files_id, file_name_id, text_name_id, blob_ch_id, prev_name_id)
 	{
-		document.getElementById(files_id).innerText = "";	
-		
+		document.getElementById(files_id).innerText = "";
+
 		document.getElementById(file_name_id).value = "";
-		
-		document.getElementById(text_name_id).innerText = "";	
+
+		document.getElementById(text_name_id).innerText = "";
 		document.getElementById(text_name_id).hidden = "none";
 
-		document.getElementById(blob_ch_id).value = "2";	
+		document.getElementById(blob_ch_id).value = "2";
 
-		document.getElementById(prev_name_id).style.display = "none";		
+		document.getElementById(prev_name_id).style.display = "none";
 	},
 
 
 	get_rcul_text: function(files_id, file_name_id, text_name_id, blob_ch_id, prev_name_id)
 	{
-		document.getElementById(files_id).innerText = "";	
+		document.getElementById(files_id).innerText = "";
 
 		document.getElementById(file_name_id).value = "";
-		
+
 		document.getElementById(text_name_id).innerText = "";
 		document.getElementById(text_name_id).hidden = "";
 
-		document.getElementById(blob_ch_id).value = "2";	
-	
-		document.getElementById(prev_name_id).style.display = "none";	
+		document.getElementById(blob_ch_id).value = "2";
+
+		document.getElementById(prev_name_id).style.display = "none";
 	},
 
 
@@ -814,6 +814,7 @@ var dl =
 
 <style type="text/css">
 
+
 body{background: #555555; color: #eee; }
 
 .user{color: #f70; font-size: 17px;}
@@ -827,13 +828,21 @@ body{background: #555555; color: #eee; }
 
 .result{ color: #eee; }
 
-.nav_wrap, .nav_wrap_filter{
+.nav_wrap_m{
 background: #333;
 }
 
+.nav_wrap_f{}
+
+.nav_wrap{
+border-right: 1px solid #111;
+}
+
+.nav_wrap_filter{}
+
 .nav_value{
-background:#333;
-border: 0px;
+background: none;
+border: 1px solid #333;
 color: #eee;
 }
 
@@ -857,9 +866,9 @@ border: 1px solid #333;
 }
 
 .slc_list{
-background:#333; 
+background:#333;
 color: #eee;
-border: 1px solid #333; 
+border: 1px solid #333;
 }
 
 .int, .int_pass{
@@ -987,7 +996,6 @@ border-top: 7px solid #555;
 border-bottom: 3px solid #555;
 }
 
-
 .file_ul{
 color: #eee;
 }
@@ -995,7 +1003,6 @@ color: #eee;
 .file_ul:hover{
 color: #999;
 }
-
 
 .file_dl_a{
 color: #eee;
@@ -1042,7 +1049,7 @@ margin: 0px;
 
 .res{
 overflow: auto;
-width: 969px;
+width: 970px;
 max-height: 300px;
 }
 
@@ -1082,6 +1089,7 @@ padding: 2px 0px 2px 37px;
 padding-bottom: 11px;
 }
 
+
 .nav{
 text-align: left;
 width: 973px;
@@ -1089,32 +1097,35 @@ padding: 0px;
 margin: 0px;
 }
 
-.nav_wrap,
-.nav_wrap_filter{
-margin-right: 2px;
-display:inline-block;
+.nav_wrap_m{
+width: 100%;
+padding: 0px; margin: 0px;
+border-spacing: 0px;
 }
 
-.nav_wrap{
+.nav_wrap_f{
+padding: 0px; margin: 0px;
+border-spacing: 0px;
+}
+
+
+
+.nav_wrap, .nav_wrap_filter{
+margin-right: 2px;
 width: 129px;
 }
 
-.nav_wrap_filter{
-width: 446px;
-}
-
 .nav_value{
-width: 173px;
-padding: 7px;
-margin: 3px 0px 2px 2px;
+width: 325px;
+
+padding: 8px;
+margin: 2px 4px 2px 2px;
 }
 
 .nav_label{
-width: 119px;
-padding: 7px;
+padding: 10px 3px 0px 10px;
 margin: 2px;
 border: 0px;
-display:inline-block;
 }
 
 .btn{
@@ -1140,7 +1151,7 @@ outline: none;
 text-align: left;
 }
 
-.slc_list{ 
+.slc_list{
 width: 45px;
 padding: 7px;
 outline: none;
@@ -1319,7 +1330,6 @@ padding: 57px 43px 0px 43px;
 
 .wr_main_nav{
 z-index: 191;
-width: 970px;
 }
 
 #status{
@@ -1421,60 +1431,6 @@ width: 117px;
 height: 47px;
 }
 
-.btn_nav_sub,
-.btn_nav_sub_sl{
-height: 45px;
-text-align: left;
-border: 0px;
-padding: 14px 15px 14px 15px;
-min-width: 235px;
-color:#FFF;
-}
-
-.btn_nav_sub{
-background-color: #333;
-}
-
-.btn_nav_sub_sl,
-.btn_nav_sub:hover{
-background-color: #E64A19;
-}
-
-ul{
-margin: 0;
-padding: 0;
-}
-
-ul.nav_main_sub li {
-float: left;
-list-style: none;
-}
-
-ul.nav_main_sub li ul {
-display: none;
-}
-
-ul.nav_main_sub li:hover {
-position: relative;
-}
-
-ul.nav_main_sub li:hover > ul {
-display: block;
-position: absolute;
-top: 47px;
-left: 0;
-text-align: left;
-}
-
-ul.nav_main_sub li ul li{
-height: auto;
-}
-
-ul.nav_main_sub li:hover ul li ul{
-position: absolute;
-top: 0;
-left: 235px;
-}
 
 .confirmDl_title{
 color: #eee;
@@ -1576,12 +1532,10 @@ padding: 3px;
 
 
 
-
-
 .file_ul{
-position: relative; 
-overflow: hidden; 
-width: 171px; 
+position: relative;
+overflow: hidden;
+width: 171px;
 height: 41px;
 line-height: 39px;
 }
@@ -1600,15 +1554,15 @@ cursor: pointer;
 }
 
 .file_ul span{
-padding: 0px 11px 0px 0px;	
+padding: 0px 11px 0px 0px;
 font-size: 15px;
 }
 
 
 .file_dl{
 margin: 0px;
-padding: 0px 11px 0px 0px;	
-display:inline-block; 
+padding: 0px 11px 0px 0px;
+display:inline-block;
 line-height: 39px;
 }
 
@@ -1616,6 +1570,7 @@ line-height: 39px;
 font-size: 15px;
 text-decoration: none;
 }
+
 
 </style>
 

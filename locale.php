@@ -16,8 +16,7 @@ define("_MESSAGE_TB_CHECK", "No table selected");
 define("_MESSAGE_NOT_VALUE", "Value is not defined");
 define("_MESSAGE_FIND_NOT_FOUND", "Is not found");
 define("_MESSAGE_SEARCHING", "SEARCHING");
-
-define("_NOTE_CONFIRM", "Confirmation");
+define("_NOTE_CONFIRM", "Confirm");
 define("_NOTE_CONFIRM_YES", "ok");
 define("_NOTE_CONFIRM_NO", "cancel");
 define("_NOTE_CONFIRM_UNSET", "unset");
@@ -36,6 +35,8 @@ define("_NOTE_FIELD", "display:");
 define("_NOTE_ORDER_BY", "order by:");
 define("_NOTE_FROM", "from:");
 define("_NOTE_FILTER", "filter:");
+define("_NOTE_FILTER_OPERATOR", "operator");
+define("_NOTE_FILTER_VALUE", "value");
 define("_NOTE_TOTAL", "total:");
 define("_NOTE_ALL", "ALL");
 define("_NOTE_SELECT", "with chosen");
@@ -44,7 +45,6 @@ define("_NOTE_SELECT_TB", "with table");
 define("_NOTE_SEARCH_M0", "as substring");
 define("_NOTE_SEARCH_M1", "as whole field ");
 define("_NOTE_IN_USE", "Not in use");
-
 define("_ACTION_EDIT", "edit");
 define("_ACTION_CREATE", "create");
 define("_ACTION_FIND", "find");
