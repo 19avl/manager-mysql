@@ -760,9 +760,9 @@ var dl =
 		document.getElementById('rcDl_ground').style.display = '';
 		document.getElementById('rcDl_window').style.display = '';
 		document.getElementById('rcDl_buf_id').value = this_id;
-
 		document.getElementById('text_id').value = text_id;
-		document.getElementById('note_function').innerHTML = title;
+		document.getElementById('note_function').innerText = title;	
+		
 	},
 
 	close_rcdl: function()

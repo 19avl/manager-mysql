@@ -1,4 +1,4 @@
-Copyright (c) 2018-2022 Andrey Lyskov
+Copyright (c) 2018-2023 Andrey Lyskov
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

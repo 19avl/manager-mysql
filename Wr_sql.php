@@ -138,7 +138,7 @@ trait Wr_sql
 
 			$script = $this->html(trim($script), "\n", "<br>");
 
-			$this->_LOG["MESSAGE"][] = "<br><br><b>".htmlentities($this->dbc->error)."</b><br><br>".$script;
+			$this->_LOG["MESSAGE"][] = "<b>".htmlentities($this->dbc->error)."</b><br>".$script;
 		}
 
 		while($this->dbc->more_results()){

@@ -57,7 +57,7 @@ Class Controller extends Query
 			$this->DATA = $this->manager->tb( $this->_DB, $this->nv, $this->cl_sl, $LIMIT);
 		}
 
-		$this->view->main($this->_DB, $this->_TB, $this->nv, $SQL);
+		$this->view->main();
 
 		$this->view->dl_nav($this->_DB, $this->_TB, $this->nv);
 

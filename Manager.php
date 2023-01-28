@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2022 Andrey Lyskov
+Copyright (c) 2018-2023 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -712,7 +712,8 @@ Class Manager
 					}
 					elseif($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "float"){
 
-						$LIST[] = "abs(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+						$LIST[] = "(SIGN(`".$row["COLUMN_NAME"]."`) *  abs(`".$row["COLUMN_NAME"]."`)) AS `".
+							$row["COLUMN_NAME"]."`";
 					}
 					elseif(in_array( $row["COLUMN_TYPE"], $this->ext["geo"])){
 
@@ -908,7 +909,7 @@ Class Manager
 
 						if($row["DATA_TYPE"] === "float"){
 
-							$field[] = "abs(`".$row["COLUMN_NAME"]."`)";
+							$field[] = "(SIGN(`".$row["COLUMN_NAME"]."`) * abs(`".$row["COLUMN_NAME"]."`))";	
 						}
 						elseif($row["DATA_TYPE"] === "bit"){
 
@@ -2173,8 +2174,8 @@ Class Manager
 		}
 		elseif($field[$nvt["fl_field_rc"]]["DATA_TYPE"] === "float")
 		{
-			$WHERE .= " abs(`".$nvt["fl_field_rc"]."`) ".
-				$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";
+			$WHERE .= "(SIGN(`".$nvt["fl_field_rc"]."`) * abs(`".$nvt["fl_field_rc"]."`)) ".
+				$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";	
 		}
 		elseif(in_array($field[$nvt["fl_field_rc"]]["DATA_TYPE"], $this->ext["geo"]))
 		{

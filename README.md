@@ -1,7 +1,7 @@
 
 ## Manager for MySQL
 
-Copyright (c) 2018-2022 Andrey Lyskov
+Copyright (c) 2018-2023 Andrey Lyskov
 
 #### Description
 

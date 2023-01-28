@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2022 Andrey Lyskov
+Copyright (c) 2018-2023 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -154,12 +154,13 @@ Class View
 		$this->form_set($_DB, $_TB,
 			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-			"", "", "", [], $nv["view_rc"]);
-
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"], $nv["view_rc"]);
 
 		$this->filter_set($nv, "db");
 
 		$this->filter_set($nv, "tb");
+		
+		$this->filter_set($nv, "rc");
 
 		$this->btn("", "", "btn_nav", _ACTION_RELOAD,
 			"onclick=\"ms.RF('VIEW', '', '".$_TB."', this.form, 0);\"");
@@ -204,7 +205,7 @@ Class View
 	}
 
 
-	public function main($_DB, $_TB, $nv, $_sql)
+	public function main()
 	{
 		$this->tg("div", "", "nav_main_back", "", "", "");
 
@@ -1162,7 +1163,7 @@ Class View
 							$this->checkbox("", "", "", $this->html($vst), "", $checked);
 						}
 
-						print $this->html($vst);
+						$this->tg("label", "", "", "", $this->html($vst), "");
 
 						$this->tg_close("div");
 
