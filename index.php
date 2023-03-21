@@ -14,8 +14,8 @@ require __DIR__."/Control.php";
 
 if(!isset($_POST["session"]))
 {	
-	define("_SESSION", uniqid(time()));
-	
+	define("_SESSION", bin2hex(random_bytes(15)));
+
 	require __DIR__."/template.php";
 }
 else

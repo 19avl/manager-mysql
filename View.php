@@ -159,7 +159,7 @@ Class View
 		$this->filter_set($nv, "db");
 
 		$this->filter_set($nv, "tb");
-		
+
 		$this->filter_set($nv, "rc");
 
 		$this->btn("", "", "btn_nav", _ACTION_RELOAD,
@@ -460,40 +460,15 @@ Class View
 
 		$this->dl_confirm("id_cn_sub");
 
-			$this->select(array_keys($RT["VIEWS"]),
-				"", "cl_sl[views]", "", "slc", "views",
+		foreach($RT["SA"] as $sk=>$sv)
+		{
+			$this->select(array_keys($sv),
+				"", "cl_sl[".$sk."]", "", "slc", $sk,
 				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
-
-			$this->select(array_keys($RT["EVENTS"]),
-				"", "cl_sl[events]", "", "slc", "events",
-				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
-
-			$this->select(array_keys($RT["TRIGGERS"]),
-				"", "cl_sl[triggers]", "", "slc", "triggers",
-				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
-
-			$this->select(array_keys($RT["PROCEDURE"]),
-				"", "cl_sl[procedure]", "", "slc", "procedure",
-				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
-
-			$this->select(array_keys($RT["FUNCTION"]),
-				"", "cl_sl[function]", "", "slc", "function",
-				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
-				function($k, $v){return $this->s2h($v);;},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
+				function($k, $v){return $this->html($v);});	
+		}
 
 		$this->input("cl_in", "", "", $RT["SUB"]["NM"], "", "hidden", "");
 		$this->input("cl_tr", "sub_name_id", "", $RT["SUB"]["ID"], "", "hidden", "");
@@ -954,8 +929,6 @@ Class View
 
 					foreach($value as $k=>$v)
 					{
-						$data_flag = "disabled";
-						$flag = "";
 						$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 
 						$class = "rt_value_list";
@@ -979,19 +952,19 @@ Class View
 
 							if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["geo"]))
 							{
-								$this->input("", "", $class, $this->html($v), "", $data_flag, "");
+								$this->input("", "", $class, $this->html($v), "", $flag, "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["binary"]))
 							{
-								$this->input("", "", $class, $this->s2h($v), "", $data_flag, "");
+								$this->input("", "", $class, $this->s2h($v), "", $flag, "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["blob"]))
 							{
-								$this->input("", "", $class, $this->get_seze($v), "", $data_flag, "");
+								$this->input("", "", $class, $this->get_seze($v), "", "disabled", "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["text"]))
 							{
-								$this->input("", "", $class, $this->get_seze($v), "", $data_flag, "");
+								$this->input("", "", $class, $this->get_seze($v), "", "disabled", "");
 							}
 							else
 							{
@@ -1002,11 +975,12 @@ Class View
 									($RT["FIELDS"][$k]["COLUMN_DEFAULT"] === "CURRENT_TIMESTAMP")){
 
 										$class = "rt_label_list";
+										$flag = "disabled";
 								}
 
 								$v = preg_replace("/\\n/", " ", $v);
 
-								$this->input("", "", $class, $this->html($v), "", $data_flag, "");
+								$this->input("", "", $class, $this->html($v), "", $flag, "");
 							}
 
 							$this->tg_close("td");
@@ -1117,7 +1091,6 @@ Class View
 
 				$this->tg_open("div", "", "", "display:inline-block;", "");
 
-				$flag = "";
 				$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 
 				$is_extra = $RT["FIELDS"][$k]["EXTRA"];
@@ -1564,6 +1537,8 @@ Class View
 				}
 			}
 		}
+
+		return "";
 	}
 
 

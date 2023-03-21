@@ -201,11 +201,15 @@ Class Manager
 
 		$RT["DB"] = $_DBS;
 		$RT["CREATE"] = [];
+/*
 		$RT["EVENTS"] = [];
 		$RT["TRIGGERS"] = [];
 		$RT["PROCEDURE"] = [];
 		$RT["FUNCTION"] = [];
 		$RT["VIEWS"] = [];
+*/
+		$RT["SA"] = [];
+
 		$RT["SUB"] = [];
 		$RT["SUB"]["ID"] = "";
 		$RT["SUB"]["NM"] = "";
@@ -254,29 +258,29 @@ Class Manager
 
 					if($CREATE[0]){
 
-						$RT["VIEWS"][$row["TABLE_NAME"]] = $this->fetch_row($CREATE[1])[1];
+						$RT["SA"]["views"][$row["TABLE_NAME"]] = $this->fetch_row($CREATE[1])[1];
 					}
 				}
 			}
 
-			$RT["EVENTS"] = $this->get_sub($_DB, $_DBS,
+			$RT["SA"]["events"] = $this->get_sub($_DB, $_DBS,
 				"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "");
 
-			$RT["TRIGGERS"] = $this->get_sub($_DB, $_DBS,
+			$RT["SA"]["triggers"] = $this->get_sub($_DB, $_DBS,
 				"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER", "SQL Original Statement", "");
 
-			$RT["PROCEDURE"] = $this->get_sub($_DB, $_DBS,
+			$RT["SA"]["procedure"] = $this->get_sub($_DB, $_DBS,
 				"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE", "Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND");
 
-			$RT["FUNCTION"] = $this->get_sub($_DB, $_DBS,
+			$RT["SA"]["function"] = $this->get_sub($_DB, $_DBS,
 				"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION", "Create Function", "ROUTINE_TYPE='FUNCTION' AND");
 
 			if(isset($cl_sl["views"]) && ($cl_sl["views"] !== "")){
 
 				$RT["SUB"]["NM"] = $cl_sl["views"];
-				if(isset($RT["VIEWS"][$this->h2s($cl_sl["views"])])){
+				if(isset($RT["SA"]["views"][$this->h2s($cl_sl["views"])])){
 
-					$RT["SUB"]["SL"] = $RT["VIEWS"][$this->h2s($cl_sl["views"])];
+					$RT["SUB"]["SL"] = $RT["SA"]["views"][$this->h2s($cl_sl["views"])];
 				}
 
 				$RT["SUB"]["ID"] = "views";
@@ -284,9 +288,9 @@ Class Manager
 			elseif(isset($cl_sl["events"]) && ($cl_sl["events"] !== "")){
 
 				$RT["SUB"]["NM"] = $cl_sl["events"];
-				if(isset($RT["EVENTS"][$this->h2s($cl_sl["events"])])){
+				if(isset($RT["SA"]["events"][$this->h2s($cl_sl["events"])])){
 
-					$RT["SUB"]["SL"] = $RT["EVENTS"][$this->h2s($cl_sl["events"])];
+					$RT["SUB"]["SL"] = $RT["SA"]["events"][$this->h2s($cl_sl["events"])];
 				}
 
 				$RT["SUB"]["ID"] = "events";
@@ -294,18 +298,18 @@ Class Manager
 			elseif(isset($cl_sl["triggers"]) && ($cl_sl["triggers"] !== "")){
 
 				$RT["SUB"]["NM"] = $cl_sl["triggers"];
-				if(isset($RT["TRIGGERS"][$this->h2s($cl_sl["triggers"])])){
+				if(isset($RT["SA"]["triggers"][$this->h2s($cl_sl["triggers"])])){
 
-					$RT["SUB"]["SL"] = $RT["TRIGGERS"][$this->h2s($cl_sl["triggers"])];
+					$RT["SUB"]["SL"] = $RT["SA"]["triggers"][$this->h2s($cl_sl["triggers"])];
 				}
 				$RT["SUB"]["ID"] = "triggers";
 			}
 			elseif(isset($cl_sl["procedure"]) && ($cl_sl["procedure"] !== "")){
 
 				$RT["SUB"]["NM"] = $cl_sl["procedure"];
-				if(isset($RT["PROCEDURE"][$this->h2s($cl_sl["procedure"])])){
+				if(isset($RT["SA"]["procedure"][$this->h2s($cl_sl["procedure"])])){
 
-					$RT["SUB"]["SL"] = $RT["PROCEDURE"][$this->h2s($cl_sl["procedure"])];
+					$RT["SUB"]["SL"] = $RT["SA"]["procedure"][$this->h2s($cl_sl["procedure"])];
 
 					$result = $this->request("SELECT PARAMETER_MODE, PARAMETER_NAME
 						FROM information_schema.PARAMETERS where SPECIFIC_SCHEMA=x'".$_DB."'
@@ -346,9 +350,9 @@ Class Manager
 			elseif(isset($cl_sl["function"]) && ($cl_sl["function"] !== "")){
 
 				$RT["SUB"]["NM"] = $cl_sl["function"];
-				if(isset($RT["FUNCTION"][$this->h2s($cl_sl["function"])])){
+				if(isset($RT["SA"]["function"][$this->h2s($cl_sl["function"])])){
 
-					$RT["SUB"]["SL"] = $RT["FUNCTION"][$this->h2s($cl_sl["function"])];
+					$RT["SUB"]["SL"] = $RT["SA"]["function"][$this->h2s($cl_sl["function"])];
 
 					$result = $this->request("SELECT PARAMETER_MODE, PARAMETER_NAME
 						FROM information_schema.PARAMETERS where SPECIFIC_SCHEMA=x'".$_DB."'
@@ -1893,106 +1897,18 @@ Class Manager
 		}
 	}
 
-
-	public function sqls_eval_list($text_script, $use)
+	public function sqlsm($text_script, $use)
 	{
 		$use = $this->h2s($use);
+		if($use !== ""){ $this->request("USE `".$use."`;", "", [], __LINE__); }
 
 		if($text_script === ""){return;}
 
-		$text_script = trim($text_script);
-		if(!preg_match("/;$/", $text_script)){ $text_script .= ";";}
+		$this->multi_request($text_script);
 
-		$list_script = [];
-		$text_script_temp = str_replace("\'", "\-", $text_script);
-		$text_script_temp = str_replace('\"', '\-', $text_script_temp);
-
-		$query = "";
-		$open_value = false;
-		$quote = "'";
-		$pos_erq = 0;
-
-		$strlen_text_script = strlen($text_script);
-
-		for($i=0;$i<$strlen_text_script;$i++)
-		{
-			if(($text_script_temp[$i] == "#") && ($open_value == false)){
-
-				while ( ($text_script_temp[$i] != "\n") && ($i < ($strlen_text_script-1)) ){ $i += 1; }
-			}
-			elseif(($text_script_temp[$i] == "-") && ($open_value == false)){
-
-				if(isset($text_script_temp[$i+1]) && ($text_script_temp[$i+1] == "-")){
-
-					while ( ($text_script_temp[$i] != "\n") && ($i < ($strlen_text_script-1)) ){ $i += 1; }
-				}
-			}
-			elseif(($text_script_temp[$i] == "/") && ($open_value == false)){
-
-				if((isset($text_script_temp[$i+1]) && ($text_script_temp[$i+1] === "*"))
-					&&(isset($text_script_temp[$i+2]) && ($text_script_temp[$i+2] !== "!"))){
-
-					while ( ($text_script_temp[$i].$text_script_temp[$i+1] != "*/") && ($i < ($strlen_text_script-1)) ){
-
-						$i += 1;
-					}
-
-					if(isset($text_script_temp[$i+1])){ $i += 1; }
-					if(isset($text_script_temp[$i+1])){ $i += 1; }
-				}
-			}
-
-			elseif($text_script_temp[$i] == "`" && ($open_value == false)){
-
-				$open_value = true;
-				$quote = "`";
-			}
-			elseif($text_script_temp[$i] == "'" && ($open_value == false)){
-
-				$open_value = true;
-				$quote = "'";
-			}
-			elseif($text_script_temp[$i] == "\"" && ($open_value == false)){
-
-				$open_value = true;
-				$quote = "\"";
-			}
-			elseif($text_script_temp[$i] == $quote && ($open_value == true)){
-
-				$open_value = false;
-			}
-
-			$query .= $text_script[$i];
-
-			if($text_script_temp[$i] == ";" && ($open_value == false)){
-
-				$list_script[] = $query;
-				$query = "";
-				$pos_erq = $i;
-			}
-		}
-
-		if($open_value === true)
-		{
-			$string = substr($text_script, $pos_erq);
-			$this->_LOG["MESSAGE"][] = "Error in your SQL syntax near<br>".$this->html($string);
-		}
-
-		if($use !== ""){ $this->request("USE `".$use."`;", "", [], __LINE__); }
-
-		foreach($list_script as $script)
-		{
-			if((trim($script) != "") && (trim($script) != ";")){
-
-				$this->sqls_eval($script);
-			}
-		}
-
-		$this->dbc->query( "SET sql_mode = '".$this->sql_mode."';" );
-
-		$this->dbc->query( "SET names '".$this->character_name."';" );
+		$this->request("SET sql_mode = '".$this->sql_mode."';", "", [], __LINE__);
+		$this->request("SET names '".$this->character_name."';", "", [], __LINE__);
 	}
-
 
 	private function check_field($_DB, $_TB, &$type)
 	{
@@ -2022,11 +1938,13 @@ Class Manager
 		{
 			while( $row = $this->fetch_assoc($result[1]) ){
 
-				$trigger = $this->request($create." `$_DBS`.`".$row[$target."_NAME"]."`;", "", [], __LINE__);
+				$s = $this->request($create." `$_DBS`.`".$row[$target."_NAME"]."`;", "", [], __LINE__);
 
-				while( $row_trigger = $this->fetch_assoc($trigger[1]) ){
+				while( $row_s = $this->fetch_assoc($s[1]) ){
 
-					$RT[$row[$target."_NAME"]] = $row_trigger[$searching];
+					$row_s[$searching] = preg_replace("/;$/", "", $row_s[$searching]);
+
+					$RT[$row[$target."_NAME"]] = $row_s[$searching];
 				}
 			}
 		}

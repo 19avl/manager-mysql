@@ -28,6 +28,7 @@ $SERVER = ["host"=>"localhost",
 	"variables"=>[
 		"names" => "utf8mb4",
 	//	"sql_mode" => "TRADITIONAL",
+		"sql_mode" => "STRICT_ALL_TABLES", 
 	//	"GLOBAL general_log" => 0,
 	//	"GLOBAL log_output" => "TABLE",
 	],

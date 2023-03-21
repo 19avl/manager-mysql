@@ -123,13 +123,13 @@ Class Controller extends Query
 
 				case "_FILE_SQL":
 				{
-					$this->manager->sqls_eval_list(base64_decode($this->script_file), $this->_DB);
+					$this->manager->sqlsm(base64_decode($this->script_file), $this->_DB);
 				}
 				break;
 
 				case "_RUN_SQL":
 				{
-					$this->manager->sqls_eval_list($this->script, $this->_DB);
+					$this->manager->sqlsm($this->script, $this->_DB);
 				}
 				break;
 

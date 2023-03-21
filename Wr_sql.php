@@ -113,40 +113,47 @@ trait Wr_sql
 		return $result->fetch_row();
 	}
 
-	private function sqls_eval($script)
+
+	private function multi_request($script)
 	{
-		$this->dbc->real_query($script);
-		$result = $this->dbc->store_result();
-
-		$ST = "<b>".htmlentities($script)."</b><br>";
-
-		if($result)
-		{
-			while($row = $result->fetch_assoc())
-			{
-				$ST .= "<br>";
-				foreach($row as $k=>$v){
-
-					$ST .= htmlentities($k).": ".htmlentities($v, ENT_SUBSTITUTE)."<br>";
-				}
-			}
-		}
+		$i = 0;		
 		
-		$this->_LOG["RESULT"][] = $ST;
+		if( $this->dbc->multi_query( $script ) )
+		{
+			do 
+			{
+				$ST = "";
 
-		if($this->dbc->error){
+				$result = $this->dbc->store_result();
+	
+				if ($result) {
 
-			$script = $this->html(trim($script), "\n", "<br>");
+					while($row = $result->fetch_assoc())
+					{
+						foreach($row as $k=>$v){
 
-			$this->_LOG["MESSAGE"][] = "<b>".htmlentities($this->dbc->error)."</b><br>".$script;
+							$ST .= htmlentities($k).": ".htmlentities($v, ENT_SUBSTITUTE)."<br>";
+						}
+						
+						$ST .= "<br>";
+					}		
+				}
+
+				if ($ST !== ""){ 
+				
+					$this->_LOG["RESULT"][] = $ST;
+				}
+		
+				$i++;
+			} 
+			while ($this->dbc->next_result());
 		}
 
-		while($this->dbc->more_results()){
-
-			$this->dbc->next_result();
-			$this->dbc->use_result();
-		}
-
+		if( $this->dbc->errno )
+		{
+			$this->_LOG["MESSAGE"][] = 
+				"Query: [".($i + 1)."]. Errno: [".$this->dbc->errno."]. '".htmlentities($this->dbc->error)."'}";	
+		}		
 	}
 
 	public function close($result)

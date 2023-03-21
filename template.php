@@ -32,7 +32,7 @@ var ct =
 		var pass = document.getElementById("en_pass").value;
 		var result = pass.replace(/^\s+/, '').replace(/\s+$/, '');
 
-		document.getElementById("pass").innerHTML = this.hashE(result);
+		document.getElementById("pass").innerHTML = this.hashE(result+"<?php echo _SESSION; ?>");
 
 		ms.pst("session=<?php echo _SESSION; ?>"+"&request="+this.set_ps());
 	},
@@ -44,59 +44,26 @@ var ct =
 			var request = document.getElementById("request").value;
 			var pass = document.getElementById("pass").innerHTML;
 
-			return this.hashE(""+encodeURIComponent(this.enc(request, pass))+this.str_request(oForm));
+			return this.hashE(""+encodeURIComponent(request+pass)+this.str_request(oForm));	
 		}
 
 		return "";
 	},
 
-	rs: function()
-	{
-		var str = "";
-
-		m = parseInt(0);
-		n = parseInt(16);
-
-		for(var i=0;i<16;i++){
-
-			num = Math.floor( Math.random() * (n - m + 1) ) + m;
-			str += num.toString(16);
-		}
-
-		return str;
-	},
-
-	enc: function(key, str)
-	{
-		var $hash = "";
-		var m = 251;
-
-		for (var i = 0; i < str.length; i++) {
-
-			$hash += (Math.pow(parseInt(key[i]), parseInt(str[i])) % m).toString(16);
-		}
-
-		return $hash;
-	},
-
 	hashE: function(str)
 	{
 		var str = unescape(encodeURIComponent(str));
-		var R = "";
-		var H = 1;
+		var H1 = 1;
+		var H2 = 1;
 		var L = str.length;
+		
+		for (var i = 1; i < L; i++) {
 
-		for (var s = 0; s < 7; s++) {
-
-			for (var i = 1; i < L; i++) {
-
-				H = (( H % str.charCodeAt(i) ) << 5) + (( str.charCodeAt(i) % str.charCodeAt(i-1) ) << s);
-			}
-
-			R += H;
+			H1 = (H1 % str.charCodeAt(i-1) << 19) + ( str.charCodeAt(i-1) );	
+			H2 = (H2 % str.charCodeAt(i) << 19) + ( str.charCodeAt(i) );			
 		}
 
-		return R;
+		return H1+''+H2;
 	},
 
 	str_request: function(oForm)

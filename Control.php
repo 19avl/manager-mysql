@@ -23,10 +23,7 @@ Class Control
 		fl_field_rc,fl_value_rc,fl_operator_rc,fl_and_rc,
 		view_rc,function,file,cl_sl,cl_dl,cl_df,cl_in,cl_tr,script";
 
-	private $exceptions = [
-		["action","_EXPORT_SQL_DB"],
-		["action","_EXPORT_SQL_TB"],
-	];
+	private $exceptions = ["_EXPORT_SQL_DB","_EXPORT_SQL_TB",];
 
 	public function __construct(){}
 
@@ -38,7 +35,10 @@ Class Control
 	public function AT($PASS)
 	{
 		if($PASS === ""){return true;}
-		else{$PASS = $this->hashE($PASS);}
+		else{
+
+			$PASS = $this->hashE($PASS._SESSION);
+		}
 
 		ini_set('session.use_cookies', 0);
 		session_id($_POST["session"]);
@@ -52,18 +52,15 @@ Class Control
 
 		$update = false;
 
-		foreach($this->exceptions as $k=>$v)
-		{
-			if(isset($_POST[$this->exceptions[$k][0]]) && 
-				($_POST[$this->exceptions[$k][0]] == $this->exceptions[$k][1])){
+		if(isset($_POST["action"]) && in_array($_POST["action"], $this->exceptions, true)){
 
-				$update = true;
-			}
+			$update = true;
 		}
 
 		if(!$update)
 		{
-			$_SESSION["request"] = $this->rs(strlen($PASS));
+			$_SESSION["request"] = bin2hex(random_bytes(15));
+
 			print "<input type='hidden' id='request' class='' value='".$_SESSION["request"]."'/>";
 		}
 
@@ -74,7 +71,7 @@ Class Control
 		}
 		else
 		{
-			if($_POST['request'] !== (string)$this->hashE($this->enc($this->session_key, $PASS).$this->str_request()))
+			if($_POST['request'] !== (string)$this->hashE($this->session_key.$PASS.$this->str_request()))
 			{
 				$this->authorize_form(_MESSAGE_CONNECTION);
 				return false;
@@ -113,56 +110,20 @@ Class Control
 		print "</form>";
 	}
 
-
-	private function rs($len)
+	function hashE($str)
 	{
-		mt_srand(time()+(double)microtime()*1000000);
-
-		$str = "";
-
-		for($i=0;$i<$len;$i++){
-
-			$str .= mt_rand(1,9);
-		}
-
-		return $str;
-	}
-
-
-	private function enc($key, $str)
-	{
-		$hash = "";
-		$m = 251;
-
-		if($key === ""){return "";}
-
-		for ($i=0; $i<strlen($str); $i++){
-
-			$hash .= base_convert((pow((int)($key[$i]), (int)($str[$i])) % $m), 10, 16);
-		}
-
-		return $hash;
-	}
-
-	private function hashE($str)
-	{
-		$R = "";
-		$H = 1;
+		$H1 = 1;
+		$H2 = 1;
 		$L = strlen($str);
 		
-		for ($s = 0; $s < 7; $s++) {
-		
-			for ($i = 1; $i < $L; $i++) {
-
-				$H = (( $H % ord($str[$i]) ) << 5) + (( ord($str[$i]) % ord($str[$i-1]) ) << $s);
-			}
-
-			$R .= $H;
+		for ($i = 1; $i < $L; $i++) 	
+		{	
+			$H1 = ($H1 % ord($str[$i-1]) << 19) + ( ord($str[$i-1]) );	
+			$H2 = ($H2 % ord($str[$i]) << 19) + ( ord($str[$i]) );
 		}
-		
-		return $R;
-	}
 
+		return $H1.$H2;			
+	}
 
 	private function str_request()
 	{

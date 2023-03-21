@@ -10,7 +10,6 @@ $SQL = [
 "engines" => "SHOW ENGINES;",
 "processlist" => "SHOW PROCESSLIST;",
 "privileges" => "SHOW PRIVILEGES;",
-
 "open tables" => "
 SHOW OPEN TABLES WHERE In_use>0;
 SHOW OPEN TABLES;",
