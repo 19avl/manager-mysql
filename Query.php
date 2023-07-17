@@ -5,13 +5,13 @@ defined("_EXEC") or die();
 
 Class Query
 {
-	protected $_DB = "";
+	protected $_SH = "";
 	protected $_TB = "";
 
 	protected $action = "";
 	protected $display = "";
 
-	protected $list_db = [];
+	protected $list_sh = [];
 	protected $list_tb = [];
 	protected $nv = [];
 	protected $key = [];
@@ -22,7 +22,6 @@ Class Query
 
 	protected $cl_in = "";
 	protected $cl_sl = [];
-	protected $cl_dl = "";
 	protected $cl_df = "";
 	protected $cl_tr = "";
 
@@ -38,33 +37,33 @@ Class Query
 
 		if(isset($_POST["display"])){ $this->display = $this->set_value($_POST["display"]); }
 
-		if(isset($_POST["db"])){ $this->_DB = $this->set_value($_POST["db"]); }
+		if(isset($_POST["sh"])){ $this->_SH = $this->set_value($_POST["sh"]); }
 
 		if(isset($_POST["tb"])){ $this->_TB = $this->set_value($_POST["tb"]); }
 
-		if(isset($_POST["list_db"])){ $this->list_db = $this->set_value_list($_POST["list_db"]); }
+		if(isset($_POST["list_sh"])){ $this->list_sh = $this->set_value_list($_POST["list_sh"]); }
 
 		if(isset($_POST["list_tb"])){ $this->list_tb = $this->set_value_list($_POST["list_tb"]); }
 
 
-		$this->nv["page_db"] = (isset($_POST["page_db"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_db"]))) ?
-				$this->set_value($_POST["page_db"]) : "0";
+		$this->nv["page_sh"] = (isset($_POST["page_sh"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_sh"]))) ?
+				$this->set_value($_POST["page_sh"]) : "0";
 
-		$this->nv["from_db"] = (isset($_POST["from_db"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_db"]))) ?
-				$this->set_value($_POST["from_db"]) : "0";
+		$this->nv["from_sh"] = (isset($_POST["from_sh"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_sh"]))) ?
+				$this->set_value($_POST["from_sh"]) : "0";
 
-		$this->nv["order_db"] = (isset($_POST["order_db"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_db"]))) ?
-				$this->set_value($_POST["order_db"]) : "0";
+		$this->nv["order_sh"] = (isset($_POST["order_sh"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_sh"]))) ?
+				$this->set_value($_POST["order_sh"]) : "0";
 
-		$this->nv["order_desc_db"] = (isset($_POST["order_desc_db"]) &&
-			($_POST["order_desc_db"] === "desc")) ? "DESC" : "";
+		$this->nv["order_desc_sh"] = (isset($_POST["order_desc_sh"]) &&
+			($_POST["order_desc_sh"] === "desc")) ? "DESC" : "";
 
-		$this->nv["field_db"] = (isset($_POST["field_db"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["field_db"]))) ?
-				$this->set_value($_POST["field_db"]) : "0";
+		$this->nv["field_sh"] = (isset($_POST["field_sh"]) &&
+			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["field_sh"]))) ?
+				$this->set_value($_POST["field_sh"]) : "0";
 
 
 		$this->nv["page_tb"] = (isset($_POST["page_tb"]) &&
@@ -106,21 +105,21 @@ Class Query
 
 
 
-		$this->nv["fl_field_db"] = [];
-		if(isset($_POST["fl_field_db"])){ $this->nv["fl_field_db"] =
-			$this->set_value_list($_POST["fl_field_db"]); }
+		$this->nv["fl_field_sh"] = [];
+		if(isset($_POST["fl_field_sh"])){ $this->nv["fl_field_sh"] =
+			$this->set_value_list($_POST["fl_field_sh"]); }
 
-		$this->nv["fl_value_db"] = [];
-		if(isset($_POST["fl_value_db"])){ $this->nv["fl_value_db"] =
-			$this->set_value_list($_POST["fl_value_db"]); }
+		$this->nv["fl_value_sh"] = [];
+		if(isset($_POST["fl_value_sh"])){ $this->nv["fl_value_sh"] =
+			$this->set_value_list($_POST["fl_value_sh"]); }
 
-		$this->nv["fl_operator_db"] = [];
-		if(isset($_POST["fl_operator_db"])){ $this->nv["fl_operator_db"] =
-			$this->set_value_list($_POST["fl_operator_db"]); }
+		$this->nv["fl_operator_sh"] = [];
+		if(isset($_POST["fl_operator_sh"])){ $this->nv["fl_operator_sh"] =
+			$this->set_value_list($_POST["fl_operator_sh"]); }
 
-		$this->nv["fl_and_db"] = [];
-		if(isset($_POST["fl_and_db"])){ $this->nv["fl_and_db"] =
-			$this->set_value_list($_POST["fl_and_db"]); }
+		$this->nv["fl_and_sh"] = [];
+		if(isset($_POST["fl_and_sh"])){ $this->nv["fl_and_sh"] =
+			$this->set_value_list($_POST["fl_and_sh"]); }
 
 
 		$this->nv["fl_field_tb"] = [];
@@ -180,8 +179,6 @@ Class Query
 		}
 
 		if(isset($_POST["cl_sl"])){ $this->cl_sl = $this->set_value_list($_POST["cl_sl"]); }
-
-		if(isset($_POST["cl_dl"])){ $this->cl_dl = $this->set_value($_POST["cl_dl"]); }
 
 		if(isset($_POST["cl_df"])){ $this->cl_df = $this->set_value($_POST["cl_df"]); }
 

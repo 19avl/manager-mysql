@@ -30,9 +30,9 @@ trait Wr_html
 	}
 
 
-	protected function form_open($class="")
+	protected function form_open($class="", $id="")
 	{
-		print "<form name='' method='post' action='' class='".$class."' enctype='' onSubmit='return false;'>";
+		print "<form id='".$id."' name='' method='post' action='' class='".$class."' enctype='' onSubmit='return false;'>";
 	}
 
 
@@ -103,7 +103,7 @@ trait Wr_html
 	}
 
 
-	protected function select($foreach, $selected, $name, $id, $class, $title, $event, $ch, $fk, $fv)
+	protected function select($foreach, $selected, $disabled, $name, $id, $class, $title, $event, $ch, $fk, $fv)
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";
 		$class = ($class !== "") ? "class='".$class."'" : "";	
@@ -114,14 +114,21 @@ trait Wr_html
 
 		foreach($foreach as $k=>$v){
 
-			if($selected === (string)call_user_func($ch, $k, $v)){
+			if(($disabled !== "") && preg_match("/".$disabled."/", (string)call_user_func($ch, $k, $v))){
+				
+				print "<OPTION value='".call_user_func($fk, $k, $v)."' disabled> ".
+					call_user_func($fv, $k, $v)." </OPTION>";	
+			}
+			elseif($selected === (string)call_user_func($ch, $k, $v)){
 
-				print "<OPTION SELECTED value='".call_user_func($fk, $k, $v)."' > ".call_user_func($fv, $k, $v)." </OPTION>";
+				print "<OPTION SELECTED value='".call_user_func($fk, $k, $v)."' > ".
+					call_user_func($fv, $k, $v)." </OPTION>";
 			}
 			else{
 
-				print "<OPTION value='".call_user_func($fk, $k, $v)."' > ".call_user_func($fv, $k, $v)." </OPTION>";
-			}
+				print "<OPTION value='".call_user_func($fk, $k, $v)."' > ".
+					call_user_func($fv, $k, $v)." </OPTION>";
+			}	
 		}
 
 		print "</select>";

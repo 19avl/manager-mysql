@@ -15,7 +15,6 @@ Class View
 
 	public function __construct(){}
 
-
 	public function dl_message()
 	{
 		$this->tg_open("div", "id_alt_message", "altDl", "display: none;", "");
@@ -27,11 +26,8 @@ Class View
 		$this->tg_close("div");
 	}
 
-
 	private function dl_confirm($id)
 	{
-		$this->input("", $id."_request", "", "", "", "hidden", "");
-
 		$this->tg_open("div", $id, "confirmDl", "display: none;", "");
 
 		$this->tg_open("div", "", "", "", "");
@@ -109,72 +105,10 @@ Class View
 	}
 
 
-	public function dl_nav($_DB, $_TB, $nv)
-	{
-		$this->tg_open("div", "id_nav_message", "altDl", "display: none;", "");
-
-		$this->btn("", "", "btn_nav_first", "...", "onclick=\"ms.el_va('id_nav_message', 'none');\"");
-
-		if(($_DB !== "") && ($_TB !== ""))
-		{
-			$this->form_open("nav_main_form");
-
-			$this->form_set("", "",
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-				"", "", "", []);
-
-			$this->filter_set($nv, "db");
-
-			$this->filter_set($nv, "tb");
-
-			$this->btn("", "", "btn_nav", _ACTION_BACK,
-							"onclick=\"ms.RF('VIEW', '".$_DB."', '', this.form, 0);\"");
-
-			$this->form_close();
-		}
-		elseif(($_DB !== "") && ($_TB === ""))
-		{
-			$this->form_open("nav_main_form");
-
-			$this->form_set("", "",
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-				"", "", "", "", "", "", "", []);
-
-			$this->filter_set($nv, "db");
-
-			$this->btn("", "", "btn_nav", _ACTION_BACK,
-				"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
-
-			$this->form_close();
-		}
-
-		$this->form_open("nav_main_form");
-
-		$this->form_set($_DB, $_TB,
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"], $nv["view_rc"]);
-
-		$this->filter_set($nv, "db");
-
-		$this->filter_set($nv, "tb");
-
-		$this->filter_set($nv, "rc");
-
-		$this->btn("", "", "btn_nav", _ACTION_RELOAD,
-			"onclick=\"ms.RF('VIEW', '', '".$_TB."', this.form, 0);\"");
-
-		$this->form_close();
-
-		$this->tg_close("div");
-	}
-
-
 	public function message($log)
 	{
-		if(isset($log["MESSAGE"]))
-		{
+		if(isset($log["MESSAGE"]) && (count($log["MESSAGE"]) !== 0))
+		{		
 			$this->tg_open("div", "div_message", "res_message", "", "");
 
 			$this->tg("div", "", "res_message_close", "", "&#10006;", "onclick=\"ms.el_va('div_message', 'none');\"");
@@ -185,11 +119,9 @@ Class View
 			}
 
 			$this->tg_close("div");
-
-			$this->tg("div", "", "separator11", "", "", "");
 		}
 
-		if(isset($log["RESULT"]))
+		if(isset($log["RESULT"]) && (count($log["RESULT"]) !== 0))
 		{
 			$this->tg_open("div", "div_result", "res", "", "");
 
@@ -199,131 +131,84 @@ Class View
 			}
 
 			$this->tg_close("div");
-
-			$this->tg("div", "", "separator11", "", "", "");
+			
+			$this->tg("div", "", "separator11", "", "", "");			
 		}
 	}
 
 
-	public function main()
+	public function main($user, $_SH, $_TB, $nv)
 	{
 		$this->tg("div", "", "nav_main_back", "", "", "");
 
 		$this->tg_open("div", "", "nav_main", "", "");
 
-			$this->btn("", "", "btn_nav_first", "...", "onclick=\"ms.el_va('id_nav_message', '');\"");
+		$this->form_open("nav_main_form", "reload");
 
-			$this->btn("", "", "btn_nav", _NOTE_DATABASES,
-				"onclick=\"ms.view_wr('id_wr_db', 'id_wr_script');\"");
+		$this->form_set($_SH, $_TB,
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
+			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"], $nv["view_rc"]);
 
-			$this->btn("", "", "btn_nav", _NOTE_SQL,
-				"onclick=\"ms.view_wr('id_wr_script', 'id_wr_db');\"");
+		$this->filter_set($nv, "sh");
 
-		$this->tg_close("div");
-	}
+		$this->filter_set($nv, "tb");
 
+		$this->filter_set($nv, "rc");
 
-	public function db($RT, $_DB, $_TB, $nv, $display)
-	{
-		if($display === "db"){
+		$this->tg("div", "", "btn_nav_first_im", "", 
+"<svg baseProfile='full' width='47' height='47'>
+<path d='M 33 21 L 33 15 L 15 15 L 15 30 L 35 30' fill='transparent' stroke='white' stroke-width='2'/>	
+<path d='M28 20 L 33 26 L 38 20 Z' fill='white'/></svg>", 
+			"onclick=\"ms.RF('VIEW', '', '".$_TB."', document.getElementById('reload'), 0);\"");
+		
+		$this->form_close();
 
-			$this->tg_open("div", "id_wr_db", "wr_main_nav", "", "");
-		}
-		else{
+		$this->btn("", "", "btn_nav", _NOTE_SQL, "onclick=\"ms.view_wr('id_wr_script', '');\"");
 
-			$this->tg_open("div", "id_wr_db", "wr_main_nav", "display: none;", "");
-		}
+		$this->tg("div", "", "separator0", "", "", "");
 
 		$this->form_open();
 
-		$this->form_set($_DB, $_TB,
-			"", "", "", "",
+		$this->form_set("", "",
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"], $nv["view_rc"]);
 
-		$this->input("display", "", "", "db", "", "hidden", "");
+		$this->filter_set($nv, "sh");
 
-		$this->nav($RT, $nv, "db");
+		$this->filter_set($nv, "tb");
+
+		$this->filter_set($nv, "rc");
+
+		$this->tg_open("div", "", "nav_main_nv", "", "");
+
+		$this->tg("div", "", "separator3", "", "", "");
+
+		$this->btn("", "", "rt_label_nv", "[ ".$user." ]",
+			"onclick=\"window.scrollTo(0,0); ms.RF('VIEW', '', '', this.form, 0);\"");
+
+
+		if($_SH !== "")
+		{
+			$this->btn("", "", "rt_label_nv", "[ ".$this->html($this->h2s($_SH))." ]",
+				"onclick=\"window.scrollTo(0,0); ms.RF('VIEW', '".$_SH."', '', this.form, 0);\"");		
+		}
+		if($_TB !== "")
+		{
+			$this->btn("", "", "rt_label_nv", "[ ".$this->html($this->h2s($_TB))." ]",
+				"onclick=\"window.scrollTo(0,0); ms.RF('VIEW', '".$_SH."', '".$_TB."', this.form, 0);\"");
+		}
+
+		$this->tg_close("div");
 
 		$this->form_close();
-
-		if( count($RT["DB"]) !== 0 )
-		{
-			$this->tg("div", "", "separator11", "", "", "");
-
-			$this->form_open();
-
-			$this->form_set($_DB, "",
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-				"", "", "", "", "", "", "", []);
-
-			$this->filter_set($nv, "db");
-
-			$this->tg_open("div", "", "ct_row", "", "");
-
-			$this->tg_open("div", "", "pl_el", "", "");
-
-			$this->checkbox("totalH", "", "ct_check", "checkbox",
-				"onclick=\"ms.check_sl(this.form,'list_db[]',this.checked); ms.el_va('id_alt_message', 'none');\"", "");
-
-			$this->input("", "", "ct_name_title", _NOTE_DATABASES, "", "disabled", "");
-
-			$this->input("", "", "ct_info_A", "COUNT", "", "readonly", "");
-
-			$this->input("", "", "ct_info_D", $RT["FIELD_SE"][$nv["field_db"]], "", "readonly", "");
-
-			$this->tg_close("div");
-
-			foreach($RT["DB"] as $key=>$value)
-			{
-				$uk = $this->s2h($key);
-
-				$this->tg_open("div", "", "pl_el", "", "");
-
-				$this->checkbox("list_db[]", "", "ct_check", $uk, "onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
-
-				$this->input("", "", "ct_name", $this->html($key),
-					"onclick=\"ms.RF('VIEW', '".$uk."', '', this.form, 0);\"", "", "");
-
-				$this->input("", "", "ct_info_A", $value["COUNT"], "", "readonly", "");
-
-				$this->input("", "", "ct_info_D", $value[$RT["FIELD_SE"][$nv["field_db"]]], "", "readonly", "");
-
-				$this->tg_close("div");
-			}
-
-			$this->checkbox("totalF", "", "ct_check", "checkbox",
-				"onclick=\"ms.check_sl(this.form,'list_db[]',this.checked); ms.el_va('id_alt_message', 'none');\"", "");
-
-			$this->dl_confirm("id_cn_db");
-
-			$this->select(
-				[
-				'_DELETE_DB'=>_ACTION_DELETE,
-				'_CLEAR_DB'=>_ACTION_CLEAR,
-				'_EXPORT_SQL_DB'=>_ACTION_EXPORT_SQL
-				],
-				false, "", "", "st_select_value", _NOTE_SELECT,
-					"onchange=\"ms.AL(this.value, 'id_cn_db', 'id_cn_db_request', '', this, this.form, 'list_db[]',
-					'"._NOTE_DATABASES." / "._NOTE_SELECT." / ', ['_DELETE_DB','_CLEAR_DB'],
-					['_EXPORT_SQL_DB'],
-					'"._MESSAGE_DB_CHECK."' ); \"",
-				function($k, $v){return $v;},
-				function($k, $v){return $k;},
-				function($k, $v){return $v;});
-
-			$this->tg_close("div");
-
-			$this->tg("div", "", "separator11", "", "", "");
-
-			$this->form_close();
-		}
 
 		$this->tg_close("div");
 	}
 
 
-	public function mk($_DB, $_TB, $LIST_SQL, $SQL_SL, $nv, $display)
+	public function mk($_SH, $_TB, $LIST_SQL, $SQL_SL, $nv, $display)
 	{
 		if($display === "sql"){
 
@@ -336,12 +221,12 @@ Class View
 
 		$this->form_open();
 
-		$this->form_set($_DB, $_TB,
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+		$this->form_set($_SH, $_TB,
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-		$this->filter_set($nv, "db");
+		$this->filter_set($nv, "sh");
 
 		$this->filter_set($nv, "tb");
 
@@ -349,11 +234,11 @@ Class View
 
 		$this->tg_open("div", "", "ct_row", "", "");
 
-			$this->select(array_keys($LIST_SQL), "", "script_id", "", "slc", _NOTE_SCRIPT,
+			$this->select(array_keys($LIST_SQL), "", "--", "script_id", "", "slc", _NOTE_SCRIPT,
 				"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 				function($k, $v){return $v;},
-				function($k, $v){return $v;},
-				function($k, $v){return $v;});
+				function($k, $v){return $this->html($v);},
+				function($k, $v){return $this->html($v);});
 
 		$this->tg_close("div");
 
@@ -361,12 +246,12 @@ Class View
 
 		$this->form_open();
 
-		$this->form_set($_DB, $_TB,
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+		$this->form_set($_SH, $_TB,
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-		$this->filter_set($nv, "db");
+		$this->filter_set($nv, "sh");
 
 		$this->filter_set($nv, "tb");
 
@@ -383,33 +268,142 @@ Class View
 		$this->tg_close("div");
 	}
 
-
-	public function stat($stat)
+	public function sh($user, $_SH, $_TB, $RT, $nv, $info)
 	{
-		$this->tg("div", "", "", "", "&nbsp;", "");
-		$this->tg("div", "", "", "", $stat, "");
-		$this->tg("div", "", "", "", "&nbsp;", "");
-	}
+		$this->tg("div", "", "rt_label_tl", "", _NOTE_SERVER.": ".$user, "onclick=\"window.scrollTo(0,0); ms.el_vb('sh_id');\"");
+		
+		$this->tg("div", "", "separator11", "", "", "");	
+		
+		$this->tg_open("div", "sh_id", "pl_el", "display: none;", "");
 
+		$this->tg_open("div", "", "rt_list", "", "");
 
-	public function info($info)
-	{
 		foreach($info as $value){
 
-			$this->tg("div", "", "", "rt_list", $value, "");
+			$this->tg("div", "", "", "", $value, "");
+		}
+		
+		$this->tg_close("div");		
+		
+		$this->tg("div", "", "separator11", "", "", "");
+
+		$this->tg_close("div");
+
+		$this->tg_open("div", "id_wr_db", "wr_main_nav", "", "");
+
+		$this->form_open();
+
+		$this->form_set($_SH, $_TB,
+			"", "", "", "",
+			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
+			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+
+		$this->tg_open("div", "", "pl_el", "", "");
+
+		$this->select(
+			[_NOTE_SEARCH_M0, _NOTE_SEARCH_M1],
+			"", "", "cl_df", "", "st_select_value", "", "",
+			function($k, $v){return $v;},
+			function($k, $v){return $k;},
+			function($k, $v){return $v;});
+
+		$this->input("cl_in", "search_db", "st_value_D", "",
+			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
+
+		$this->btn("", "", "st_btn", _ACTION_FIND,
+			"onclick=\"ms.AV('_FIND_TL', '', '', this.form, 0, 'search_db', '"._MESSAGE_NOT_VALUE."');\"");
+
+		$this->tg_close("div");
+
+		$this->tg("div", "", "separator3", "", "", "");
+	
+		$this->nav($RT, $nv, "sh");
+
+		$this->form_close();
+
+		if( count($RT["SH"]) !== 0 )
+		{
+			$this->form_open();
+
+			$this->form_set($_SH, "",
+				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
+				"", "", "", "", "", "", "", []);
+
+			$this->filter_set($nv, "sh");
+
+			$this->tg_open("div", "", "ct_row", "", "");
+
+			$this->tg_open("div", "", "pl_el", "", "");
+
+			$this->checkbox("totalH", "", "ct_check", "checkbox",
+				"onclick=\"ms.check_sl(this.form,'list_sh[]',this.checked); ms.el_va('id_alt_message', 'none');\"", "");
+
+			$this->input("", "", "ct_name_title", _NOTE_SCHEMAS, "", "disabled", "");
+
+			$this->input("", "", "ct_info_A", "COUNT", "", "readonly", "");
+
+			$this->input("", "", "ct_info_D", $RT["FIELD_SE"][$nv["field_sh"]], "", "readonly", "");
+
+			$this->tg_close("div");
+
+			foreach($RT["SH"] as $key=>$value)
+			{
+				$uk = $this->s2h($key);
+
+				$this->tg_open("div", "", "pl_el", "", "");
+
+				$this->checkbox("list_sh[]", "", "ct_check", $uk, "onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
+
+				$this->input("", "", "ct_name", $this->html($key),
+					"onclick=\"ms.RF('VIEW', '".$uk."', '', this.form, 0);\"", "", "");
+
+				$this->input("", "", "ct_info_A", $value["count"], "", "readonly", "");
+
+				$this->input("", "", "ct_info_D", $value[$RT["FIELD_SE"][$nv["field_sh"]]], "", "readonly", "");
+
+				$this->tg_close("div");
+			}
+
+			$this->checkbox("totalF", "", "ct_check", "checkbox",
+				"onclick=\"ms.check_sl(this.form,'list_sh[]',this.checked); ms.el_va('id_alt_message', 'none');\"", "");
+
+			$this->dl_confirm("id_cn_db");
+
+			$this->select(
+				[
+				'_DELETE_SH'=>_ACTION_DELETE,
+				'_CLEAR_SH'=>_ACTION_CLEAR,
+				'_EXPORT_SQL_SH'=>_ACTION_EXPORT_SQL
+				],
+				false, "", "", "", "st_select_value", _NOTE_SELECT,
+					"onchange=\"ms.AL(this.value, 'id_cn_db', this, this.form, 'list_sh[]',
+					'"._NOTE_SCHEMAS." / "._NOTE_SELECT." / ', ['_DELETE_SH','_CLEAR_SH'],
+					['_EXPORT_SQL_SH'],
+					'"._MESSAGE_SH_CHECK."' ); \"",
+				function($k, $v){return $v;},
+				function($k, $v){return $k;},
+				function($k, $v){return $v;});
+
+			$this->tg_close("div");
+
+			$this->tg("div", "", "separator11", "", "", "");
+
+			$this->form_close();
 		}
 
-		$this->tg("div", "", "separator11", "", "", "");
+		$this->tg_close("div");
 	}
 
 
-	public function tb($_DB, $RT, $action, $nv, $display)
+	public function tb($user, $_SH, $RT, $action, $nv, $display)
 	{
 		if($RT["CREATE"] == ""){return;}
 
-		$_DBS = $this->html($this->h2s($_DB));
+		$_SHS = $this->html($this->h2s($_SH));
 
-		$this->input("", "", "rt_label_db", $_DBS, "onclick=\"ms.el_vb('db_id');\"", "readonly", "");
+		$this->tg("div", "", "rt_label_tl", "", _NOTE_SCHEMA.": ".$_SHS, "onclick=\"window.scrollTo(0,0); ms.el_vb('db_id');\"");
+
+		$this->tg("div", "", "separator11", "", "", "");
 
 		if($display === "tb_sub"){
 
@@ -420,135 +414,40 @@ Class View
 			$this->tg_open("div", "db_id", "pl_el", "display: none;", "");
 		}
 
-		$this->tg("div", "", "separator11", "", "", "");
-
-		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["DB"], 7)), "");
+		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["SH"], 7)), "");
 
 		$this->form_open();
 
-		$this->form_set($_DB, "",
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+		$this->form_set($_SH, "",
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			"", "", "", "", "", "", "", []);
 
 		$this->dl_confirm("id_cn_tbt");
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->input("cl_in", "db_name_new_id", "st_value_B", $this->html($this->h2s($_DB)),
+		$this->input("cl_in", "db_name_new_id", "st_value_B", $this->html($this->h2s($_SH)),
 			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 		$this->btn("", "", "st_btn", _ACTION_COPY,
-			"onclick=\"ms.AT('_COPY_DB', 'id_cn_tbt', 'id_cn_stb_request', '', this, this.form, '', [''], [],
+			"onclick=\"ms.AT('_COPY_SH', 'id_cn_tbt', this, this.form, '', [''], [],
 			'db_name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 		$this->form_close();
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->form_open();
-
-		$this->form_set($_DB, "",
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
-			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-			"", "", "", []);
-
-		$this->filter_set($nv, "db");
-
-		$this->filter_set($nv, "tb");
-
-		$this->input("display", "", "", "tb_sub", "", "hidden", "");
-
-		$this->dl_confirm("id_cn_sub");
-
-		foreach($RT["SA"] as $sk=>$sv)
-		{
-			$this->select(array_keys($sv),
-				"", "cl_sl[".$sk."]", "", "slc", $sk,
-				"onchange=\"ms.RF('_GET_SUB', '".$_DB."', '', this.form, 0); \"",
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});	
-		}
-
-		$this->input("cl_in", "", "", $RT["SUB"]["NM"], "", "hidden", "");
-		$this->input("cl_tr", "sub_name_id", "", $RT["SUB"]["ID"], "", "hidden", "");
-		$this->input("cl_dl", "", "", $this->s2h(substr($RT["SUB"]["SL"], 7)), "", "hidden", "");
-
-		if($RT["SUB"]["SL"] !== "")
-		{
-			$this->tg_open("div", "target_id_nav", "", "", "");
-
-				$this->textarea("cl_df", "", "rt_value_text",
-					$this->html(substr($RT["SUB"]["SL"], 7), "`,`", "`,\n`"),
-					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "disabled");
-
-				$this->tg("div", "", "separator3", "", "", "");
-
-				$this->btn("", "", "st_btn", _ACTION_EDIT,
-					"onclick=\"ms.el_va('target_id_edit', ''); ms.el_va('target_id_nav', 'none');\"");
-
-				if(($RT["SUB"]["ID"] === "procedure") || ($RT["SUB"]["ID"] === "function")){
-
-					$this->btn("", "", "st_btn", _ACTION_RUN,
-						"onclick=\"ms.el_va('target_id_run', ''); ms.el_va('target_id_nav', 'none');\"");
-				}
-
-			$this->tg_close("div");
-
-			$this->tg_open("div", "target_id_edit", "", "display: none;", "");
-
-				$this->textarea("cl_df", "target_id", "rt_value_text",
-					$this->html(substr($RT["SUB"]["SL"], 7), "`,`", "`,\n`"),
-					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
-
-				$this->tg("div", "", "separator3", "", "", "");
-
-				$this->btn("", "", "st_btn", _ACTION_DELETE,
-					"onclick=\"ms.AT('_DELETE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-					ms.get_sub('sub_name_id','')+' / "._ACTION_DELETE."',
-					['_DELETE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-				$this->btn("", "", "st_btn", _ACTION_UPDATE,
-					"onclick=\"ms.AT('_UPDATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-					ms.get_sub('sub_name_id','')+' / "._ACTION_UPDATE."',
-					['_UPDATE_SUB'], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-				$this->btn("", "", "st_btn", _ACTION_CREATE,
-					"onclick=\"ms.AT('_CREATE_SUB', 'id_cn_sub', 'id_cn_sub_request', '', this, this.form,
-					ms.get_sub('sub_name_id','')+' / "._ACTION_CREATE."',
-					[], [], 'target_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-			$this->tg_close("div");
-
-			$this->tg_open("div", "target_id_run", "", "display: none;", "");
-
-				if(($RT["SUB"]["ID"] === "procedure") || ($RT["SUB"]["ID"] === "function")){
-
-					$this->textarea("script", "", "rt_value_text", $RT["SUB"]["PR"],"", "");
-
-					$this->tg("div", "", "separator3", "", "", "");
-
-					$this->btn("", "", "st_btn", _ACTION_RUN, "onclick=\"ms.RF('_RUN_SQL', '', '', this.form, 0);\"");
-				}
-
-			$this->tg_close("div");
-		}
-
-		$this->form_close();
-
 		$this->tg_close("div");
 
-		$this->tg("div", "", "separator11", "", "", "");
-
 		$this->form_open();
 
-		$this->form_set($_DB, "", "", "", "", "", "", "", "", "", "", "", "", []);
+		$this->form_set($_SH, "", "", "", "", "", "", "", "", "", "", "", "", []);
 
 		$this->tg_open("div", "", "pl_el", "", "");
 
 		$this->select(
 			[_NOTE_SEARCH_M0, _NOTE_SEARCH_M1],
-			"", "cl_df", "", "st_select_value", "", "",
+			"", "", "cl_df", "", "st_select_value", "", "",
 			function($k, $v){return $v;},
 			function($k, $v){return $k;},
 			function($k, $v){return $v;});
@@ -557,7 +456,7 @@ Class View
 			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 		$this->btn("", "", "st_btn", _ACTION_FIND,
-			"onclick=\"ms.AV('_FIND_DB', '".$_DB."', '', this.form, 0, 'search_db', '"._MESSAGE_NOT_VALUE."');\"");
+			"onclick=\"ms.AV('_FIND_SH', '".$_SH."', '', this.form, 0, 'search_db', '"._MESSAGE_NOT_VALUE."');\"");
 
 		$this->tg_close("div");
 
@@ -571,12 +470,12 @@ Class View
 
 		$this->form_open();
 
-		$this->form_set($_DB, "",
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+		$this->form_set($_SH, "",
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			"", "", "", []);
 
-		$this->filter_set($nv, "db");
+		$this->filter_set($nv, "sh");
 
 		$this->filter_set($nv, "tb");
 
@@ -604,7 +503,7 @@ Class View
 			$this->checkbox("list_tb[]", "", "ct_check", $uk, "onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
 
 			$flag = "";
-			if($value["COUNT"] === "IN USE"){
+			if($value["count"] === "IN USE"){
 
 				$flag = "disabled";
 			}
@@ -612,7 +511,7 @@ Class View
 			$this->input("", "", "ct_name", $this->html($key),
 				"onclick=\"ms.RF('VIEW', '', '".$uk."', this.form, 0);\"", $flag, "");
 
-			$this->input("", "", "ct_info_A", $value["COUNT"], "", "readonly", "");
+			$this->input("", "", "ct_info_A", $value["count"], "", "readonly", "");
 
 			$this->input("", "", "ct_info_D", $value[$RT["FIELD_SE"][$nv["field_tb"]]], "", "readonly", "");
 
@@ -630,8 +529,8 @@ Class View
 				'_CLEAR_TB'=>_ACTION_CLEAR,
 				'_EXPORT_SQL_TB'=>_ACTION_EXPORT_SQL
 			],
-			false, "list_LT_sl", "", "st_select_value", _NOTE_SELECT,
-			"onchange=\"ms.AL(this.value, 'id_cn_tbr', 'id_cn_tbr_request', '', this, this.form, 'list_tb[]',
+			false, "", "list_LT_sl", "", "st_select_value", _NOTE_SELECT,
+			"onchange=\"ms.AL(this.value, 'id_cn_tbr', this, this.form, 'list_tb[]',
 			'"._NOTE_TABLES." / "._NOTE_SELECT." / ', ['_DELETE_TB','_CLEAR_TB'],
 			['_EXPORT_SQL_TB'],
 			'"._MESSAGE_TB_CHECK."' ); \"",
@@ -647,14 +546,16 @@ Class View
 	}
 
 
-	public function rc($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, $display)
+	public function rc($user, $_SH, $_TB, $RT, $nv, $FUNCTION, $ext, $display)
 	{
-		$_DBS = $this->html($this->h2s($_DB));
+		$_SHS = $this->html($this->h2s($_SH));
 		$_TBS = $this->html($this->h2s($_TB));
 
 		if($RT["CREATE"] == ""){return;}
 
-		$this->input("", "", "rt_label_db", $_DBS.".".$_TBS, "onclick=\"ms.el_vb('tb_id');\"", "readonly", "");
+		$this->tg("div", "", "rt_label_tl", "", _NOTE_TABLE.": ".$_TBS, "onclick=\"window.scrollTo(0,0); ms.el_vb('tb_id');\"");
+
+		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tg_open("div", "", "pl_el", "", "");
 
@@ -667,14 +568,12 @@ Class View
 			$this->tg_open("div", "tb_id", "", "display: none;", "");
 		}
 
-		$this->tg("div", "", "separator11", "", "", "");
-
-		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["DB"], 7), "`,`", "`,<br>`"), "");
+		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["SH"], 7), "`,`", "`,<br>`"), "");
 
 		$this->tg("div", "", "separator3", "", "", "");
 		$this->tg("div", "", "separator3", "", "", "");
 
-		if($RT["TABLE_TYPE"] === "VIEW"){
+		if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["TABLE_TYPE"] === "SYSTEM VIEW")){
 
 			$this->tg("div", "", "res", "", $this->html(substr($RT["CREATE"]["TB"], 7), "`,`", "`,<br>`"), "");
 		}
@@ -685,61 +584,24 @@ Class View
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		if(($this->h2s($_DB) !== "information_schema") && ($this->h2s($_DB) !== "performance_schema") &&
+		if(($this->h2s($_SH) !== "information_schema") && ($this->h2s($_SH) !== "performance_schema") &&
 			($RT["CREATE"]["TB"] !== ""))
 		{
 			$this->form_open();
 
-			$this->form_set($_DB, $_TB,
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$this->form_set($_SH, $_TB,
+				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 
 			$this->filter_set($nv, "tb");
 
-			$this->input("display", "", "", "rc_sub", "", "hidden", "");
-
 			$this->dl_confirm("id_cn_st");
 
-			if(($RT["TABLE_TYPE"] !== "VIEW"))
-			{
-				$this->select($RT["ALTER_TABLE"]["ADD"], false, "", "", "slc", "add",
-					"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
-					function($k, $v){return $v;},
-					function($k, $v){return $this->html($v);},
-					function($k, $v){return $this->html($v);});
-
-				$this->select($RT["ALTER_TABLE"]["CHANGE"], false, "", "", "slc", "change",
-					"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
-					function($k, $v){return $v;},
-					function($k, $v){return $this->html($v);},
-					function($k, $v){return $this->html($v);});
-
-				$this->select($RT["ALTER_TABLE"]["DROP"], false, "", "", "slc", "drop",
-					"onchange=\"ms.el_va('st_id','');ms.el_va('id_alt_message', 'none');ms.sub_tb('tb_def_id', this); \"",
-					function($k, $v){return $v;},
-					function($k, $v){return $this->html($v);},
-					function($k, $v){return $this->html($v);});
-
-				$this->tg_open("div", "st_id", "", "display: none;", "");
-
-				$this->textarea("cl_df", "tb_def_id", "rt_value_text", "",
-					"onclick=\"ms.el_va('id_alt_message', 'none');\"", "");
-
-				$this->btn("", "", "st_btn", _ACTION_ALTER,
-					"onclick=\"ms.AT('_UPDATE_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
-					ms.get_sub('','')+'"._NOTE_TABLE." / "._ACTION_ALTER."',
-					['_UPDATE_TB'], [], 'tb_def_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-				$this->tg_close("div");
-
-				$this->tg("div", "", "separator11", "", "", "");
-			}
-
-			$this->select($RT["DB_LIST"],
-				$_DB, "cl_tr", "", "st_select_db", "", "",
+			$this->select($RT["SH_LIST"],
+				$_SH, "", "cl_tr", "", "st_select_value", "", "",
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->s2h($v);},
 				function($k, $v){return $this->html($v);});
@@ -748,12 +610,12 @@ Class View
 				"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
 
 			$this->btn("", "", "st_btn", _ACTION_RENAME,
-				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form,
+				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', this, this.form,
 				'"._NOTE_TABLE." / "._ACTION_RENAME."',
 				['_RENAME_TB'], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 			$this->btn("", "", "st_btn", _ACTION_COPY,
-				"onclick=\"ms.AT('_COPY_TB', 'id_cn_st', 'id_cn_st_request', '', this, this.form, '',
+				"onclick=\"ms.AT('_COPY_TB', 'id_cn_st', this, this.form, '',
 				[], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
 
 			$this->tg("div", "", "separator11", "", "", "");
@@ -762,7 +624,7 @@ Class View
 
 			if(($RT["TABLE_TYPE"] !== "VIEW")){
 
-				$this->rc_data($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, "insert");
+				$this->rc_data($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, "insert");
 			}
 		}
 
@@ -770,12 +632,10 @@ Class View
 
 		$this->tg_close("div");
 
-		$this->tg("div", "", "separator11", "", "", "");
-
 		$this->form_open();
 
-		$this->form_set($_DB, $_TB,
-			$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+		$this->form_set($_SH, $_TB,
+			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 			$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 			"", "", "", [], $nv["view_rc"]);
 
@@ -783,7 +643,7 @@ Class View
 
 		$this->select(
 			[_NOTE_SEARCH_M0, _NOTE_SEARCH_M1],
-			"", "cl_df", "", "st_select_value", "", "",
+			"", "", "cl_df", "", "st_select_value", "", "",
 			function($k, $v){return $v;},
 			function($k, $v){return $k;},
 			function($k, $v){return $v;});
@@ -806,11 +666,11 @@ Class View
 
 			if($nv["view_rc"] === "tb"){
 
-				$this->rc_data($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, "edit");
+				$this->rc_data($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, "edit");
 			}
 			else{
 
-				$this->rc_data_list($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, "edit");
+				$this->rc_data_list($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, "edit");
 			}
 		}
 
@@ -818,7 +678,7 @@ Class View
 	}
 
 
-	private function rc_data_list($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, $mod)
+	private function rc_data_list($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, $mod)
 	{
 		$this->tg_open("div", "", "rt_list", "", "");
 
@@ -830,12 +690,12 @@ Class View
 
 					$this->form_open();
 
-					$this->form_set($_DB, $_TB,
-						$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+					$this->form_set($_SH, $_TB,
+						$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 						$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 						$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-					$this->filter_set($nv, "db");
+					$this->filter_set($nv, "sh");
 
 					$this->filter_set($nv, "tb");
 
@@ -892,7 +752,8 @@ Class View
 		$this->tg_close("table");
 
 		$from_rc = $nv["from_rc"];
-		$count = "0";
+
+		$count = 0;
 
 		foreach($RT["RECORDS"] as $value)
 		{
@@ -900,12 +761,12 @@ Class View
 
 			$this->form_open();
 
-			$this->form_set($_DB, $_TB,
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$this->form_set($_SH, $_TB,
+				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 
 			$this->filter_set($nv, "tb");
 
@@ -956,11 +817,11 @@ Class View
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["binary"]))
 							{
-								$this->input("", "", $class, $this->s2h($v), "", $flag, "");
+								$this->input("", "", $class, $v, "", $flag, "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["blob"]))
 							{
-								$this->input("", "", $class, $this->get_seze($v), "", "disabled", "");
+								$this->input("", "", $class, $this->get_seze($this->h2s($v)), "", "disabled", "");
 							}
 							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["text"]))
 							{
@@ -1000,18 +861,18 @@ Class View
 	}
 
 
-	private function rc_data($_DB, $_TB, $RT, $nv, $FUNCTION, $ext, $mod)
+	private function rc_data($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, $mod)
 	{
 		if($mod === "edit")
 		{
 			$this->form_open();
 
-			$this->form_set($_DB, $_TB,
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$this->form_set($_SH, $_TB,
+				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 
 			$this->filter_set($nv, "tb");
 
@@ -1043,12 +904,12 @@ Class View
 
 			$this->form_open();
 
-			$this->form_set($_DB, $_TB,
-				$nv["page_db"], $nv["from_db"], $nv["order_db"], $nv["field_db"],
+			$this->form_set($_SH, $_TB,
+				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
 				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
 				"", "", $nv["order_rc"], $nv["field_rc"]);
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 
 			$this->filter_set($nv, "tb");
 
@@ -1233,13 +1094,15 @@ Class View
 					}
 
 					$this->input("file[".$uk."]", "file".$count.$count_fl.$uk.$mod, "",
-						$this->s2h($v), "", "hidden", "");
+						$v, "", "hidden", "");
 
 					$this->input("field[".$uk."]", "text".$count.$count_fl.$uk.$mod, $class,
-						$this->s2h($v), "", $data_flag, "");
+						$v, "", $data_flag, "");
 				}
 				elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["blob"]))
 				{
+					$v = $this->h2s($v);
+					
 					if(($mod === "edit") && (trim($v) !== "")){
 
 						$value = " ( ".$this->get_seze($v)." ) ";
@@ -1400,11 +1263,11 @@ Class View
 				$this->tg_close("div");
 			}
 
-			$this->dl_confirm("id_cn_rc".$count.$uk.$mod);
+			$this->dl_confirm("id_cn_rc".$count.$mod);
 
 			$this->tg("div", "", "separator3", "", "", "");
 
-			if($this->h2s($_DB) !== "information_schema")
+			if($this->h2s($_SH) !== "information_schema")
 			{
 				if(($count_fl > 0) && ($count_fl_display > 0))
 				{
@@ -1414,39 +1277,17 @@ Class View
 						{
 							if($mod === "edit")
 							{
-								if(!isset($RT["PRIVILEGES"]["TABLE_PRIVILEGES"]) ||
-									in_array("DELETE", $RT["PRIVILEGES"]["TABLE_PRIVILEGES"]))
-								{
-									$this->btn("", "", "btn", _ACTION_DELETE,
-										"onclick=\"ms.AT('_DELETE_RC', 'id_cn_rc".$count.$uk.$mod."',
-										'id_cn_rc".$count.$uk.$mod."_request', '', this, this.form,
-										'"._NOTE_ROW." / "._ACTION_DELETE."', ['_DELETE_RC'], []); \"");
-								}
+								$this->btn("", "", "btn", _ACTION_DELETE,
+									"onclick=\"ms.AT('_DELETE_RC', 'id_cn_rc".$count.$mod."', this, this.form,
+									'"._NOTE_ROW." / "._ACTION_DELETE."', ['_DELETE_RC'], []); \"");
 
-								if(!isset($RT["PRIVILEGES"]["TABLE_PRIVILEGES"]) ||
-									in_array("UPDATE", $RT["PRIVILEGES"]["TABLE_PRIVILEGES"]))
-								{
-									$this->btn("", "", "btn", _ACTION_UPDATE,
-										"onclick=\"ms.RF('_UPDATE_RC', '', '', this.form, 0);\"");
-								}
+								$this->btn("", "", "btn", _ACTION_UPDATE,
+									"onclick=\"ms.RF('_UPDATE_RC', '', '', this.form, 0);\"");
 							}
 						}
 
-						if(!isset($RT["PRIVILEGES"]["TABLE_PRIVILEGES"]) ||
-							in_array("INSERT", $RT["PRIVILEGES"]["TABLE_PRIVILEGES"]))
-						{
-							if($mod === "insert"){
-
-								$this->btn("", "", "btn", _ACTION_INSERT,
-									"onclick=\"ms.RF('_INSERT_RC', '', '',this.form, 0);\"");
-							}
-
-							if($mod === "edit"){
-
-								$this->btn("", "", "btn", _ACTION_INSERT,
-									"onclick=\"ms.RF('_COPY_RC', '', '',this.form, 0);\"");
-							}
-						}
+						$this->btn("", "", "btn", _ACTION_INSERT,
+							"onclick=\"ms.RF('_INSERT_RC', '', '',this.form, 0);\"");
 					}
 				}
 			}
@@ -1500,62 +1341,40 @@ Class View
 
 	private function privileges_rc($k, $PRIVILEGES, $mod)
 	{
-		if(!isset($PRIVILEGES["COLUMN_PRIVILEGES"])){
+		$RT = "";
 
-			if(isset($PRIVILEGES["TABLE_PRIVILEGES"])){
+		if($mod === "edit"){$action = "UPDATE";}
+		else{$action = "INSERT";}
 
-				if($mod === "edit")
-				{
-					if(!in_array("UPDATE", $PRIVILEGES["TABLE_PRIVILEGES"])){
-
-						return "disabled";
-					}
-				}
-				elseif($mod === "insert")
-				{
-					if(!in_array("INSERT", $PRIVILEGES["TABLE_PRIVILEGES"])){
-
-						return "disabled";
-					}
-				}
-			}
-		}
-		else
+		if(isset($PRIVILEGES["TABLE_PRIVILEGES"]) || isset($PRIVILEGES["COLUMN_PRIVILEGES"]))
 		{
-			if($mod === "edit")
-			{
-				if(!in_array($k, $PRIVILEGES["COLUMN_PRIVILEGES"]["UPDATE"])){
-
-					return "disabled";
-				}
+			if(in_array($action, $PRIVILEGES["TABLE_PRIVILEGES"]) ||
+				(isset($PRIVILEGES["COLUMN_PRIVILEGES"][$action]) &&
+				in_array($k, $PRIVILEGES["COLUMN_PRIVILEGES"][$action]))
+			){
+				$RT = "";
 			}
-			elseif($mod === "insert")
-			{
-				if(!in_array($k, $PRIVILEGES["COLUMN_PRIVILEGES"]["INSERT"])){
-
-					return "disabled";
-				}
-			}
+			else{$RT = "disabled";}	
 		}
-
-		return "";
+	
+		return $RT;
 	}
 
 
-	private function form_set($_DB, $_TB,
-		$page_db, $from_db, $order_db, $field_db,
+	private function form_set($_SH, $_TB,
+		$page_sh, $from_sh, $order_sh, $field_sh,
 		$page_tb, $from_tb, $order_tb, $field_tb,
 		$page_rc, $from_rc, $order_rc, $field_rc, $view_rc="")
 	{
 		$this->input("action", "", "", "", "", "hidden", "");
 
-		$this->input("db", "", "", $_DB, "", "hidden", "");
+		$this->input("sh", "", "", $_SH, "", "hidden", "");
 		$this->input("tb", "", "", $_TB, "", "hidden", "");
 
-		if($page_db != ""){$this->input("page_db", "", "", $page_db, "", "hidden", "");}
-		if($from_db != ""){$this->input("from_db", "", "", $from_db, "", "hidden", "");}
-		if($order_db != ""){$this->input("order_db", "", "", $order_db, "", "hidden", "");;}
-		if($field_db != ""){$this->input("field_db", "", "", $field_db, "", "hidden", "");}
+		if($page_sh != ""){$this->input("page_sh", "", "", $page_sh, "", "hidden", "");}
+		if($from_sh != ""){$this->input("from_sh", "", "", $from_sh, "", "hidden", "");}
+		if($order_sh != ""){$this->input("order_sh", "", "", $order_sh, "", "hidden", "");;}
+		if($field_sh != ""){$this->input("field_sh", "", "", $field_sh, "", "hidden", "");}
 
 		if($page_tb != ""){$this->input("page_tb", "", "", $page_tb, "", "hidden", "");}
 		if($from_tb != ""){$this->input("from_tb", "", "", $from_tb, "", "hidden", "");}
@@ -1680,7 +1499,7 @@ Class View
 				}
 				else
 				{
-					$this->select($RT["FIELD_SE"], $nv["field_".$pre], "field_".$pre, "", "slc", "",
+					$this->select($RT["FIELD_SE"], $nv["field_".$pre], "", "field_".$pre, "", "slc", "",
 						"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 						function($k, $v){return $k;},
 						function($k, $v){return $k;},
@@ -1693,7 +1512,7 @@ Class View
 
 				$this->tg("div", "", "nav_label", "", _NOTE_LIMIT, "");
 
-				$this->select($RT["ON_PAGE"], $nv["page_".$pre], "page_".$pre, "", "slc", "",
+				$this->select($RT["ON_PAGE"], $nv["page_".$pre], "", "page_".$pre, "", "slc", "",
 					"onchange=\"ms.set_vl('from_".$pre."', '0'); ms.RF('VIEW', '', '', this.form, 0);\"",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
@@ -1705,7 +1524,7 @@ Class View
 
 				$this->tg("div", "", "nav_label", "", _NOTE_FROM, "");
 
-				$this->select($RT["FROM"], $nv["from_".$pre], "from_".$pre, "from_".$pre, "slc", "",
+				$this->select($RT["FROM"], $nv["from_".$pre], "", "from_".$pre, "from_".$pre, "slc", "",
 					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
@@ -1717,7 +1536,7 @@ Class View
 
 				$this->tg("div", "", "nav_label", "", _NOTE_ORDER_BY, "");
 
-				$this->select($RT["FIELD_ST"], $nv["order_".$pre], "order_".$pre, "", "slc", "",
+				$this->select($RT["FIELD_ST"], $nv["order_".$pre], "", "order_".$pre, "", "slc", "",
 					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 					function($k, $v){return $k;},
 					function($k, $v){return $k;},
@@ -1745,11 +1564,11 @@ Class View
 
 		if($pre === "tb"){
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 		}
 		if($pre === "rc"){
 
-			$this->filter_set($nv, "db");
+			$this->filter_set($nv, "sh");
 
 			$this->filter_set($nv, "tb");
 		}
@@ -1804,7 +1623,7 @@ Class View
 			}
 			else{
 
-				$this->select(["AND", "OR"], $add_fl_operator_and,
+				$this->select(["AND", "OR"], $add_fl_operator_and, "",
 					"fl_and_".$pre."[]", "", "slc", "", "",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
@@ -1820,7 +1639,7 @@ Class View
 			$this->tg_close("td");
 			$this->tg_open("td", "", "nav_wrap_filter", "", "");
 
-			$this->select($RT["FILTER_EX"][$v], $add_fl_operator,
+			$this->select($RT["FILTER_EX"][$v], $add_fl_operator, "",
 				"fl_operator_".$pre."[]", "", "slc", "", "",
 				function($k, $v){return $v;},
 				function($k, $v){return $v;},

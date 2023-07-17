@@ -17,7 +17,6 @@ define("_URL", $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].parse_ur
 
 $PASS = "";
 
-
 /* MYSQL */
 
 $SERVER = ["host"=>"localhost", 

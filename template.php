@@ -32,7 +32,7 @@ var ct =
 		var pass = document.getElementById("en_pass").value;
 		var result = pass.replace(/^\s+/, '').replace(/\s+$/, '');
 
-		document.getElementById("pass").innerHTML = this.hashE(result+"<?php echo _SESSION; ?>");
+		document.getElementById("pass").innerHTML = this.hashE(result);
 
 		ms.pst("session=<?php echo _SESSION; ?>"+"&request="+this.set_ps());
 	},
@@ -94,7 +94,6 @@ var ms =
 	{
 		var container = "content";
 		var status = "status";
-		var status_back = "status_back";
 
 		var url = "<?php echo _URL; ?>";
 
@@ -120,9 +119,7 @@ var ms =
 				if (X.status == 200){
 
 					document.getElementById(container).innerHTML = X.responseText;
-					document.getElementById(status).value = "";
 					document.getElementById(status).style.display = "none";
-					document.getElementById(status_back).style.display = "none";
 
 					if(document.getElementById("div_message") ||
 						document.getElementById("div_error") || document.getElementById("div_result")){
@@ -137,7 +134,6 @@ var ms =
 			else{
 
 				document.getElementById(status).style.display = "";
-				document.getElementById(status_back).style.display = "";
 			}
 		}
 
@@ -148,11 +144,11 @@ var ms =
 	},
 
 
-	RF: function(action, db, table, form, request)
+	RF: function(action, sh, table, form, request)
 	{
 		if(action !== ""){form.action.value=action;}
 
-		if(db !== ""){form.db.value=db;}
+		if(sh !== ""){form.sh.value=sh;}
 		if(table !== ""){form.tb.value=table;}
 
 		var data = "";
@@ -228,7 +224,8 @@ var ms =
 
 	},
 
-	AL: function(action, id_win, id, name, el, form, cbName, text, warning_list, request_list, war)
+
+	AL: function(action, id_win, el, form, cbName, text, warning_list, request_list, war)
 	{
 		if(cbName !== "")
 		{
@@ -273,12 +270,6 @@ var ms =
 			if(request_list[r] === el.value){ request = 1;}
 		}
 
-		if(name !== "")
-		{
-			document.getElementById(id).name = name;
-			document.getElementById(id).value = el.value;
-		}
-
 		form.action.value = action;
 
 		if( el.nodeName === "SELECT"){ el[0].selected='selected'; }
@@ -293,7 +284,8 @@ var ms =
 		}
 	},
 
-	AT: function(action, id_win, id, name, el, form, text, warning_list, request_list, id_tr, war)
+
+	AT: function(action, id_win, el, form, text, warning_list, request_list, id_tr, war)
 	{
 		var innner_buf_res = 0;
 		if(id_tr){
@@ -325,12 +317,6 @@ var ms =
 				if(warning_list[w] === action){ warning = 1; }
 			}
 
-			if(name !== "")	{
-
-				document.getElementById(id).name = name;
-				document.getElementById(id).value = el.value;
-			}
-
 			form.action.value = action;
 
 			if( el.nodeName === "SELECT"){ el[0].selected='selected'; }
@@ -346,7 +332,7 @@ var ms =
 		}
 	},
 
-	AV: function(action, db, table, form, request, id, war)
+	AV: function(action, sh, table, form, request, id, war)
 	{
 		if(document.getElementById(id).value === ""){
 
@@ -354,7 +340,7 @@ var ms =
 		}
 		else{
 
-			this.RF(action, db, table, form, request);
+			this.RF(action, sh, table, form, request);
 		}
 	},
 
@@ -437,7 +423,10 @@ var ms =
 
 	view_wr: function(id, id_close)
 	{
-		document.getElementById(id_close).style.display = "none";
+		if(id_close !== ""){
+			
+			document.getElementById(id_close).style.display = "none";
+		}
 
 		if(document.getElementById(id).style.display === "none"){
 
@@ -885,9 +874,28 @@ border: 1px solid #777;
 color: #eee;
 }
 
+.rt_label_nv{ 
+cursor: pointer; 
+color: #f70;
+background: none;
+border: 0px;
+}
+
+.rt_label_nv:hover{
+color: #999;
+}
+
+.rt_label_tl{
+font-size: 17px;
+cursor: pointer;
+}
+
+.rt_label_tl:hover{
+color:#999;
+}
+
 .rt_label_sv,
-.rt_label_sv_des,
-.rt_label_db{
+.rt_label_sv_des{
 cursor: pointer;
 background: #333;
 color: #eee;
@@ -907,14 +915,12 @@ border: 0;
 .st_value_B,
 .st_value_C,
 .st_value_D,
-.st_select_db,
 .st_select_value{
 background: #555;
 border: 1px solid #777;
 color: #eee;
 }
 
-.st_select_db,
 .st_select_value{
 border: 0px;
 background: #333;
@@ -959,7 +965,6 @@ color: #eee;
 }
 
 .wr_main_nav{
-border-top: 7px solid #555;
 border-bottom: 3px solid #555;
 }
 
@@ -1032,24 +1037,25 @@ width: 100%;
 max-height: 170px;
 }
 
+
 .res_message_close{
-z-index: 505;
-position:fixed;
-display:inline-block;
-bottom:0;
+z-index: 505;	
+position:fixed; 
+display:inline-block; 
 left: 0px;
-padding: 5px 11px 7px 11px;
-font-size: 17px;
+padding: 0px 11px 7px 11px;
+font-size: 15px;
 cursor: pointer;
-max-height: 170px;
 }
+
+.message{ 
+padding: 3px 11px 3px 51px;
+}
+
+
 
 .message_at{
 padding-bottom: 5px;
-}
-
-.message{
-padding: 2px 0px 2px 37px;
 }
 
 .result{
@@ -1084,7 +1090,6 @@ width: 129px;
 
 .nav_value{
 width: 325px;
-
 padding: 8px;
 margin: 2px 4px 2px 2px;
 }
@@ -1195,9 +1200,13 @@ width: 149px;
 width: 45px;
 }
 
+
+.rt_label_nv{
+padding: 0px 5px 0px 5px; 
+}
+
 .rt_label_sv,
 .rt_label_sv_des,
-.rt_label_db,
 .rt_label_key,
 .rt_label_name,
 .rt_label_type,
@@ -1211,7 +1220,6 @@ width: 45px;
 .st_value_B,
 .st_value_C,
 .st_value_D,
-.st_select_db,
 .st_select_value{
 padding: 8px;
 margin: 1px 2px 1px 0px;
@@ -1219,7 +1227,6 @@ margin: 1px 2px 1px 0px;
 
 .rt_label_sv{ width: 200px;}
 .rt_label_sv_des{ width: 730px; }
-.rt_label_db{ width: 954px; }
 .rt_label_key{ width: 27px; }
 .rt_label_name{ width: 188px; }
 .rt_label_type{ width: 149px; }
@@ -1241,9 +1248,8 @@ resize: vertical;
 
 .st_value_A{ width: 340px; }
 .st_value_B{ width: 799px; }
-.st_value_C{ width: 439px; }
+.st_value_C{ width: 494px; }
 .st_value_D{ width: 646px; }
-.st_select_db{ width: 206px; }
 .st_select_value{ width: 151px; }
 
 .type_value{
@@ -1292,34 +1298,22 @@ width:100%;
 width:970px;
 display:inline-block;
 text-align: left;
-padding: 57px 43px 0px 43px;
+padding: 89px 43px 0px 43px;
 }
 
 .wr_main_nav{
 z-index: 191;
 }
 
-#status{
-z-index: 505;
-position:fixed;
-display:inline-block;
-background: none;
-text-align: center;
-top:0;
-left: 5px;
-margin-top: 5px;
-width: 37px;
-height: 36px;
-border: 1px solid #777;
-}
 
-#status_back{
+#status{
 z-index: 501;
 position: fixed;
 top: 0;
 right: 0;
 bottom: 0;
 left: 0;
+cursor: wait;
 }
 
 
@@ -1376,26 +1370,37 @@ background: none;
 
 .nav_main_form{
 display: inline-block;
+float: left;
 }
 
-.btn_nav_first{
+.nav_main_nv{
+display: flex;
+flex-wrap: wrap; 
+height: 45px; 
+align-content: center;
+background: #555555; 
+}
+
+.btn_nav_first_im{
+border: 0px;
+border-right: 1px solid #000;
 width: 47px;
 height: 47px;
-border: 0px;
-padding: 1px;
-background-color: #E64A19;
-border-right: 1px solid #000;
-color:#FFF;
+text-align: center;
+cursor: pointer;
 }
 
-.btn_nav{
-background-color: #333;
+
+.btn_nav,
+.btn_nav:hover{
 border: 0px;
 border-right: 1px solid #000;
 padding: 14px 5px 14px 5px;
-color:#FFF;
 width: 117px;
-height: 47px;
+height: 47px;	
+cursor: pointer;
+background-color: #333;
+color:#FFF;
 }
 
 
@@ -1548,21 +1553,9 @@ text-decoration: none;
 
 <div id="expl_page" class="page">
 
-	<div id="status" type="text" value="" style="display: none;">
-<svg width="36" height="36">
-<circle cx="18" cy="18" r="9" stroke="#aaa" stroke-width="2" fill="transparent"/>
-<path d="M 18,14 L 18,18 22,22" fill="transparent" stroke="#aaa" stroke-width="2"/>
-<rect width="2" height="2" x="11" y="17" fill="#aaa" />
-<rect width="2" height="2" x="23" y="17" fill="#aaa" />
-<rect width="2" height="2" x="17" y="11" fill="#aaa" />
-<rect width="2" height="2" x="17" y="23" fill="#aaa" />
-<line id="ln" x1="14" x2="22" y1="8" y2="8" stroke="#aaa" stroke-width="3" />
-<line id="ln" x1="14" x2="22" y1="28" y2="28" stroke="#aaa" stroke-width="3" />
-</svg>
-	</div>
-
-	<div id="status_back" style="display: none;"></div>
+	<div id="status" style="display: none;"></div>
 	<div class="block" id="content"></div>
+	
 </div>
 
 <!--[if lt IE 11]>

@@ -11,7 +11,6 @@ require __DIR__."/Control.php";
 
 
 
-
 if(!isset($_POST["session"]))
 {	
 	define("_SESSION", bin2hex(random_bytes(15)));
@@ -20,8 +19,6 @@ if(!isset($_POST["session"]))
 }
 else
 {
-	define("_SESSION", $_POST["session"]);
-	
 	require __DIR__."/Convert.php";
 	require __DIR__."/Manager.php";
 	require __DIR__."/View.php";

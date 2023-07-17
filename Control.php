@@ -13,17 +13,17 @@ Class Control
 {
 	private $session_key;
 
-	public static $CHECK ="action,jump_sv,sv,db,tb,key,field,
-		blob_ch,display,list_db,list_tb,
-		page_db,from_db,order_db,field_db,
+	public static $CHECK ="action,jump_sv,sv,sh,tb,key,field,
+		blob_ch,display,list_sh,list_tb,
+		page_sh,from_sh,order_sh,field_sh,
 		page_rc,from_rc,order_rc,field_rc,
 		page_tb,from_tb,order_tb,field_tb,
-		fl_field_db,fl_value_db,fl_operator_db,fl_and_db,
+		fl_field_sh,fl_value_sh,fl_operator_sh,fl_and_sh,
 		fl_field_tb,fl_value_tb,fl_operator_tb,fl_and_tb,
 		fl_field_rc,fl_value_rc,fl_operator_rc,fl_and_rc,
 		view_rc,function,file,cl_sl,cl_dl,cl_df,cl_in,cl_tr,script";
 
-	private $exceptions = ["_EXPORT_SQL_DB","_EXPORT_SQL_TB",];
+	private $exceptions = ["_EXPORT_SQL_SH","_EXPORT_SQL_TB",];
 
 	public function __construct(){}
 
@@ -37,7 +37,7 @@ Class Control
 		if($PASS === ""){return true;}
 		else{
 
-			$PASS = $this->hashE($PASS._SESSION);
+			$PASS = $this->hashE($PASS);
 		}
 
 		ini_set('session.use_cookies', 0);

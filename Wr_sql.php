@@ -74,6 +74,8 @@ trait Wr_sql
 				$this->sql_mode = $this->fetch_row($sql_mode[1])[0];
 			}
 
+			$this->current_user	= $SERVER["user"]."@".$SERVER["host"].":".$SERVER["port"];
+
 			$this->client_info = $this->dbc->client_info;
 			
 			$this->server_info = $this->dbc->server_info;
@@ -88,15 +90,13 @@ trait Wr_sql
 
 	protected function request($sql, $type, $value, $line, $log = true)
 	{
-		if($log){$this->_LOG["SQL"][] = $sql;}
-
 		$this->dbc->real_query($sql);
 		$result = $this->dbc->store_result();
 
 		if($this->dbc->error){
 
-			if($log){$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error, ENT_SUBSTITUTE);}
-
+			$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error, ENT_SUBSTITUTE);
+			
 			return [false, $this->dbc->errno];
 		}
 
