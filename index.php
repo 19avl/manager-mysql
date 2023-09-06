@@ -24,8 +24,8 @@ else
 	require __DIR__."/View.php";
 	require __DIR__."/Query.php";
 	require __DIR__."/Controller.php";
-
-	new Controller($SERVER, $LIMIT, $PASS);	
+	
+	new Controller($LIMIT, $USER);
 }
 
 

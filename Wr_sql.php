@@ -74,11 +74,10 @@ trait Wr_sql
 				$this->sql_mode = $this->fetch_row($sql_mode[1])[0];
 			}
 
-			$this->current_user	= $SERVER["user"]."@".$SERVER["host"].":".$SERVER["port"];
-
 			$this->client_info = $this->dbc->client_info;
-			
 			$this->server_info = $this->dbc->server_info;
+			
+			$this->current_user	= $SERVER["user"]."@".$SERVER["host"].":".$SERVER["port"];			
 		}
 		else{
 

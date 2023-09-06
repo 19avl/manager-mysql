@@ -11,16 +11,16 @@ Class Controller extends Query
 	private $view;
 	private $DATA;
 
-	public function __construct($SERVER, $LIMIT, $PASS)
+	public function __construct($LIMIT, $USER)
 	{
 		$this->query();
 
 		$this->control = new Control();
-		$this->control->main($PASS);
+		$this->control->main($USER["pass"]);
 
 		$this->manager = new Manager();
 
-		$this->manager->connect($SERVER);
+		$this->manager->connect($USER["server"]);
 
 		if($this->manager->connect){
 
@@ -31,8 +31,6 @@ Class Controller extends Query
 
 		$this->action();
 		
-		$manager_info = $this->manager->info();
-
 		if(file_exists(__DIR__."/sql.php")){
 
 			require __DIR__."/sql.php";
@@ -50,13 +48,7 @@ Class Controller extends Query
 		{
 			$this->DATA = $this->manager->rc( $this->_SH, $this->_TB, $this->nv, $LIMIT, "" );
 			
-			if(isset($this->DATA["ALTER_TABLE"]))
-			{
-				$SQL = array_merge($SQL, 
-					$this->DATA["ALTER_TABLE"]["ADD"],
-					$this->DATA["ALTER_TABLE"]["CHANGE"],
-					$this->DATA["ALTER_TABLE"]["DROP"]);
-			}			
+			$SQL = array_merge($SQL, $this->DATA["SQL"]);			
 			
 			$this->script = $this->manager->mk($this->script_id, $SQL);
 		}
@@ -64,15 +56,7 @@ Class Controller extends Query
 		{
 			$this->DATA = $this->manager->tb( $this->_SH, $this->nv, $this->cl_sl, $LIMIT);
 
-			if(isset($this->DATA["ALTER_SCHEMA"]["CHANGE"]))
-			{
-				$SQL = array_merge($SQL, $this->DATA["ALTER_SCHEMA"]["CHANGE"]);
-			}
-
-			if(isset($this->DATA["SU_A"]["LIST"]))
-			{
-				$SQL = array_merge($SQL, $this->DATA["SU_A"]["LIST"]);
-			}
+			$SQL = array_merge($SQL, $this->DATA["SQL"]);
 
 			$this->script = $this->manager->mk($this->script_id, $SQL);
 		}
@@ -90,17 +74,16 @@ Class Controller extends Query
 		if($this->_SH === ""){
 
 			$this->view->sh($this->manager->current_user,
-				$this->_SH, $this->_TB, $this->DATA, $this->nv, $manager_info);	
+				$this->_SH, $this->_TB, $this->DATA, $this->nv);	
 		}
-		elseif(($this->_SH !== "") && ($this->_TB !== ""))
-		{
-			$this->view->rc($this->manager->current_user,
-				$this->_SH, $this->_TB, $this->DATA, $this->nv, $FUNCTION, $this->manager->ext, $this->display);
+		elseif(($this->_SH !== "") && ($this->_TB !== "")){
+
+			$this->view->rc($this->_SH, $this->_TB, 
+				$this->DATA, $this->nv, $FUNCTION, $this->manager->ext);
 		}
-		elseif(($this->_SH !== "") && ($this->_TB === ""))
-		{
-			$this->view->tb($this->manager->current_user,
-				$this->_SH, $this->DATA, $this->action, $this->nv, $this->display);
+		elseif(($this->_SH !== "") && ($this->_TB === "")){
+
+			$this->view->tb($this->_SH, $this->DATA, $this->action, $this->nv);
 		}
 	}
 
@@ -150,14 +133,6 @@ Class Controller extends Query
 				}
 				break;
 
-				case "_COPY_SH":
-				{
-					$this->manager->copy_sh($this->_SH, $this->cl_in);
-					$this->display = "sh";
-					$this->_SH = "";
-				}
-				break;
-
 				case "_CLEAR_SH":
 				{
 					$this->manager->clear_sh($this->list_sh);
@@ -186,23 +161,6 @@ Class Controller extends Query
 					}
 
 					$this->manager->export_sql($this->list_sh, [], $this->nv, "SH");
-				}
-				break;
-
-				case "_RENAME_TB":
-				{
-					if($this->manager->rename_tb($this->_SH, $this->_TB, $this->cl_tr, $this->cl_in)){
-
-						$this->_TB = "";					
-					}
-				}
-				break;
-
-				case "_COPY_TB":
-				{
-					$this->manager->copy_tb($this->_SH, [$this->_TB], $this->cl_tr, $this->cl_in, true);
-
-					$this->_TB = "";
 				}
 				break;
 

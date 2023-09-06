@@ -51,8 +51,6 @@ define("_ACTION_FIND", "find");
 define("_ACTION_RUN", "run");
 define("_ACTION_DELETE", "delete");
 define("_ACTION_CLEAR", "clear");
-define("_ACTION_COPY", "copy");
-define("_ACTION_RENAME", "rename");
 define("_ACTION_UPDATE", "update");
 define("_ACTION_INSERT", "insert");
 define("_ACTION_ALTER", "alter");

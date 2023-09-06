@@ -13,7 +13,13 @@ Class View
 	use Convert;
 	use Wr_html;
 
-	public function __construct(){}
+	public function __construct(){
+		
+		$this->ac_con = "['_DELETE_SH','_CLEAR_SH','_DELETE_TB','_CLEAR_TB']";
+			
+		$this->ac_ex = "['_EXPORT_SQL_SH','_EXPORT_CSV_SH','_EXPORT_XML_SH',
+			'_EXPORT_SQL_TB','_EXPORT_CSV_TB','_EXPORT_XML_TB',]";			
+	}
 
 	public function dl_message()
 	{
@@ -139,6 +145,8 @@ Class View
 
 	public function main($user, $_SH, $_TB, $nv)
 	{
+		$this->tg("div", "", "nav_main_back_un", "", "", "");			
+		
 		$this->tg("div", "", "nav_main_back", "", "", "");
 
 		$this->tg_open("div", "", "nav_main", "", "");
@@ -268,26 +276,12 @@ Class View
 		$this->tg_close("div");
 	}
 
-	public function sh($user, $_SH, $_TB, $RT, $nv, $info)
+
+	public function sh($user, $_SH, $_TB, $RT, $nv)
 	{
-		$this->tg("div", "", "rt_label_tl", "", _NOTE_SERVER.": ".$user, "onclick=\"window.scrollTo(0,0); ms.el_vb('sh_id');\"");
-		
+		$this->tg("div", "", "rt_label_tl1", "", _NOTE_SERVER.": ".$user, "");
+
 		$this->tg("div", "", "separator11", "", "", "");	
-		
-		$this->tg_open("div", "sh_id", "pl_el", "display: none;", "");
-
-		$this->tg_open("div", "", "rt_list", "", "");
-
-		foreach($info as $value){
-
-			$this->tg("div", "", "", "", $value, "");
-		}
-		
-		$this->tg_close("div");		
-		
-		$this->tg("div", "", "separator11", "", "", "");
-
-		$this->tg_close("div");
 
 		$this->tg_open("div", "id_wr_db", "wr_main_nav", "", "");
 
@@ -369,17 +363,11 @@ Class View
 
 			$this->dl_confirm("id_cn_db");
 
-			$this->select(
-				[
-				'_DELETE_SH'=>_ACTION_DELETE,
-				'_CLEAR_SH'=>_ACTION_CLEAR,
-				'_EXPORT_SQL_SH'=>_ACTION_EXPORT_SQL
-				],
+			$this->select($RT["ACS"],
 				false, "", "", "", "st_select_value", _NOTE_SELECT,
 					"onchange=\"ms.AL(this.value, 'id_cn_db', this, this.form, 'list_sh[]',
-					'"._NOTE_SCHEMAS." / "._NOTE_SELECT." / ', ['_DELETE_SH','_CLEAR_SH'],
-					['_EXPORT_SQL_SH'],
-					'"._MESSAGE_SH_CHECK."' ); \"",
+					'"._NOTE_SCHEMAS." / "._NOTE_SELECT." / ', 
+					".$this->ac_con.",".$this->ac_ex.",'"._MESSAGE_SH_CHECK."' ); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $k;},
 				function($k, $v){return $v;});
@@ -395,49 +383,15 @@ Class View
 	}
 
 
-	public function tb($user, $_SH, $RT, $action, $nv, $display)
+	public function tb($_SH, $RT, $action, $nv)
 	{
 		if($RT["CREATE"] == ""){return;}
 
 		$_SHS = $this->html($this->h2s($_SH));
 
-		$this->tg("div", "", "rt_label_tl", "", _NOTE_SCHEMA.": ".$_SHS, "onclick=\"window.scrollTo(0,0); ms.el_vb('db_id');\"");
+		$this->tg("div", "", "rt_label_tl1", "", _NOTE_SCHEMA.": ".$_SHS, "");
 
 		$this->tg("div", "", "separator11", "", "", "");
-
-		if($display === "tb_sub"){
-
-			$this->tg_open("div", "db_id", "pl_el", "", "");
-		}
-		else{
-
-			$this->tg_open("div", "db_id", "pl_el", "display: none;", "");
-		}
-
-		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["SH"], 7)), "");
-
-		$this->form_open();
-
-		$this->form_set($_SH, "",
-			$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
-			"", "", "", "", "", "", "", []);
-
-		$this->dl_confirm("id_cn_tbt");
-
-		$this->tg("div", "", "separator11", "", "", "");
-
-		$this->input("cl_in", "db_name_new_id", "st_value_B", $this->html($this->h2s($_SH)),
-			"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
-
-		$this->btn("", "", "st_btn", _ACTION_COPY,
-			"onclick=\"ms.AT('_COPY_SH', 'id_cn_tbt', this, this.form, '', [''], [],
-			'db_name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-		$this->form_close();
-
-		$this->tg("div", "", "separator11", "", "", "");
-
-		$this->tg_close("div");
 
 		$this->form_open();
 
@@ -523,17 +477,11 @@ Class View
 
 		$this->dl_confirm("id_cn_tbr");
 
-		$this->select(
-			[
-				'_DELETE_TB'=>_ACTION_DELETE,
-				'_CLEAR_TB'=>_ACTION_CLEAR,
-				'_EXPORT_SQL_TB'=>_ACTION_EXPORT_SQL
-			],
+		$this->select($RT["ACS"],
 			false, "", "list_LT_sl", "", "st_select_value", _NOTE_SELECT,
 			"onchange=\"ms.AL(this.value, 'id_cn_tbr', this, this.form, 'list_tb[]',
-			'"._NOTE_TABLES." / "._NOTE_SELECT." / ', ['_DELETE_TB','_CLEAR_TB'],
-			['_EXPORT_SQL_TB'],
-			'"._MESSAGE_TB_CHECK."' ); \"",
+			'"._NOTE_TABLES." / "._NOTE_SELECT." / ', 
+			".$this->ac_con.",".$this->ac_ex.",'"._MESSAGE_TB_CHECK."' ); \"",
 			function($k, $v){return $v;},
 			function($k, $v){return $k;},
 			function($k, $v){return $v;});
@@ -546,89 +494,24 @@ Class View
 	}
 
 
-	public function rc($user, $_SH, $_TB, $RT, $nv, $FUNCTION, $ext, $display)
+	public function rc($_SH, $_TB, $RT, $nv, $FUNCTION, $ext)
 	{
 		$_SHS = $this->html($this->h2s($_SH));
 		$_TBS = $this->html($this->h2s($_TB));
 
 		if($RT["CREATE"] == ""){return;}
 
-		$this->tg("div", "", "rt_label_tl", "", _NOTE_TABLE.": ".$_TBS, "onclick=\"window.scrollTo(0,0); ms.el_vb('tb_id');\"");
+		$this->tg("div", "", "rt_label_tl2", "", _NOTE_TABLE.": ".$_TBS, 
+			"onclick=\"window.scrollTo(0,0); ms.el_vb('tb_id');\"");
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->tg_open("div", "", "pl_el", "", "");
+		$this->tg_open("div", "tb_id", "pl_el", "display: none;", "");
 
-		if($display === "rc_sub"){
-
-			$this->tg_open("div", "tb_id", "", "", "");
-		}
-		else{
-
-			$this->tg_open("div", "tb_id", "", "display: none;", "");
-		}
-
-		$this->tg("div", "", "", "", $this->html(substr($RT["CREATE"]["SH"], 7), "`,`", "`,<br>`"), "");
-
-		$this->tg("div", "", "separator3", "", "", "");
-		$this->tg("div", "", "separator3", "", "", "");
-
-		if(($RT["TABLE_TYPE"] === "VIEW") || ($RT["TABLE_TYPE"] === "SYSTEM VIEW")){
-
-			$this->tg("div", "", "res", "", $this->html(substr($RT["CREATE"]["TB"], 7), "`,`", "`,<br>`"), "");
-		}
-		else{
-
-			$this->tg("div", "", "res", "", $this->html(substr($RT["CREATE"]["TB"], 7), "\n", "<br>"), "");
-		}
-
-		$this->tg("div", "", "separator11", "", "", "");
-
-		if(($this->h2s($_SH) !== "information_schema") && ($this->h2s($_SH) !== "performance_schema") &&
-			($RT["CREATE"]["TB"] !== ""))
-		{
-			$this->form_open();
-
-			$this->form_set($_SH, $_TB,
-				$nv["page_sh"], $nv["from_sh"], $nv["order_sh"], $nv["field_sh"],
-				$nv["page_tb"], $nv["from_tb"], $nv["order_tb"], $nv["field_tb"],
-				$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
-
-			$this->filter_set($nv, "sh");
-
-			$this->filter_set($nv, "tb");
-
-			$this->dl_confirm("id_cn_st");
-
-			$this->select($RT["SH_LIST"],
-				$_SH, "", "cl_tr", "", "st_select_value", "", "",
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->s2h($v);},
-				function($k, $v){return $this->html($v);});
-
-			$this->input("cl_in", "name_new_id", "st_value_C", $_TBS,
-				"onclick=\"ms.el_va('id_alt_message', 'none');\"", "", "");
-
-			$this->btn("", "", "st_btn", _ACTION_RENAME,
-				"onclick=\"ms.AT('_RENAME_TB', 'id_cn_st', this, this.form,
-				'"._NOTE_TABLE." / "._ACTION_RENAME."',
-				['_RENAME_TB'], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-			$this->btn("", "", "st_btn", _ACTION_COPY,
-				"onclick=\"ms.AT('_COPY_TB', 'id_cn_st', this, this.form, '',
-				[], [], 'name_new_id', '"._MESSAGE_NOT_VALUE."'); \"");
-
-			$this->tg("div", "", "separator11", "", "", "");
-
-			$this->form_close();
-
-			if(($RT["TABLE_TYPE"] !== "VIEW")){
-
+			if($RT["TABLE_TYPE"] === "BASE TABLE")
+			{
 				$this->rc_data($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, "insert");
 			}
-		}
-
-		$this->tg_close("div");
 
 		$this->tg_close("div");
 
@@ -680,8 +563,6 @@ Class View
 
 	private function rc_data_list($_SH, $_TB, $RT, $nv, $FUNCTION, $ext, $mod)
 	{
-		$this->tg_open("div", "", "rt_list", "", "");
-
 		$this->tg_open("table", "", "rt_list_tb", "", "");
 
 			$this->tg_open("tr", "", "", "", "");
@@ -801,9 +682,8 @@ Class View
 
 						$uk = $this->s2h($k);
 
-						if(($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI") ||
-							($RT["FIELDS"][$k]["COLUMN_KEY"] === "UNI")){
-
+						if($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI")
+						{
 							$this->input("key[".$uk."]", "", "", $this->s2h($v), "", "hidden", "");
 						}
 
@@ -854,8 +734,6 @@ Class View
 
 			$this->form_close();
 		}
-
-		$this->tg_close("div");
 
 		$this->tg("div", "", "separator11", "", "", "");
 	}
@@ -1048,9 +926,11 @@ Class View
 
 				if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["blob"]) ||
 					in_array($RT["FIELDS"][$k]["DATA_TYPE"], $ext["geo"]) ||
+					($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") ||
+					($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
+					($RT["FIELDS"][$k]["DATA_TYPE"] === "bit") ||
 					($RT["FIELDS"][$k]["EXTRA"] === "auto_increment") ||
 					($RT["FIELDS"][$k]["COLUMN_DEFAULT"] === "CURRENT_TIMESTAMP") ||
-					($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") || ($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
 					in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"]))
 				{
 					$this->input("function[".$uk."]", "function_".$count.$count_fl.$uk.$mod, "rt_value_function_disabled", "",
@@ -1336,28 +1216,6 @@ Class View
 		}
 
 		return $size;
-	}
-
-
-	private function privileges_rc($k, $PRIVILEGES, $mod)
-	{
-		$RT = "";
-
-		if($mod === "edit"){$action = "UPDATE";}
-		else{$action = "INSERT";}
-
-		if(isset($PRIVILEGES["TABLE_PRIVILEGES"]) || isset($PRIVILEGES["COLUMN_PRIVILEGES"]))
-		{
-			if(in_array($action, $PRIVILEGES["TABLE_PRIVILEGES"]) ||
-				(isset($PRIVILEGES["COLUMN_PRIVILEGES"][$action]) &&
-				in_array($k, $PRIVILEGES["COLUMN_PRIVILEGES"][$action]))
-			){
-				$RT = "";
-			}
-			else{$RT = "disabled";}	
-		}
-	
-		return $RT;
 	}
 
 
@@ -1674,5 +1532,25 @@ Class View
 	}
 
 
+	private function privileges_rc($k, $PRIVILEGES, $mod)
+	{
+		$RT = "";
+
+		if($mod === "edit"){$action = "UPDATE";}
+		else{$action = "INSERT";}
+
+		if(isset($PRIVILEGES["TABLE_PRIVILEGES"]) || isset($PRIVILEGES["COLUMN_PRIVILEGES"]))
+		{
+			if(in_array($action, $PRIVILEGES["TABLE_PRIVILEGES"]) ||
+				(isset($PRIVILEGES["COLUMN_PRIVILEGES"][$action]) &&
+				in_array($k, $PRIVILEGES["COLUMN_PRIVILEGES"][$action]))
+			){
+				$RT = "";
+			}
+			else{$RT = "disabled";}	
+		}
+	
+		return $RT;
+	}
 
 }

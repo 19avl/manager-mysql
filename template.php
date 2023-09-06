@@ -885,13 +885,14 @@ border: 0px;
 color: #999;
 }
 
-.rt_label_tl{
+.rt_label_tl1,
+.rt_label_tl2{
 font-size: 17px;
-cursor: pointer;
 }
 
-.rt_label_tl:hover{
+.rt_label_tl2:hover{
 color:#999;
+cursor: pointer;
 }
 
 .rt_label_sv,
@@ -912,8 +913,6 @@ border: 0;
 .rt_value_text,
 .rt_select_type,
 .st_value_A,
-.st_value_B,
-.st_value_C,
 .st_value_D,
 .st_select_value{
 background: #555;
@@ -1217,8 +1216,6 @@ padding: 0px 5px 0px 5px;
 .rt_value_text,
 .rt_select_type,
 .st_value_A,
-.st_value_B,
-.st_value_C,
 .st_value_D,
 .st_select_value{
 padding: 8px;
@@ -1247,8 +1244,6 @@ resize: vertical;
 }
 
 .st_value_A{ width: 340px; }
-.st_value_B{ width: 799px; }
-.st_value_C{ width: 494px; }
 .st_value_D{ width: 646px; }
 .st_select_value{ width: 151px; }
 
@@ -1348,14 +1343,24 @@ color: #eee;
 }
 
 
+.nav_main_back_un,
 .nav_main_back{
-z-index: 201;
-position:fixed;
+position:fixed; 
 top: 0;
 left: 0;
 width: 100%;
+}
+
+.nav_main_back_un{
+z-index: 200;
+height: 94px;
+background: #555555; 
+}
+
+.nav_main_back{
+z-index: 201;
 height: 47px;
-background:#333;
+background:#333; 
 }
 
 .nav_main{
@@ -1378,7 +1383,6 @@ display: flex;
 flex-wrap: wrap; 
 height: 45px; 
 align-content: center;
-background: #555555; 
 }
 
 .btn_nav_first_im{
