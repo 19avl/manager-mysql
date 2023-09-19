@@ -1424,6 +1424,9 @@ Class Manager
 				}
 				elseif($action === "_INSERT_RC")
 				{
+
+
+
 					if(isset($blob_ch[$kh]) && ($blob_ch[$kh] === "2"))
 					{
 						if(isset($file[$kh]) && ($file[$kh] !== "")){
@@ -1439,11 +1442,8 @@ Class Manager
 							$sfV[] = "x'".$this->s2h($v)."'";
 						}
 					}
-					elseif((isset($blob_ch[$kh]) && ($blob_ch[$kh] === "1")) &&
-						($action === "_COPY_RC"))
+					elseif((isset($blob_ch[$kh]) && ($blob_ch[$kh] === "1")))
 					{
-						$sfC[] = "`".$k."`";
-
 						$result = $this->request(
 							"SELECT `".$k."` FROM `".$_TBS."` WHERE ".implode(" AND ", $sfK)." LIMIT 1;",
 							"", [], __LINE__);
@@ -1452,7 +1452,12 @@ Class Manager
 
 							$res = $this->fetch_assoc($result[1]);
 
-							$sfV[] = "x'".$this->s2h($res[$k])."'";
+							if($res)
+							{
+								$sfC[] = "`".$k."`";
+
+								$sfV[] = "x'".$this->s2h($res[$k])."'";
+							}
 						}
 					}
 				}

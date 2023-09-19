@@ -11,7 +11,6 @@ $SQL = [
 -- show GLOBAL variables;
 -- show SESSION variables;
 
-show variables like 'char%';
 show variables like 'sql_mode';
 SHOW VARIABLES WHERE Variable_name IN ('log', 'general_log', 'general_log_file', 'log_output');",
 

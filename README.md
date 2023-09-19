@@ -12,11 +12,11 @@ Web-based administration tool for MYSQL.
 
 - Browse databases, tables, views, fields and indexes with aggregate, sort and limit results
 - Searching globally in a database or a subset of it
-- Copy, drop databases
-- Copy, drop, rename, alter tables and fields
+- Create, drop, alter databases
+- Create, copy, drop, alter tables, fields and indexes
 - Create, copy, drop, update records 
 - Manage routines, triggers and events
-- Execute any SQL command from a text field  
+- Execute arbitrary SQL  
 - Export structure, data, views, triggers, routines, events to SQL
 
 
