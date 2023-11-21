@@ -20,8 +20,6 @@ if(!isset($_POST["session"]))
 else
 {
 	require __DIR__."/Convert.php";
-	require __DIR__."/Manager.php";
-	require __DIR__."/View.php";
 	require __DIR__."/Query.php";
 	require __DIR__."/Controller.php";
 	

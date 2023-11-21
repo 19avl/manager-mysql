@@ -69,9 +69,10 @@ trait Wr_html
 		}
 
 		$id = ($id !== "") ? "id='".$id."'" : "";
+		$name = ($name !== "") ? "name='".$name."'" : "";
 		$class = ($class !== "") ? "class='".$class."'" : "";
 
-		print "<input ".$id." name='".$name."' type='".$type."' ".$class." value='".$value."' ".
+		print "<input ".$id." ".$name." type='".$type."' ".$class." value='".$value."' ".
 			$event." ".$flag." placeholder='".$placeholder."'>";
 	}
 

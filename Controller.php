@@ -18,6 +18,8 @@ Class Controller extends Query
 		$this->control = new Control();
 		$this->control->main($USER["pass"]);
 
+		require __DIR__."/Manager.php";
+
 		$this->manager = new Manager();
 
 		$this->manager->connect($USER["server"]);
@@ -25,41 +27,46 @@ Class Controller extends Query
 		if($this->manager->connect){
 
 			$this->control->ms($this->manager->_LOG["MESSAGE"]["connect"]);
-			
+
 			return;
 		}
 
 		$this->action();
-		
+
+		$SQL_SCRIPTS = [];
+
 		if(file_exists(__DIR__."/sql.php")){
 
 			require __DIR__."/sql.php";
 		}
-		if(!isset($SQL)){$SQL = [];}
-		if(!isset($FUNCTION)){$FUNCTION = [];}
+
+		if(!isset($SQL_FUNCTIONS)){$SQL_FUNCTIONS = ["..." => []];}
 
 		if($this->_SH === ""){
 
 			$this->DATA = $this->manager->sh($this->nv, $LIMIT);
-
-			$this->script = $this->manager->mk($this->script_id, $SQL);	
 		}
 		elseif(($this->_SH !== "") && ($this->_TB !== ""))
 		{
 			$this->DATA = $this->manager->rc( $this->_SH, $this->_TB, $this->nv, $LIMIT, "" );
-			
-			$SQL = array_merge($SQL, $this->DATA["SQL"]);			
-			
-			$this->script = $this->manager->mk($this->script_id, $SQL);
+
+			$SQL_SCRIPTS["objects"] = $this->DATA["SQL"];
 		}
 		elseif(($this->_SH !== "") && ($this->_TB === ""))
 		{
 			$this->DATA = $this->manager->tb( $this->_SH, $this->nv, $this->cl_sl, $LIMIT);
 
-			$SQL = array_merge($SQL, $this->DATA["SQL"]);
-
-			$this->script = $this->manager->mk($this->script_id, $SQL);
+			$SQL_SCRIPTS["objects"] = $this->DATA["SQL"];
 		}
+
+		$this->script_sql = "";
+
+		if($this->script_id !== ""){
+	
+			$this->script_sql = $SQL_SCRIPTS["userscripts"][$this->script_id];
+		}
+
+		require __DIR__."/View.php";
 
 		$this->view = new View();
 
@@ -67,19 +74,19 @@ Class Controller extends Query
 
 		$this->view->dl_message();
 
-		$this->view->mk($this->_SH, $this->_TB, $SQL, $this->script, $this->nv, $this->display);
+		$this->view->sql($this->_SH, $this->_TB, $SQL_SCRIPTS, $this->script_sql, $this->nv, $this->display);
 
 		$this->view->message($this->manager->_LOG);
 
 		if($this->_SH === ""){
 
 			$this->view->sh($this->manager->current_user,
-				$this->_SH, $this->_TB, $this->DATA, $this->nv);	
+				$this->_SH, $this->_TB, $this->DATA, $this->nv);
 		}
 		elseif(($this->_SH !== "") && ($this->_TB !== "")){
 
-			$this->view->rc($this->_SH, $this->_TB, 
-				$this->DATA, $this->nv, $FUNCTION, $this->manager->ext);
+			$this->view->rc($this->_SH, $this->_TB,
+				$this->DATA, $this->nv, $SQL_FUNCTIONS, $this->manager->ext);
 		}
 		elseif(($this->_SH !== "") && ($this->_TB === "")){
 

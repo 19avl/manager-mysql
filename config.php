@@ -18,9 +18,9 @@ $USER = [
 	"pass"=>"",
 	
 	"server" => ["host"=>"localhost", 
-		//"port"=>3311, 
+		"port"=>3311, 
 		"user"=>"root", 
-		"pass"=>"",
+		"pass"=>"root",
 
 		"variables"=>[
 			"names" => "utf8mb4",

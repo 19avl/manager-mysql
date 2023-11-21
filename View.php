@@ -216,7 +216,7 @@ Class View
 	}
 
 
-	public function mk($_SH, $_TB, $LIST_SQL, $SQL_SL, $nv, $display)
+	public function sql($_SH, $_TB, $SCRIPT, $SQL_SL, $nv, $display)	
 	{
 		if($display === "sql"){
 
@@ -242,11 +242,27 @@ Class View
 
 		$this->tg_open("div", "", "ct_row", "", "");
 
-			$this->select(array_keys($LIST_SQL), "", "--", "script_id", "", "slc", _NOTE_SCRIPT,
+		if(isset($SCRIPT["userscripts"])){
+		
+			$this->select(array_keys($SCRIPT["userscripts"]), "", "--", "script_id", "", "slc", "userscripts",
 				"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 				function($k, $v){return $v;},
 				function($k, $v){return $this->html($v);},
-				function($k, $v){return $this->html($v);});
+				function($k, $v){return $this->html($v);});	
+		}				
+
+		if(isset($SCRIPT["objects"])){
+
+			foreach($SCRIPT["objects"] as $k=>$v)
+			{
+
+				$this->select($v, "", "--", $k, $k."_id", "slc", $k,
+					"onchange=\"ms.IRText('".$k."_id', 'script_text_sql', this);\"",
+					function($k, $v){return $k;},
+					function($k, $v){return $this->html($v);},
+					function($k, $v){return $this->html($k);});	
+			}		
+		}
 
 		$this->tg_close("div");
 
@@ -263,9 +279,7 @@ Class View
 
 		$this->filter_set($nv, "tb");
 
-		$this->textarea("script", "script_text", "", $SQL_SL, "", "title='"._NOTE_SCRIPT_DROP."'");
-
-		$this->textarea("script_file", "script_text_file", "", "", "", "hidden");
+		$this->textarea("script", "script_text_sql", "", $SQL_SL, "", "title='"._NOTE_SCRIPT_DROP."'");
 
 		$this->btn("", "", "btn", _ACTION_RUN, "onclick=\"ms.RF('_RUN_SQL', '', '".$_TB."', this.form, 0);\"");
 

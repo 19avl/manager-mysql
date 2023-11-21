@@ -30,19 +30,6 @@ Class Manager
 		];
 	}
 
-	public function mk($script_id, $_sql)
-	{
-		$SQL_SL = "";
-
-		if($script_id !== ""){
-
-			$SQL_SL = $_sql[$script_id];
-		}
-
-		return $SQL_SL;
-	}
-
-
 	public function sh($nv, $LIMIT)
 	{
 		$RT = [];
@@ -164,8 +151,7 @@ Class Manager
 		{
 			$RT["CREATE"]["SH"] = $this->fetch_row($CREATE[1])[1];
 
-			$RT["SQL"] = [
-				"-- SCHEMA" => "",
+			$RT["SQL"]["schema"] = [
 				"CREATE" => $RT["CREATE"]["SH"],
 				"ALTER CHARACTER SET" => "ALTER DATABASE `".$_SHS."` CHARACTER SET utf8 DEFAULT COLLATE utf8mb4_bin;",
 				"ALTER ENCRYPTION" => "ALTER DATABASE `".$_SHS."` ENCRYPTION 'N';\n\n",
@@ -186,20 +172,18 @@ Class Manager
 
 			foreach($RT["SU"]["LIST"]["events"] as $k=>$v)
 			{
-				$RT["SQL"]["-- EVENTS"] = "";
-				$RT["SQL"][$k." "] = "DROP EVENT IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["events"][$k." "] = "DROP EVENT IF EXISTS `".$k."`;\n\n".$v.";";
 			}
 
 			foreach($RT["SU"]["LIST"]["triggers"] as $k=>$v)
 			{
-				$RT["SQL"]["-- TRIGGERS"] = "";
-				$RT["SQL"][$k." "] = "DROP TRIGGER IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["triggers"][$k." "] = "DROP TRIGGER IF EXISTS `".$k."`;\n\n".$v.";";
 			}
 
 			foreach($RT["SU"]["LIST"]["procedures"] as $k=>$v)
 			{
-				$RT["SQL"]["-- PROCEDURES"] = "";
-				$RT["SQL"][$k." "] = "DROP PROCEDURE IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["routines"]["-- PROCEDURES"] = "";
+				$RT["SQL"]["routines"][$k." "] = "DROP PROCEDURE IF EXISTS `".$k."`;\n\n".$v.";";
 
 				$SUB_PR = [];
 				$SUB_PR_OUT = [];
@@ -231,20 +215,20 @@ Class Manager
 					}
 				}
 
-				$RT["SQL"][$k." "] .=
+				$RT["SQL"]["routines"][$k." "] .=
 					"\n\n".implode(" ",$SUB_PR_SET)."CALL ".$k."(".implode(", ",$SUB_PR).");";
 
 				if(count($SUB_PR_OUT) !== 0){
 
-					$RT["SQL"][$k." "] .= "\nSELECT ".implode(", ",$SUB_PR_OUT).";";
+					$RT["SQL"]["routines"][$k." "] .= "\nSELECT ".implode(", ",$SUB_PR_OUT).";";
 				}
 
 			}
 
 			foreach($RT["SU"]["LIST"]["functions"] as $k=>$v)
 			{
-				$RT["SQL"]["-- FUNCTIONS"] = "";
-				$RT["SQL"][$k." "] = "DROP FUNCTION IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["routines"]["-- FUNCTIONS"] = "";
+				$RT["SQL"]["routines"][$k." "] = "DROP FUNCTION IF EXISTS `".$k."`;\n\n".$v.";";
 
 				$SUB_PR = [];
 
@@ -261,7 +245,7 @@ Class Manager
 					}
 				}
 
-				$RT["SQL"][$k." "] .= "\n\nSELECT ".$k."(".implode(", ",$SUB_PR).");";
+				$RT["SQL"]["routines"][$k." "] .= "\n\nSELECT ".$k."(".implode(", ",$SUB_PR).");";
 			}
 
 			$result = $this->request("SHOW OPEN TABLES FROM `$_SHS` WHERE In_use>0;", "", [], __LINE__);
@@ -714,28 +698,21 @@ Class Manager
 
 			if(($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
 			{
-				$SCA["-- TABLE"] = "";
-
-				$SCA["CREATE"] = "USE `".$_SHS."`;\n\n".
+				$SCA["table"]["CREATE"] = "USE `".$_SHS."`;\n\n".
 					$RT["CREATE"]["TB"].";";
 
-				$SCA["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
+				$SCA["table"]["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
 					"CREATE TABLE `".$_TBS."` LIKE `".$_SHS."`.`".$_TBS."`;";
 			}
 			elseif($RT["TABLE_TYPE"] === "VIEW")
 			{
-				$SCA["-- VIEW"] = "";
-
-				$SCA["CREATE"] = $RT["CREATE"]["TB"].";\n\n";
+				$SCA["table"]["CREATE"] = $RT["CREATE"]["TB"].";\n\n";
 			}
 			else
 			{
-				$SCA["-- TABLE"] = "";
-
-				$SCA["CREATE"] = "USE `".$_SHS."`;\n\n".
+				$SCA["table"]["CREATE"] = "USE `".$_SHS."`;\n\n".
 					"SET FOREIGN_KEY_CHECKS=0;\n\n".
 					$RT["CREATE"]["TB"].";\n\n".
-					"INSERT INTO `".$_SHS."`.`".$_TBS."` SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n".
 					"SET FOREIGN_KEY_CHECKS=1;";
 
 				$FKC = "";
@@ -754,7 +731,7 @@ Class Manager
 
 						$row_referent = $this->fetch_assoc($referent[1]);
 
-						$FKC .= "ALTER TABLE `".$_TBS."` ADD CONSTRAINT `".
+						$FKC .= "ALTER TABLE table_name ADD CONSTRAINT `".
 							$count."fk".microtime()."` FOREIGN KEY (`".
 							$fk["COLUMN_NAME"]."`) REFERENCES `".
 							$fk["REFERENCED_TABLE_SCHEMA"]."`.`".
@@ -764,42 +741,43 @@ Class Manager
 
 						$count += 1;
 					}
-
-					$SCA["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
-						"CREATE TABLE `".$_TBS."` LIKE `".$_SHS."`.`".$_TBS."`;\n\n".
-						"INSERT INTO `".$_TBS."` SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n".
-						$FKC."";
 				}
+
+				$SCA["table"]["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
+					"CREATE TABLE table_name LIKE `".$_SHS."`.`".$_TBS."`;\n\n".$FKC.
+					"INSERT INTO table_name SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n";
+
+				$SCA["table"]["CREATE AS"] = "USE `".$_SHS."`;\n\n".
+					"CREATE TABLE table_name AS SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n".$FKC;
+
+				$SCA["table"]["INSERT INTO"] = "USE `".$_SHS."`;\n\n".
+					"INSERT INTO `".$_TBS."` SELECT * FROM table_name;\n\n";
 			}
 
 			if($prc === 1){
 
-				$SCA["REMOVE PARTITIONING"] = "ALTER TABLE `".$_TBS."` "."REMOVE PARTITIONING;";
+				$SCA["table"]["REMOVE PARTITIONING"] = "ALTER TABLE `".$_TBS."` "."REMOVE PARTITIONING;";
 			}
 
 			if($str !== ""){
 
-				$SCA["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".substr($str, 2);
+				$SCA["table"]["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".substr($str, 2);
 			}
 
 			if(($RT["TABLE_TYPE"] === "BASE TABLE") &&
 				(($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM")))
 			{
-				$SCA["ANALYZE"] = "ANALYZE TABLE `".$_TBS."`;";
-				$SCA["CHECK"] = "CHECK TABLE `".$_TBS."`;";
-				$SCA["OPTIMIZE"] = "OPTIMIZE TABLE `".$_TBS."`;";
-				$SCA["REPAIR"] = "REPAIR TABLE `".$_TBS."`;";
-				$SCA["ADD PRIMARY KEY"] = "ALTER TABLE `".$_TBS."` "."ADD PRIMARY KEY (`...`);";
-				$SCA["ADD CONSTRAINT FOREIGN"] =
+				$SCA["table"]["ADD PRIMARY KEY"] = "ALTER TABLE `".$_TBS."` "."ADD PRIMARY KEY (`...`);";
+				$SCA["table"]["ADD CONSTRAINT FOREIGN"] =
 					"ALTER TABLE `".$_TBS."` "."ADD CONSTRAINT `...` \nFOREIGN KEY (`...`) \nREFERENCES `...` (`...`);";
-				$SCA["ADD UNIQUE"] = "ALTER TABLE `".$_TBS."` "."ADD UNIQUE (`...`);";
-				$SCA["ADD INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD INDEX (`...`);";
-				$SCA["ADD SPATIAL INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD SPATIAL INDEX(`...`);";
-				$SCA["ADD FULLTEXT INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD FULLTEXT INDEX(`...`);";
+				$SCA["table"]["ADD UNIQUE"] = "ALTER TABLE `".$_TBS."` "."ADD UNIQUE (`...`);";
+				$SCA["table"]["ADD INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD INDEX (`...`);";
+				$SCA["table"]["ADD SPATIAL INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD SPATIAL INDEX (`...`);";
+				$SCA["table"]["ADD FULLTEXT INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD FULLTEXT INDEX (`...`);";
 
 				if($this->server_info[0] > 5){
 
-					$SCA["ADD CHECK"] = "ALTER TABLE `".$_TBS."` "."ADD CHECK (...);";
+					$SCA["table"]["ADD CHECK"] = "ALTER TABLE `".$_TBS."` "."ADD CHECK (...);";
 				}
 
 				$result = $this->request("SELECT INDEX_NAME
@@ -810,41 +788,45 @@ Class Manager
 				{
 					if(trim($row[0]) !== "PRIMARY"){
 
-						$SCA["DROP INDEX ".$row[0]] = "ALTER TABLE `".$_TBS."` DROP INDEX `".$row[0]."`;";
+						$SCA["table"]["DROP INDEX ".$row[0]] = "ALTER TABLE `".$_TBS."` DROP INDEX `".$row[0]."`;";
 					}
 					else{
 
-						$RT["SQL_ADD"]["DROP"]["DROP PRIMARY KEY"] = "ALTER TABLE `".$_TBS."` DROP PRIMARY KEY;";
+						$SCA["table"]["DROP PRIMARY KEY"] = "ALTER TABLE `".$_TBS."` DROP PRIMARY KEY;";
 					}
 				}
 			}
 
 			$COLUMN = array_keys($RT["FIELDS"]);
 
-			$SCA_ADD = [];
-			$SCA_CHANGE = [];
-			$SCA_DROP = [];
+			$CL_ADD = [];
+			$CL_CHANGE = [];
+			$CL_DROP = [];
+			$SCA_CL = [];
 
 			if(($RT["TABLE_TYPE"] === "BASE TABLE") &&
 				(($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM")))
 			{
-				$SCA_ADD["-- COLUMN"] = "";
-				$SCA_ADD["ADD COLUMN FIRST"] = "ALTER TABLE `".$_TBS."` "."ADD\n... \nFIRST;";
+				$CL_ADD["ADD COLUMN FIRST"] = "ALTER TABLE `".$_TBS."` "."ADD\n... \nFIRST;";
 
 				foreach($COLUMN as $VCOLUMN)
 				{
-					$SCA_ADD["ADD COLUMN AFTER ".$VCOLUMN.""] =
+					$CL_ADD["ADD COLUMN AFTER ".$VCOLUMN.""] =
 						"ALTER TABLE `".$_TBS."` "."ADD\n... \nAFTER `".$VCOLUMN."`;";
 
-					$SCA_CHANGE["CHANGE COLUMN ".$VCOLUMN.""] =
+					$CL_CHANGE["CHANGE COLUMN ".$VCOLUMN.""] =
 						"ALTER TABLE `".$_TBS."` "."CHANGE COLUMN `".$VCOLUMN."` \n...\n;";
 
-					$SCA_DROP["DROP COLUMN ".$VCOLUMN.""] =
+					$CL_DROP["DROP COLUMN ".$VCOLUMN.""] =
 						"ALTER TABLE `".$_TBS."` "."DROP COLUMN `".$VCOLUMN."`;";
 				}
+				
+				$SCA_CL["columns"] = array_merge($CL_ADD, $CL_CHANGE, $CL_DROP);	
 			}
 
-			$RT["SQL"] = array_merge($SCA, $RT["SQL_ADD"]["DROP"], $SCA_ADD, $SCA_CHANGE, $SCA_DROP);
+			$SCA["table"] = array_merge($SCA["table"], $RT["SQL_ADD"]["DROP"]);
+
+			$RT["SQL"] = array_merge($SCA, $SCA_CL);
 		}
 
 		return $RT;

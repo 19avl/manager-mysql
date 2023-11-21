@@ -32,7 +32,7 @@ var ct =
 		var pass = document.getElementById("en_pass").value;
 		var result = pass.replace(/^\s+/, '').replace(/\s+$/, '');
 
-		document.getElementById("pass").innerHTML = this.hashE(result);
+		document.getElementById("pass").innerHTML = this.sha1("<?php echo _SESSION; ?>"+result);
 
 		ms.pst("session=<?php echo _SESSION; ?>"+"&request="+this.set_ps());
 	},
@@ -43,27 +43,149 @@ var ct =
 
 			var request = document.getElementById("request").value;
 			var pass = document.getElementById("pass").innerHTML;
-
-			return this.hashE(""+encodeURIComponent(request+pass)+this.str_request(oForm));	
+	
+			return this.sha1(""+encodeURIComponent(request+pass)+this.str_request(oForm));
 		}
 
 		return "";
 	},
 
-	hashE: function(str)
+	sha1: function(str)
 	{
-		var str = unescape(encodeURIComponent(str));
-		var H1 = 1;
-		var H2 = 1;
-		var L = str.length;
-		
-		for (var i = 1; i < L; i++) {
+		str = unescape(encodeURIComponent(str));	
 
-			H1 = (H1 % str.charCodeAt(i-1) << 19) + ( str.charCodeAt(i-1) );	
-			H2 = (H2 % str.charCodeAt(i) << 19) + ( str.charCodeAt(i) );			
+		var Hex = function (val) {
+		
+			var str = '';
+			var i;
+
+			for (i = 7; i >= 0; i--) {
+
+				str += ((val >>> (i * 4)) & 0x0f).toString(16);
+			}
+		
+			return str;
 		}
 
-		return H1+''+H2;
+		var s, i, j;
+		var W = new Array(80);
+		var H0 = 0x67452301;
+		var H1 = 0xEFCDAB89;
+		var H2 = 0x98BADCFE;
+		var H3 = 0x10325476;
+		var H4 = 0xC3D2E1F0;
+		var A, B, C, D, E;
+		var temp;
+		var hash;
+	
+		var strLen = str.length;
+		var wordArray = [];
+  
+		for (i = 0; i < strLen - 3; i += 4) {
+		
+			j = str.charCodeAt(i) << 24 | str.charCodeAt(i + 1) << 16 | str.charCodeAt(i + 2) << 8 | str.charCodeAt(i + 3);
+			
+			wordArray.push(j);
+		}
+
+		var sl = strLen % 4;	
+
+		if(sl === 0){
+	
+			i = 0x080000000;
+		}
+		else if(sl === 1){
+	
+			i = str.charCodeAt(strLen - 1) << 24 | 0x0800000;
+		}
+		else if(sl === 2){
+	
+			i = str.charCodeAt(strLen - 2) << 24 | str.charCodeAt(strLen - 1) << 16 | 0x08000;
+		}
+		else if(sl === 3){
+	
+			i = str.charCodeAt(strLen - 3) << 24 |
+				str.charCodeAt(strLen - 2) << 16 | str.charCodeAt(strLen - 1) << 8 | 0x80;
+		}
+
+		wordArray.push(i);
+	
+		while ((wordArray.length % 16) !== 14) {
+			
+			wordArray.push(0);
+		}
+	
+		wordArray.push(strLen >>> 29);
+		wordArray.push((strLen << 3) & 0x0ffffffff);
+  
+		for (s = 0; s < wordArray.length; s += 16) {
+	  
+			for (i = 0; i < 16; i++) {
+			
+				W[i] = wordArray[s + i];
+			}
+	
+			for (i = 16; i <= 79; i++) {
+			
+				W[i] = ((W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16])<<1) | ((W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16])>>>(32-1));	
+			}
+	
+			A = H0;
+			B = H1;
+			C = H2;
+			D = H3;
+			E = H4;
+	
+			for (i = 0; i <= 19; i++) {
+			
+				temp = (((A<<5) | (A>>>(32-5))) + ((B & C) | (~B & D)) + E + W[i] + 0x5A827999) & 0x0ffffffff;
+				E = D;
+				D = C;
+				C = (B<<30) | (B>>>(32-30));
+				B = A;
+				A = temp;
+			}
+	
+			for (i = 20; i <= 39; i++) {
+			
+				temp = (((A<<5) | (A>>>(32-5))) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1) & 0x0ffffffff;
+				E = D;
+				D = C;
+				C = (B<<30) | (B>>>(32-30));
+				B = A;
+				A = temp;
+			}
+	
+			for (i = 40; i <= 59; i++) {
+			
+				temp = (((A<<5) | (A>>>(32-5))) + ((B & C) | (B & D) | (C & D)) + E + W[i] + 0x8F1BBCDC) & 0x0ffffffff;
+				E = D;
+				D = C;
+				C = (B<<30) | (B>>>(32-30));
+				B = A;
+				A = temp;
+			}
+
+			for (i = 60; i <= 79; i++) {
+			
+				temp = (((A<<5) | (A>>>(32-5))) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6) & 0x0ffffffff;
+				E = D;
+				D = C;
+				C = (B<<30) | (B>>>(32-30));
+				B = A;
+				A = temp;
+			}
+	
+			H0 = (H0 + A) & 0x0ffffffff;
+			H1 = (H1 + B) & 0x0ffffffff;
+			H2 = (H2 + C) & 0x0ffffffff;
+			H3 = (H3 + D) & 0x0ffffffff;
+			H4 = (H4 + E) & 0x0ffffffff;
+		}
+  
+		hash = Hex(H0) + Hex(H1) + Hex(H2) + Hex(H3) + Hex(H4);
+	
+		return hash.toLowerCase();
 	},
 
 	str_request: function(oForm)
@@ -128,7 +250,7 @@ var ms =
 					}
 
 					ms.wdf();
-					ms.rdf();
+					ms.rdf('script_text_sql');
 				}
 			}
 			else{
@@ -507,6 +629,25 @@ var ms =
 	},
 
 
+	IRText: function(slID, objID, el)
+	{
+		var slt = document.getElementById(slID);
+		var obj = document.getElementById(objID);
+
+		var start = obj.selectionStart;
+		var end = obj.selectionEnd;
+
+		obj.focus();
+
+		obj.value = obj.value.substr(0,start)+slt.value+obj.value.substr(end);
+
+		obj.selectionStart = start;
+		obj.selectionEnd = start+slt.value.length;
+
+		el[0].selected='selected';
+	},
+
+
 	st_event: function()
 	{
 		var event = event || window.event;
@@ -517,15 +658,15 @@ var ms =
 	},
 
 
-	rdf: function()
+	rdf: function(script_text_id)
 	{
 		var script_text = "";
-
+		
 		document.body.addEventListener('dragover', handleDragOver, false);
 		document.body.addEventListener('drop', handleDragOver, false);
 
 		if (window.File && window.FileReader && window.FileList && window.Blob &&
-			(script_text = document.getElementById('script_text'))) {
+			(script_text = document.getElementById(script_text_id))) {
 
 			script_text.addEventListener('drop', handleFileDrag, false);
 		}
@@ -539,7 +680,7 @@ var ms =
 
 			var files = evt.dataTransfer.files;
 
-			ms.get_files(files);
+			ms.get_files(files, script_text_id);
 		}
 
 		function handleDragOver() {
@@ -553,29 +694,36 @@ var ms =
 	},
 
 
-	get_files: function(files)
+	get_files: function(files, script_text_id)
 	{
 		var str = "";
 
 		for (var i = 0, f; f = files[i]; i++)
 		{
 			(function(e) {
-
+				
 				var reader = new FileReader();
 
 				reader.onloadend = function(){
+					
+					if (reader.readyState == FileReader.DONE) 
+					{
+						str += "/* "+files[e].name+" */\r\n";
 
-					if (reader.readyState == FileReader.DONE) {
+						try{ 
 
-						str += reader.result;
+							str += decodeURIComponent(escape(reader.result))+"\r\n\r\n";
+						}
+						catch (CatchException){ 
+			
+							str += "/* ERROR */\r\n";
+							str += reader.result+"\r\n\r\n";
+						}
 
 						if(e === (files["length"]-1)){
 
-							document.getElementById("script_text_file").innerText = window.btoa(str);
-
-							ms.RF('_FILE_SQL', '', '', document.getElementById("script_text_file").form, 0);
+							document.getElementById(script_text_id).innerHTML = str;
 						}
-
 					}
 				};
 
@@ -957,7 +1105,7 @@ background: #333;
 color: #eee;
 }
 
-#script_text{
+#script_text_sql{
 background: #555;
 border: 1px solid #777;
 color: #eee;
@@ -1276,7 +1424,7 @@ border-spacing: 0;
 padding: 0 2px 2px 0;
 }
 
-#script_text{
+#script_text_sql{
 width: 958px;
 height: 190px;
 resize: vertical;

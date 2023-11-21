@@ -3,35 +3,36 @@
 defined("_EXEC") or die();
 
 
-$SQL = [
+$SQL_SCRIPTS = [
 
-"-- SHOW" => "",
+	"userscripts" => [
 
-"variables" => "
+"show variables" => "
 -- show GLOBAL variables;
 -- show SESSION variables;
 
 show variables like 'sql_mode';
 SHOW VARIABLES WHERE Variable_name IN ('log', 'general_log', 'general_log_file', 'log_output');",
 
-"plugins" => "SHOW PLUGINS;",
-"engines" => "SHOW ENGINES;",
-"processlist" => "SHOW PROCESSLIST;",
-"privileges" => "SHOW PRIVILEGES;",
-"open tables" => "SHOW OPEN TABLES;",
-"collation" => "SHOW COLLATION;",
+"show plugins" => "SHOW PLUGINS;",
+"show engines" => "SHOW ENGINES;",
+"show processlist" => "SHOW PROCESSLIST;",
+"show privileges" => "SHOW PRIVILEGES;",
+"show open tables" => "SHOW OPEN TABLES;",
+"show collation" => "SHOW COLLATION;",
 
-"charset" => "
+"show charset" => "
 SHOW VARIABLES LIKE 'char%';
 show variables LIKE '%collation%';
 SHOW COLLATION;",
 
-"grants" => "SHOW GRANTS;",
+"show grants" => "SHOW GRANTS;",
 
+	],
 ];
 
+$SQL_FUNCTIONS = [
 
-$FUNCTION = [
 "AES_ENCRYPT" => ["'str'", "'key'"],
 "AES_DECRYPT" => ["'crypt_str'", "'key'"],
 "CHAR" => ["int", "..."],

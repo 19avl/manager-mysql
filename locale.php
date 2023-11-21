@@ -30,7 +30,6 @@ define("_NOTE_TABLE", "Table");
 define("_NOTE_ROWS", "rows");
 define("_NOTE_ROW", "row");
 define("_NOTE_SQL", "sql");
-define("_NOTE_SCRIPT", "script:");
 define("_NOTE_SCRIPT_DROP", "Drop files here");
 define("_NOTE_LIMIT", "limit:");
 define("_NOTE_FIELD", "display:");

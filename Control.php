@@ -37,12 +37,18 @@ Class Control
 		if($PASS === ""){return true;}
 		else{
 
-			$PASS = $this->hashE($PASS);
+			$PASS = sha1($_POST["session"].$PASS);
 		}
 
-		ini_set('session.use_cookies', 0);
-		session_id($_POST["session"]);
+		session_name(md5(_URL));
+
+		$url = parse_url(_URL);
+
+		session_set_cookie_params(0, $url["path"], $url["host"], false, true);
+		register_shutdown_function('session_write_close');
 		session_start();
+
+		session_regenerate_id(true);
 
 		if(isset($_SESSION["request"])){
 
@@ -71,7 +77,7 @@ Class Control
 		}
 		else
 		{
-			if($_POST['request'] !== (string)$this->hashE($this->session_key.$PASS.$this->str_request()))
+			if($_POST['request'] !== sha1($this->session_key.$PASS.$this->str_request()))
 			{
 				$this->authorize_form(_MESSAGE_CONNECTION);
 				return false;
@@ -108,21 +114,6 @@ Class Control
 
 		print "<br><input type='button' name='' class='btn' value='OK' onclick='ct.get_ps(); '/><br/>";
 		print "</form>";
-	}
-
-	function hashE($str)
-	{
-		$H1 = 1;
-		$H2 = 1;
-		$L = strlen($str);
-		
-		for ($i = 1; $i < $L; $i++) 	
-		{	
-			$H1 = ($H1 % ord($str[$i-1]) << 19) + ( ord($str[$i-1]) );	
-			$H2 = ($H2 % ord($str[$i]) << 19) + ( ord($str[$i]) );
-		}
-
-		return $H1.$H2;			
 	}
 
 	private function str_request()

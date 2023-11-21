@@ -25,9 +25,9 @@ Class Query
 	protected $cl_df = "";
 	protected $cl_tr = "";
 
-	protected $script_file = "";
 	protected $script = "";
 	protected $script_id = "";
+	protected $script_id_add = "";
 
 	public function __construct(){}
 
@@ -191,6 +191,8 @@ Class Query
 		if(isset($_POST["script"])){ $this->script = $this->set_value($_POST["script"]); }
 
 		if(isset($_POST["script_id"])){ $this->script_id = $this->set_value($_POST["script_id"]); }
+		
+		if(isset($_POST["script_id_add"])){ $this->script_id_add = $this->set_value($_POST["script_id_add"]); }		
 	}
 
 
