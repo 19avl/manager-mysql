@@ -33,7 +33,7 @@ trait Wr_sql
 			$SERVER["socket"] = NULL;
 		}
 
-		$CLIENT_SSL = NULL;
+		$CLIENT_SSL = 0;
 		if(isset($SERVER["require_secure_transport"]) && $SERVER["require_secure_transport"]){
 
 			$CLIENT_SSL = MYSQLI_CLIENT_SSL;
@@ -42,28 +42,35 @@ trait Wr_sql
 		$this->dbc->real_connect(
 			$SERVER["host"], $SERVER["user"], $SERVER["pass"], "", $SERVER["port"], $SERVER["socket"], $CLIENT_SSL);
 
-		if(!mysqli_connect_errno()){
+		if(!mysqli_connect_errno())
+		{
+			try {
 
-			if(isset($SERVER["variables"]) && (count($SERVER["variables"]) !== 0)){
+				if(isset($SERVER["variables"]) && (count($SERVER["variables"]) !== 0)){
 
-				foreach($SERVER["variables"] as $k=>$v){
+					foreach($SERVER["variables"] as $k=>$v){
 
-					if(strtolower($k) === "names"){
+						if(strtolower($k) === "names"){
 
-						$this->dbc->set_charset($v);
-					}
-					else{
-
-						if(is_int($v)){
-
-							$this->dbc->query( "SET ".$k." = ".$v.";" );
+							$this->dbc->set_charset($v);
 						}
 						else{
 
-							$this->dbc->query( "SET ".$k." = '".$v."';" );
+							if(is_int($v)){
+
+								$this->dbc->query( "SET ".$k." = ".$v.";" );
+							}
+							else{
+
+								$this->dbc->query( "SET ".$k." = '".$v."';" );
+							}
 						}
 					}
 				}
+			} 
+			catch (Exception $e) {
+
+				$this->_LOG["MESSAGE"][] = "Errno: [".$this->dbc->errno."]. '".htmlentities( $e->getMessage())."'}";		
 			}
 
 			$this->character_name = $this->dbc->character_set_name();
@@ -79,28 +86,14 @@ trait Wr_sql
 			
 			$this->current_user	= $SERVER["user"]."@".$SERVER["host"].":".$SERVER["port"];			
 		}
-		else{
-
+		else
+		{
 			$this->connect = true;
 
 			$this->_LOG["MESSAGE"]["connect"] = _MESSAGE_CONNECTION.": ".$SERVER["host"]."@".$SERVER["user"];
 		}
 	}
 
-	protected function request($sql, $type, $value, $line, $log = true)
-	{
-		$this->dbc->real_query($sql);
-		$result = $this->dbc->store_result();
-
-		if($this->dbc->error){
-
-			$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error, ENT_SUBSTITUTE);
-			
-			return [false, $this->dbc->errno];
-		}
-
-		return [true, $result];
-	}
 
 	protected function fetch_assoc($result)
 	{
@@ -113,45 +106,76 @@ trait Wr_sql
 	}
 
 
-	private function multi_request($script)
+	protected function request($sql, $type, $value, $line, $log = true)
 	{
-		$i = 0;		
-		
-		if( $this->dbc->multi_query( $script ) )
-		{
-			do 
-			{
-				$ST = "";
+		try {
+			
+			$this->dbc->real_query($sql);
+			$result = $this->dbc->store_result();
 
-				$result = $this->dbc->store_result();
-	
-				if ($result) {
+			if($this->dbc->error){
 
-					while($row = $result->fetch_assoc())
-					{
-						foreach($row as $k=>$v){
+				$this->_LOG["MESSAGE"][] = htmlentities($this->dbc->error, ENT_SUBSTITUTE);
+			
+				return [false, $this->dbc->errno];
+			}
+		} 
+		catch (Exception $e) {
 
-							$ST .= htmlentities($k).": ".htmlentities($v, ENT_SUBSTITUTE)."<br>";
-						}
-						
-						$ST .= "<br>";
-					}		
-				}
+				$this->_LOG["MESSAGE"][] = htmlentities($e->getMessage(), ENT_SUBSTITUTE);	
 
-				if ($ST !== ""){ 
-				
-					$this->_LOG["RESULT"][] = $ST;
-				}
-		
-				$i++;
-			} 
-			while ($this->dbc->next_result());
+				return [false, $this->dbc->errno];				
 		}
 
-		if( $this->dbc->errno )
-		{
+		return [true, $result];
+	}
+
+
+	private function multi_request($script)
+	{	
+		try {		
+		
+			$i = 0;		
+
+			if( $this->dbc->multi_query( $script ) )
+			{
+				do {
+				
+					$ST = "";
+
+					if ($result = $this->dbc->store_result()) {
+
+						while($row = $result->fetch_assoc())
+						{
+							foreach($row as $k=>$v){
+
+								$ST .= htmlentities((string)$k).": ".htmlentities((string)$v, ENT_SUBSTITUTE)."<br>";
+							}
+						
+							$ST .= "<br>";
+						}		
+					}
+
+					if ($ST !== ""){ 
+				
+						$this->_LOG["RESULT"][] = $ST;
+					}
+		
+					$i++;
+				} 
+				while ($this->dbc->next_result());
+			}
+
+			if( $this->dbc->errno )
+			{
+				$this->_LOG["MESSAGE"][] = 
+					"Query: [".($i + 1)."]. Errno: [".$this->dbc->errno."]. '".htmlentities($this->dbc->error)."'}";	
+			}	
+		} 
+		catch (Exception $e) {
+
 			$this->_LOG["MESSAGE"][] = 
-				"Query: [".($i + 1)."]. Errno: [".$this->dbc->errno."]. '".htmlentities($this->dbc->error)."'}";	
+				"Query: [".($i + 1)."]. Errno: [".$this->dbc->errno."]. '".htmlentities( $e->getMessage())."'}";		
 		}		
 	}
 

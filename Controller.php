@@ -10,6 +10,9 @@ Class Controller extends Query
 	private $manager;
 	private $view;
 	private $DATA;
+	private $control;
+	private $script_sql;
+
 
 	public function __construct($LIMIT, $USER)
 	{
@@ -54,7 +57,7 @@ Class Controller extends Query
 		}
 		elseif(($this->_SH !== "") && ($this->_TB === ""))
 		{
-			$this->DATA = $this->manager->tb( $this->_SH, $this->nv, $this->cl_sl, $LIMIT);
+			$this->DATA = $this->manager->tb( $this->_SH, $this->nv, $LIMIT);
 
 			$SQL_SCRIPTS["objects"] = $this->DATA["SQL"];
 		}

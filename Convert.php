@@ -21,11 +21,11 @@ trait Convert
 	{
 		if($EL !==""){
 
-			return preg_replace("/".$EL."/", $DL, htmlspecialchars($input, ENT_QUOTES | ENT_SUBSTITUTE));
+			return preg_replace("/".$EL."/", $DL, htmlspecialchars((string)$input, ENT_QUOTES | ENT_SUBSTITUTE));
 		}
 		else{
 
-			return htmlspecialchars($input, ENT_QUOTES | ENT_SUBSTITUTE);
+			return htmlspecialchars((string)$input, ENT_QUOTES | ENT_SUBSTITUTE);
 		}
 	}
 
@@ -50,9 +50,9 @@ trait Convert
 
 	protected function set_name($name)
 	{
-		if((substr($name, 0, 1) === "`") && (substr($name, (strlen ($name)-1), 1) === "`")){
+		if((substr((string)$name, 0, 1) === "`") && (substr($name, (strlen((string)$name)-1), 1) === "`")){
 
-			$name = str_replace("`", "", $name);
+			$name = str_replace("`", "", (string)$name);
 		}
 
 		return $name;
@@ -62,7 +62,7 @@ trait Convert
 	{
 		$hex = "";
 
-		$l = strlen($str);
+		$l = strlen((string)$str);
 
 		for ($i=0; $i<$l; $i++){
 

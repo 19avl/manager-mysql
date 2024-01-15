@@ -21,7 +21,6 @@ Class Query
 	protected $blob_ch = [];
 
 	protected $cl_in = "";
-	protected $cl_sl = [];
 	protected $cl_df = "";
 	protected $cl_tr = "";
 
@@ -177,8 +176,6 @@ Class Query
 
 			$this->blob_ch = $this->set_value_list($_POST["blob_ch"]);
 		}
-
-		if(isset($_POST["cl_sl"])){ $this->cl_sl = $this->set_value_list($_POST["cl_sl"]); }
 
 		if(isset($_POST["cl_df"])){ $this->cl_df = $this->set_value($_POST["cl_df"]); }
 

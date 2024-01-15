@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2023 Andrey Lyskov
+Copyright (c) 2018-2024 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -12,6 +12,9 @@ Class View
 {
 	use Convert;
 	use Wr_html;
+
+private $ac_con;
+private $ac_ex;
 
 	public function __construct(){
 
@@ -733,7 +736,7 @@ Class View
 										$flag = "disabled";
 								}
 
-								$v = preg_replace("/\\n/", " ", $v);
+								$v = preg_replace("/\\n/", " ", (string)$v);
 
 								$this->input("", "", $class, $this->html($v), "", $flag, "");
 							}
@@ -997,7 +1000,7 @@ Class View
 				{
 					$v = $this->h2s($v);
 
-					if(($mod === "edit") && (trim($v) !== "")){
+					if(($mod === "edit") && (trim((string)$v) !== "")){
 
 						$value = " ( ".$this->get_seze($v)." ) ";
 					}
@@ -1021,7 +1024,7 @@ Class View
 
 						$this->tg_open("td", "", "", "", "");
 
-						if(($mod === "edit") && (trim($v) !== ""))
+						if(($mod === "edit") && (trim((string)$v) !== ""))
 						{
 							$this->tg_open("div", "", "file_dl", "", "");
 
@@ -1097,7 +1100,7 @@ Class View
 						}
 					}
 
-					if(($mod === "edit") && (trim($v) !== ""))
+					if(($mod === "edit") && (trim((string)$v) !== ""))
 					{
 						$this->textarea("", "prev".$count.$count_fl.$uk.$mod, "rt_value_text",
 							$this->strTV($this->html($v)), "", "disabled");
@@ -1197,7 +1200,8 @@ Class View
 
 	private function get_seze($v)
 	{
-		$size = strlen($v);
+		$size = strlen((string)$v);
+		
 		if($size > 1024)
 		{
 			$size = ($size/1024);

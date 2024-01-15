@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2023 Andrey Lyskov
+Copyright (c) 2018-2024 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -12,6 +12,17 @@ Class Manager
 {
 	use Convert;
 	use Wr_sql;
+
+	public $_LOG;
+	public $connect;
+	private $DS;
+	public $ext;
+	private $dbc;
+	private $sql_mode;
+	private $client_info;
+	private $server_info;
+	public $current_user;
+	private $character_name;
 
 	public function __construct()
 	{
@@ -98,7 +109,8 @@ Class Manager
 		return $RT;
 	}
 
-	public function tb($_SH, $nv, $cl_sl, $LIMIT)
+
+	public function tb($_SH, $nv, $LIMIT)
 	{
 		$_SHS = $this->h2s($_SH);
 
@@ -145,14 +157,14 @@ Class Manager
 		$SUB_PR_SET = [];
 		$SUB_PR_OUT = [];
 
-		$CREATE = $this->request("SHOW CREATE DATABASE `$_SHS`", "", [], __LINE__);
+		$CREATE = $this->request("SHOW CREATE DATABASE `$_SHS`;", "", [], __LINE__);
 
 		if($CREATE[0])
 		{
 			$RT["CREATE"]["SH"] = $this->fetch_row($CREATE[1])[1];
 
 			$RT["SQL"]["schema"] = [
-				"CREATE" => $RT["CREATE"]["SH"],
+				"CREATE" => $RT["CREATE"]["SH"].";",
 				"ALTER CHARACTER SET" => "ALTER DATABASE `".$_SHS."` CHARACTER SET utf8 DEFAULT COLLATE utf8mb4_bin;",
 				"ALTER ENCRYPTION" => "ALTER DATABASE `".$_SHS."` ENCRYPTION 'N';\n\n",
 				"ALTER READ ONLY" => "ALTER DATABASE `".$_SHS."` READ ONLY = 0;"
@@ -172,18 +184,18 @@ Class Manager
 
 			foreach($RT["SU"]["LIST"]["events"] as $k=>$v)
 			{
-				$RT["SQL"]["events"][$k." "] = "DROP EVENT IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["events"][$k." "] = "DROP EVENT IF EXISTS `".$k."`;\n\n".$v."";
 			}
 
 			foreach($RT["SU"]["LIST"]["triggers"] as $k=>$v)
 			{
-				$RT["SQL"]["triggers"][$k." "] = "DROP TRIGGER IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["triggers"][$k." "] = "DROP TRIGGER IF EXISTS `".$k."`;\n\n".$v."";
 			}
 
 			foreach($RT["SU"]["LIST"]["procedures"] as $k=>$v)
 			{
 				$RT["SQL"]["routines"]["-- PROCEDURES"] = "";
-				$RT["SQL"]["routines"][$k." "] = "DROP PROCEDURE IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["routines"][$k." "] = "DROP PROCEDURE IF EXISTS `".$k."`;\n\n".$v."";
 
 				$SUB_PR = [];
 				$SUB_PR_OUT = [];
@@ -228,7 +240,7 @@ Class Manager
 			foreach($RT["SU"]["LIST"]["functions"] as $k=>$v)
 			{
 				$RT["SQL"]["routines"]["-- FUNCTIONS"] = "";
-				$RT["SQL"]["routines"][$k." "] = "DROP FUNCTION IF EXISTS `".$k."`;\n\n".$v.";";
+				$RT["SQL"]["routines"][$k." "] = "DROP FUNCTION IF EXISTS `".$k."`;\n\n".$v."";
 
 				$SUB_PR = [];
 
@@ -345,10 +357,13 @@ Class Manager
 
 		$RT["SQL_ADD"]["DROP"] = [];
 
+		$SCA["table"] = [];
+
 		$C_L = [];
 		$C_F = [];
 
 		$LIST = [];
+		$ORDER_LIST = [];
 		$LIST_KEY = [];
 
 		$CREATE = $this->request("SHOW CREATE DATABASE `$_SHS`", "", [], __LINE__, false);
@@ -412,24 +427,23 @@ Class Manager
 						$C_L[$row["COLUMN_NAME"]][] = $row["CONSTRAINT_TYPE"];
 					}
 
-					if(trim($row["REFERENCED_COLUMN_NAME"]) !== ""){
+					if(trim((string)$row["REFERENCED_COLUMN_NAME"]) !== ""){
 
 						$C_F[$row["COLUMN_NAME"]][] = $row;
 					}
 
-					if(trim($row["CONSTRAINT_TYPE"]) === "CHECK"){
+					if(trim((string)$row["CONSTRAINT_TYPE"]) === "CHECK"){
 
 						$RT["SQL_ADD"]["DROP"]["DROP CHECK ".$row["CONSTRAINT_NAME"]] =
 							"ALTER TABLE `".$_TBS."` "."DROP CHECK `".$row["CONSTRAINT_NAME"]."`;";
 					}
-					elseif(trim($row["CONSTRAINT_TYPE"]) === "FOREIGN KEY"){
+					elseif(trim((string)$row["CONSTRAINT_TYPE"]) === "FOREIGN KEY"){
 
 						$RT["SQL_ADD"]["FOREIGN KEY"][] = $row;
 
 						$RT["SQL_ADD"]["DROP"]["DROP FOREIGN KEY ".$row["CONSTRAINT_NAME"]] =
 							"ALTER TABLE `".$_TBS."` "."DROP FOREIGN KEY `".$row["CONSTRAINT_NAME"]."`;";
 					}
-
 				}
 			}
 
@@ -452,13 +466,16 @@ Class Manager
 							$RT["FIELD_ST_NAV"][] = $row["COLUMN_NAME"];
 						}
 
-						$RT["FIELD_ST"][] = $row["COLUMN_NAME"];
+						if($row["COLUMN_TYPE"]  !== "json"){
+
+							$RT["FIELD_ST"][] = $row["COLUMN_NAME"];
+						}
 
 						if(in_array( $row["DATA_TYPE"], $this->ext["binary"])  &&
 							($RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"] != ""))
 						{
-							if($this->server_info[0] > 5)
-							{
+							if($this->server_info > 5){
+
 								$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"] =
 									preg_replace("/^0x/", "", $RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_DEFAULT"]);
 							}
@@ -501,7 +518,7 @@ Class Manager
 
 						$temp = preg_replace("/^(enum|set)\('/", "", $RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_TYPE"]);
 						$temp = preg_replace("/'\)$/", "", $temp);
-						$temp = str_replace("\\\\", "\\", $temp);
+						$temp = str_replace("\\\\", "\\", (string)$temp);
 
 						$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_VALUE"] = explode("','", $temp);
 
@@ -567,6 +584,11 @@ Class Manager
 
 						$LIST[] = "`".$row["COLUMN_NAME"]."`";
 					}
+
+					if($row["COLUMN_TYPE"]  !== "json"){
+
+						$ORDER_LIST[] = "`".$row["COLUMN_NAME"]."`";
+					}
 				}
 
 				if(($RT["TABLE_TYPE"] !== "VIEW") && ($RT["TABLE_TYPE"] !== "SYSTEM VIEW") && ($mode === "")){
@@ -601,18 +623,18 @@ Class Manager
 
 			if($mode !== ""){$LIMIT = "";}
 
-			$ORDER_LIST	= array_keys($LIST);
+			$ORDER_LIST	= array_keys($ORDER_LIST);
 			unset($ORDER_LIST[0]);
 
-			if(count($ORDER_LIST) === 0){$order_list_st = "1";}
+			if(count($ORDER_LIST) === 0){$order_list_st = "";}
 			else{
 
-				$order_list_st = ($nv["order_rc"]+1)." ".$nv["order_desc_rc"].",".
+				$order_list_st = " ORDER BY ".($nv["order_rc"]+1)." ".$nv["order_desc_rc"].",".
 				implode(" ".$nv["order_desc_rc"].", ", $ORDER_LIST);
 			}
 
 			$result = $this->request("SELECT ".implode(", ",  $LIST).
-				" FROM `".$_SHS."`.`".$_TBS."` ".$WHERE." ORDER BY ".$order_list_st.$LIMIT.";",
+				" FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";",
 				"", [], __LINE__, false);
 
 			if($result[0])
@@ -761,7 +783,7 @@ Class Manager
 
 			if($str !== ""){
 
-				$SCA["table"]["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".substr($str, 2);
+				$SCA["table"]["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".substr((string)$str, 2);
 			}
 
 			if(($RT["TABLE_TYPE"] === "BASE TABLE") &&
@@ -775,7 +797,7 @@ Class Manager
 				$SCA["table"]["ADD SPATIAL INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD SPATIAL INDEX (`...`);";
 				$SCA["table"]["ADD FULLTEXT INDEX"] = "ALTER TABLE `".$_TBS."` "."ADD FULLTEXT INDEX (`...`);";
 
-				if($this->server_info[0] > 5){
+				if($this->server_info > 5){
 
 					$SCA["table"]["ADD CHECK"] = "ALTER TABLE `".$_TBS."` "."ADD CHECK (...);";
 				}
@@ -786,7 +808,7 @@ Class Manager
 
 				while( $row = $this->fetch_row($result[1]) )
 				{
-					if(trim($row[0]) !== "PRIMARY"){
+					if(trim((string)$row[0]) !== "PRIMARY"){
 
 						$SCA["table"]["DROP INDEX ".$row[0]] = "ALTER TABLE `".$_TBS."` DROP INDEX `".$row[0]."`;";
 					}
@@ -820,14 +842,15 @@ Class Manager
 					$CL_DROP["DROP COLUMN ".$VCOLUMN.""] =
 						"ALTER TABLE `".$_TBS."` "."DROP COLUMN `".$VCOLUMN."`;";
 				}
-				
-				$SCA_CL["columns"] = array_merge($CL_ADD, $CL_CHANGE, $CL_DROP);	
+
+				$SCA_CL["columns"] = array_merge($CL_ADD, $CL_CHANGE, $CL_DROP);
 			}
 
 			$SCA["table"] = array_merge($SCA["table"], $RT["SQL_ADD"]["DROP"]);
 
 			$RT["SQL"] = array_merge($SCA, $SCA_CL);
 		}
+
 
 		return $RT;
 	}
@@ -873,7 +896,7 @@ Class Manager
 	{
 		$count = 0;
 
-		$find = trim($find);
+		$find = trim((string)$find);
 
 		$this->_LOG["RESULT"][] = "<br>"._MESSAGE_SEARCHING.": ".$this->html($find)."<br>";
 
@@ -939,7 +962,7 @@ Class Manager
 
 							if($mode === "0")
 							{
-								if(stristr($str, $find)){
+								if(stristr((string)$str, $find)){
 
 									$this->_LOG["RESULT"][] = $this->html($_SHS).".".$this->html($valS).
 										":<br>[ ".$this->html($k)." ] - ".$this->html($v);
@@ -947,9 +970,10 @@ Class Manager
 									$count += 1;
 								}
 							}
+
 							elseif($mode === "1")
 							{
-								if($str === trim($find)){
+								if($str === trim((string)$find)){
 
 									$this->_LOG["RESULT"][] = $this->html($_SHS).".".$this->html($valS).
 										":<br>[ ".$this->html($k)." ] - ".$this->html($v);
@@ -957,6 +981,7 @@ Class Manager
 									$count += 1;
 								}
 							}
+
 						}
 					}
 				}
@@ -976,7 +1001,7 @@ Class Manager
 		header("Expires: 0");
 		header("Cache-Control: no-cache, must-revalidate");
 		header("Pragma: no-cache");
-		header("Content-Length: ".strlen($string));
+		header("Content-Length: ".strlen((string)$string));
 		print $string;
 
 		die();
@@ -1163,9 +1188,9 @@ Class Manager
 			{
 				$this->request("USE `".$_SHS."`;", "", [], __LINE__);
 
-				$triggers = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
+				$triggers = implode("".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
 					"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER",
-					"SQL Original Statement", "")).";";
+					"SQL Original Statement", ""))."";
 
 				if($triggers !== ";"){
 
@@ -1174,9 +1199,9 @@ Class Manager
 					$sT .= PHP_EOL.$triggers.PHP_EOL;
 				}
 
-				$procedures = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
+				$procedures = implode("".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
 					"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE",
-					"Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND")).";";
+					"Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND"))."";
 
 				if($procedures !== ";"){
 
@@ -1185,9 +1210,9 @@ Class Manager
 					$sT .= PHP_EOL.$procedures.PHP_EOL;
 				}
 
-				$functions = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
+				$functions = implode("".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
 					"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION",
-					"Create Function", "ROUTINE_TYPE='FUNCTION' AND")).";";
+					"Create Function", "ROUTINE_TYPE='FUNCTION' AND"))."";
 
 				if($functions !== ";"){
 
@@ -1196,8 +1221,8 @@ Class Manager
 					$sT .= PHP_EOL.$functions.PHP_EOL;
 				}
 
-				$events = implode(";".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
-					"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", "")).";";
+				$events = implode("".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
+					"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", ""))."";
 
 				if($events !== ";"){
 
@@ -1600,9 +1625,9 @@ Class Manager
 		if($text_script === ""){return;}
 
 		$this->multi_request($text_script);
-
+		
 		$this->request("SET sql_mode = '".$this->sql_mode."';", "", [], __LINE__);
-		$this->request("SET names '".$this->character_name."';", "", [], __LINE__);
+		$this->request("SET names '".$this->character_name."';", "", [], __LINE__);		
 	}
 
 	private function check_field($_SH, $_TB, &$type)
@@ -1635,11 +1660,11 @@ Class Manager
 
 				$s = $this->request($create." `$_SHS`.`".$row[$target."_NAME"]."`;", "", [], __LINE__);
 
-				while( $row_s = $this->fetch_assoc($s[1]) ){
+				while( $row_sub = $this->fetch_assoc($s[1]) ){
 
-					$row_s[$searching] = preg_replace("/;$/", "", $row_s[$searching]);
+					if(!preg_match("/;$/", $row_sub[$searching])){ $row_sub[$searching] .= ";";}
 
-					$RT[$row[$target."_NAME"]] = $row_s[$searching];
+					$RT[$row[$target."_NAME"]] = $row_sub[$searching];
 				}
 			}
 		}
