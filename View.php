@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2024 Andrey Lyskov
+Copyright (c) 2018-2025 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -29,9 +29,9 @@ Class View
 			'_DELETE_RC_FILTER','_DELETE_RC']";
 
 		$this->ac_ex = "[
-			'_EXPORT_SQL_SH_FILTER','_EXPORT_SQL_SH',
-			'_EXPORT_SQL_TB_FILTER','_EXPORT_SQL_TB',
-			'_EXPORT_SQL_RC_FILTER']";
+			'_SAVE_SQL_SH_FILTER','_SAVE_SQL_SH',
+			'_SAVE_SQL_TB_FILTER','_SAVE_SQL_TB',
+			'_SAVE_SQL_RC_FILTER']";
 	}
 
 
@@ -158,7 +158,7 @@ Class View
 	}
 
 
-	public function main($user, $nv)
+	public function main($user, $nv, $display)
 	{
 		$this->tg("div", "", "nav_main_back_un", "", "", "");
 		$this->tg("div", "", "nav_main_back", "", "", "");
@@ -176,14 +176,21 @@ Class View
 			"<svg width='47' height='47'>".
 			"<path d='M27 22 L33 22 L33 16 Z' fill='white' />".
 			"<path d='M32,24 A8,8 0 1,1 30.92,20.00'></svg>",
-			"onclick=\"ms.RF('VIEW', '', '".$nv["_TB"]."', document.getElementById('reload'), 0);\"");
+			"onclick=\"ms.RF('VIEW', '', '".$nv["_TB"]."', document.getElementById('reload'), 0);\" ".
+			"title='"._ACTION_RELOAD."'");
 
 		$this->tgFr_close();
 
 		$this->tgFr_open("nav_main_form");
 
-		$this->tgFr_input("button", "", "nav_id_wr_script", "btn_nav", _NOTE_SQL,
-			"onclick=\"ms.view_wr('id_wr_script',[''], this);\"");
+		$style_wr_script = "btn_nav";
+		if($display == "sql"){
+	
+			$style_wr_script = "btn_nav_focus";	
+		}
+	
+		$this->tgFr_input("button", "", "nav_id_wr_script", $style_wr_script, _NOTE_SQL,
+			"onclick=\"ms.view_wr('id_wr_script',[''], this);\"");			
 
 		$this->tgFr_input("hidden", "session", "", "", "", "", "");
 

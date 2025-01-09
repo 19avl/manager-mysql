@@ -40,6 +40,26 @@ Class Controller extends Request
 
 		$this->view = new View($USER[$this->nv["_US"]], $this->manager->GT);
 
+		if($this->action === "_RUN_SQL")
+		{
+			if(!$this->manager->ex_sh($this->nv["_SH"]))
+			{
+				$this->nv = $this->manager->reset_ve($this->nv, $LIMIT);
+				$this->nv = $this->manager->reset_fl($this->nv);
+
+				$this->nv["_SH"] = "";
+				$this->nv["_TB"] = "";
+			}
+
+			if(!$this->manager->ex_tb($this->nv["_SH"], $this->nv["_TB"]))
+			{
+				$this->nv = $this->manager->reset_ve($this->nv, $LIMIT);
+				$this->nv = $this->manager->reset_fl($this->nv);
+
+				$this->nv["_TB"] = "";
+			}
+		}
+
 		if($this->nv["_SH"] === "")
 		{
 			$this->DATA = $this->manager->sh($this->nv);
@@ -64,8 +84,8 @@ Class Controller extends Request
 			$this->script_sql = $SQL["userscripts"][$this->script_id];
 		}
 
-		$this->view->main($this->manager->current_user, $this->nv);
-		
+		$this->view->main($this->manager->current_user, $this->nv, $this->display);
+
 		$this->view->dl_ms();
 
 		$this->view->sql($SQL, $this->script_sql, $this->nv, $this->display);
@@ -121,12 +141,10 @@ Class Controller extends Request
 				case "_DELETE_SH_FILTER":
 				{
 					$this->manager->delete_sh($this->manager->list_sh_filter($this->nv));
-					$this->nv["_SH"] = "";
 
-					$this->nv["fl_field_rc"] = [];
-					$this->nv["fl_value_rc"] = [];
-					$this->nv["fl_operator_rc"] = [];
-					$this->nv["fl_and_rc"] = [];
+					$this->nv = $this->manager->reset_fl($this->nv);
+
+					$this->nv["_SH"] = "";
 				}
 				break;
 
@@ -153,10 +171,7 @@ Class Controller extends Request
 				{
 					$this->manager->delete_tb($this->nv["_SH"], $this->manager->list_tb_filter($this->nv));
 
-					$this->nv["fl_field_rc"] = [];
-					$this->nv["fl_value_rc"] = [];
-					$this->nv["fl_operator_rc"] = [];
-					$this->nv["fl_and_rc"] = [];
+					$this->nv = $this->manager->reset_fl($this->nv);
 				}
 				break;
 
@@ -180,21 +195,13 @@ Class Controller extends Request
 				{
 					$this->manager->delete_rc_filter($this->nv);
 
-					$this->nv["fl_field_rc"] = [];
-					$this->nv["fl_value_rc"] = [];
-					$this->nv["fl_operator_rc"] = [];
-					$this->nv["fl_and_rc"] = [];
+					$this->nv = $this->manager->reset_fl($this->nv);
 				}
 				break;
 
 				case "_RESET_FILTER_rc":
 				{
-					$this->nv["fl_field_rc"] = [];
-					$this->nv["fl_value_rc"] = [];
-					$this->nv["fl_operator_rc"] = [];
-					$this->nv["fl_and_rc"] = [];
-
-					$this->nv["fl_count_rc"] = "2";
+					$this->nv = $this->manager->reset_fl($this->nv);
 				}
 				break;
 
@@ -226,7 +233,47 @@ Class Controller extends Request
 				}
 				break;
 
-				case "_EXPORT_SQL_SH":
+				case "_VIEW_SQL_SH":
+				{
+					if(count($this->list_rc) === 0){
+
+						$this->list_rc[] = $this->nv["_SH"];
+					}
+
+					$this->manager->res_get(
+						$this->manager->export_sql($this->list_rc, [], $this->nv, "SH"));
+				}
+				break;
+
+				case "_VIEW_SQL_SH_FILTER":
+				{
+					$this->manager->res_get(
+						$this->manager->export_sql($this->manager->list_sh_filter($this->nv), [], $this->nv, "SH"));
+				}
+				break;
+
+				case "_VIEW_SQL_TB":
+				{
+					$this->manager->res_get(
+						$this->manager->export_sql([$this->nv["_SH"]], $this->list_rc, $this->nv, "TB"));
+				}
+				break;
+
+				case "_VIEW_SQL_TB_FILTER":
+				{
+					$this->manager->res_get(
+						$this->manager->export_sql([$this->nv["_SH"]], $this->manager->list_tb_filter($this->nv), $this->nv, "TB"));
+				}
+				break;
+
+				case "_VIEW_SQL_RC_FILTER":
+				{
+					$this->manager->res_get(
+						$this->manager->export_sql([$this->nv["_SH"]], [$this->nv["_TB"]], $this->nv, "RC"));
+				}
+				break;
+
+				case "_SAVE_SQL_SH":
 				{
 					if(count($this->list_rc) === 0){
 
@@ -237,27 +284,27 @@ Class Controller extends Request
 				}
 				break;
 
-				case "_EXPORT_SQL_SH_FILTER":
+				case "_SAVE_SQL_SH_FILTER":
 				{
 					$this->manager->export_get(
 						$this->manager->export_sql($this->manager->list_sh_filter($this->nv), [], $this->nv, "SH"));
 				}
 				break;
 
-				case "_EXPORT_SQL_TB":
+				case "_SAVE_SQL_TB":
 				{
 					$this->manager->export_get($this->manager->export_sql([$this->nv["_SH"]], $this->list_rc, $this->nv, "TB"));
 				}
 				break;
 
-				case "_EXPORT_SQL_TB_FILTER":
+				case "_SAVE_SQL_TB_FILTER":
 				{
 					$this->manager->export_get(
 						$this->manager->export_sql([$this->nv["_SH"]], $this->manager->list_tb_filter($this->nv), $this->nv, "TB"));
 				}
 				break;
 
-				case "_EXPORT_SQL_RC_FILTER":
+				case "_SAVE_SQL_RC_FILTER":
 				{
 					$this->manager->export_get($this->manager->export_sql([$this->nv["_SH"]], [$this->nv["_TB"]], $this->nv, "RC"));
 				}

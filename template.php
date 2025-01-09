@@ -1459,8 +1459,8 @@ width: 129px;
 
 .fl_value{
 width: 325px;
-padding: 8px;
-margin: 2px 4px 2px 2px;
+padding: 7.3px;
+margin: 3px 4px 2px 2px;
 }
 
 .fl_label{

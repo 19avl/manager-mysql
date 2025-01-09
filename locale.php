@@ -56,8 +56,9 @@ define("_ACTION_DELETE", "delete");
 define("_ACTION_CLEAR", "clear");
 define("_ACTION_UPDATE", "update");
 define("_ACTION_INSERT", "insert");
-define("_ACTION_CREATE_VIEW", "create view");
-define("_ACTION_EXPORT_SQL", "export");
+define("_ACTION_EXPORT", "export");
+define("_ACTION_VIEW_SQL", "view as sql");
+define("_ACTION_SAVE_SQL", "save as sql");
 define("_ACTION_EXIT", "exit");
 
 

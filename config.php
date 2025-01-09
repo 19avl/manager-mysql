@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright (c) 2018-2024 Andrey Lyskov
+Copyright (c) 2018-2025 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -27,7 +27,8 @@ $USER = [
 
 		"variables"=>[
 			"names" => "utf8mb4",
-			"sql_mode" => "TRADITIONAL",			
+			"sql_mode" => "TRADITIONAL",	
+			//"sql_mode" => "STRICT_ALL_TABLES", 
 			//"GLOBAL general_log" => 0,
 			//"GLOBAL log_output" => "TABLE",
 		],

@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2024 Andrey Lyskov
+Copyright (c) 2018-2025 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -41,7 +41,6 @@ Class Manager
 			"binary" => ["varbinary", "binary"],
 			"text" => ["tinytext", "text", "mediumtext", "longtext"],
 			"char" => ["varchar", "char"],
-
 			"number" => ["int","tinyint","smallint","mediumint","bigint","double","float","decimal"],
 			"bit" => ["bit"],
 		];
@@ -72,11 +71,72 @@ Class Manager
 	}
 
 
+	public function reset_ve($nv, $LIMIT){
+
+		$nv["page_rc"] = $LIMIT[0];
+		$nv["from_rc"] = 0;
+		$nv["order_rc"] = 0;
+
+		return $nv;
+	}
+
+	public function reset_fl($nv){
+
+		$nv["fl_field_rc"] = [];
+		$nv["fl_value_rc"] = [];
+		$nv["fl_operator_rc"] = [];
+		$nv["fl_and_rc"] = [];
+		$nv["fl_count_rc"] = "2";
+
+		return $nv;
+	}
+
+	public function ex_sh($_SH)
+	{
+		if($_SH !== "")
+		{
+			$result = $this->request("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ".
+				"WHERE SCHEMA_NAME = x'".$_SH."';",
+				"", [], __LINE__, false);
+
+			if($result[0]){
+
+				if(!isset($this->fetch_assoc($result[1])["SCHEMA_NAME"])){
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	public function ex_tb($_SH, $_TB)
+	{
+		if($_TB !== "")
+		{
+			$result = $this->request("SELECT TABLE_NAME FROM information_schema.TABLES ".
+				"WHERE TABLE_SCHEMA = x'".$_SH."' AND TABLE_NAME = x'".$_TB."';",
+				"", [], __LINE__, false);
+
+			if($result[0]){
+
+				if(!isset($this->fetch_assoc($result[1])["TABLE_NAME"])){
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	public function sqlsm($text_script, $use)
 	{
 		if($text_script === ""){return;}
 
 		$use = hex2bin((string)$use);
+
 		if($use !== ""){ $this->request("USE `".$use."`;", "", [], __LINE__); }
 
 		$this->multi_request($text_script);
@@ -159,12 +219,16 @@ Class Manager
 		$RT["ACF"] = [
 			'_DELETE_SH_FILTER'=>_ACTION_DELETE,
 			'_CLEAR_SH_FILTER'=>_ACTION_CLEAR,
-			'_EXPORT_SQL_SH_FILTER'=>_ACTION_EXPORT_SQL];
+			''=>'-- '._ACTION_EXPORT,
+			'_VIEW_SQL_SH_FILTER'=>_ACTION_VIEW_SQL,
+			'_SAVE_SQL_SH_FILTER'=>_ACTION_SAVE_SQL];
 
 		$RT["ACS"] = [
 			'_DELETE_SH'=>_ACTION_DELETE,
 			'_CLEAR_SH'=>_ACTION_CLEAR,
-			'_EXPORT_SQL_SH'=>_ACTION_EXPORT_SQL];
+			''=>'-- '._ACTION_EXPORT,
+			'_VIEW_SQL_SH'=>_ACTION_VIEW_SQL,
+			'_SAVE_SQL_SH'=>_ACTION_SAVE_SQL];
 
 		return $RT;
 	}
@@ -179,7 +243,6 @@ Class Manager
 		$RT["TABLE_NAME"] = "TABLE_NAME";
 
 		$RT["SQL"]["schema"] = [];
-		$RT["SQL"]["tables"] = [];
 
 		$RT["FIELD_SE_ORDER"] = ["TABLE_NAME", "ENGINE", "TABLE_COLLATION", "TABLE_TYPE"];
 
@@ -266,9 +329,6 @@ Class Manager
 				}
 
 				$RT["DATA"][] = $row;
-
-				$RT["SQL"]["tables"]["RENAME ".$row["TABLE_NAME"]." "] =
-					"RENAME TABLE `".$row["TABLE_NAME"]."` TO table_name;";
 			}
 		}
 
@@ -283,12 +343,16 @@ Class Manager
 		$RT["ACF"] = [
 			'_DELETE_TB_FILTER'=>_ACTION_DELETE,
 			'_CLEAR_TB_FILTER'=>_ACTION_CLEAR,
-			'_EXPORT_SQL_TB_FILTER'=>_ACTION_EXPORT_SQL];
+			''=>'-- '._ACTION_EXPORT,
+			'_VIEW_SQL_TB_FILTER'=>_ACTION_VIEW_SQL,
+			'_SAVE_SQL_TB_FILTER'=>_ACTION_SAVE_SQL];
 
 		$RT["ACS"] = [
 			'_DELETE_TB'=>_ACTION_DELETE,
 			'_CLEAR_TB'=>_ACTION_CLEAR,
-			'_EXPORT_SQL_TB'=>_ACTION_EXPORT_SQL];
+			''=>'-- '._ACTION_EXPORT,
+			'_VIEW_SQL_TB'=>_ACTION_VIEW_SQL,
+			'_SAVE_SQL_TB'=>_ACTION_SAVE_SQL];
 
 		$RT["SQL"]["schema"] = [
 			"CREATE" => $RT["CREATE"]["SH"].";",
@@ -410,7 +474,7 @@ Class Manager
 		$RT["SQL"]["table"] = [];
 		$RT["SQL_ADD"] = [];
 
-		$C_L = [];
+		$C_T = [];
 		$C_F = [];
 
 		$LIST = [];
@@ -432,7 +496,6 @@ Class Manager
 
 		$RT["CREATE"]["TB"] = $this->fetch_row($CREATE[1])[1];
 
-		$prc = 0;
 		$fpr = 0;
 		$str = "";
 
@@ -444,18 +507,17 @@ Class Manager
 
 				$fpr = 1;
 				$str .= $v."\n";
-
-				if(preg_match("/^\/\*\![0-9]{5} PARTITION /",$v)){$prc = 1;}
 			}
 		}
 
-		$result = $this->request("SELECT `TABLE_TYPE`, `ENGINE` FROM information_schema.TABLES WHERE ".
+		$result = $this->request("SELECT `TABLE_TYPE`, `ENGINE`, `CREATE_OPTIONS` FROM information_schema.TABLES WHERE ".
 			"TABLE_SCHEMA=x'".$nv["_SH"]."' AND TABLE_NAME=x'".$nv["_TB"]."';", "", [], __LINE__, false);
 
 		while( $row = $this->fetch_assoc($result[1]) ){
 
 			$RT["TABLE_TYPE"] = $row["TABLE_TYPE"];
 			$RT["ENGINE"] = $row["ENGINE"];
+			$RT["CREATE_OPTIONS"] = $row["CREATE_OPTIONS"];
 		}
 
 		if($mode === "")
@@ -474,7 +536,7 @@ Class Manager
 			{
 				if($row["CONSTRAINT_TYPE"] !== NULL){
 
-					$C_L[$row["COLUMN_NAME"]][] = $row["CONSTRAINT_TYPE"];
+					$C_T[$row["COLUMN_NAME"]][] = $row["CONSTRAINT_TYPE"];
 				}
 
 				if(trim((string)$row["REFERENCED_COLUMN_NAME"]) !== ""){
@@ -489,7 +551,14 @@ Class Manager
 				}
 				elseif(trim((string)$row["CONSTRAINT_TYPE"]) === "FOREIGN KEY"){
 
-					$RT["SQL_ADD"]["FOREIGN KEY"][] = $row;
+					$RT["SQL_ADD"]["FOREIGN KEY"][$row["CONSTRAINT_NAME"]]["COLUMN_NAME"][] =
+						$row["COLUMN_NAME"];
+					$RT["SQL_ADD"]["FOREIGN KEY"][$row["CONSTRAINT_NAME"]]["REFERENCED_COLUMN_NAME"][] =
+						$row["REFERENCED_COLUMN_NAME"];
+					$RT["SQL_ADD"]["FOREIGN KEY"][$row["CONSTRAINT_NAME"]]["REFERENCED_TABLE_SCHEMA"] =
+						$row["REFERENCED_TABLE_SCHEMA"];
+					$RT["SQL_ADD"]["FOREIGN KEY"][$row["CONSTRAINT_NAME"]]["REFERENCED_TABLE_NAME"] =
+						$row["REFERENCED_TABLE_NAME"];
 
 					$RT["SQL_ADD"]["DROP"]["DROP FOREIGN KEY ".$row["CONSTRAINT_NAME"]] =
 						"ALTER TABLE `".$_TBS."` "."DROP FOREIGN KEY `".$row["CONSTRAINT_NAME"]."`;";
@@ -526,9 +595,9 @@ Class Manager
 
 					$RT["DATA_NEW"][0][$row["COLUMN_NAME"]] = "";
 
-					if(isset($C_L[$row["COLUMN_NAME"]])){
+					if(isset($C_T[$row["COLUMN_NAME"]])){
 
-						$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = $C_L[$row["COLUMN_NAME"]];
+						$RT["FIELDS"][$row["COLUMN_NAME"]]["CONSTRAINT"] = $C_T[$row["COLUMN_NAME"]];
 					}
 					else{
 
@@ -697,7 +766,7 @@ Class Manager
 				}
 				else{
 
-					$RT["FILTER_EX"][$v] = ["","=","<>",">","<","LIKE %...%","NOT LIKE %...%",
+					$RT["FILTER_EX"][$v] = ["","=","<>",">",">=","<","<=","LIKE %...%","NOT LIKE %...%",
 						"REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
 				}
 			}
@@ -756,23 +825,30 @@ Class Manager
 
 			$RT["ACF"] = [
 				'_DELETE_RC_FILTER'=>_ACTION_DELETE,
-				'_EXPORT_SQL_RC_FILTER'=>_ACTION_EXPORT_SQL];
+				''=>'-- '._ACTION_EXPORT,
+				'_VIEW_SQL_RC_FILTER'=>_ACTION_VIEW_SQL,
+				'_SAVE_SQL_RC_FILTER'=>_ACTION_SAVE_SQL];
 
-			$RT["ACS"] = [
-				'_DELETE_RC'=>_ACTION_DELETE,
-				'_UPDATE_RC'=>_ACTION_UPDATE];
-
-			if(($RT["ENGINE"] === "MRG_MyISAM") || ($RT["ENGINE"] === "MRG_MYISAM"))
-			{
-				$RT["SQL"]["table"]["CREATE"] = "USE `".$_SHS."`;\n\n".
-					$RT["CREATE"]["TB"].";";
-
-				$RT["SQL"]["table"]["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
-					"CREATE TABLE `".$_TBS."` LIKE `".$_SHS."`.`".$_TBS."`;";
-			}
-			elseif($RT["TABLE_TYPE"] === "VIEW")
+			if($RT["TABLE_TYPE"] === "VIEW")
 			{
 				$RT["SQL"]["table"]["CREATE"] = $RT["CREATE"]["TB"].";\n\n";
+			}
+			elseif((strtoupper((string)$RT["ENGINE"]) === "FEDERATED") ||
+				(strtoupper((string)$RT["ENGINE"]) === "MRG_MyISAM") ||
+				(strtoupper((string)$RT["ENGINE"]) === "ARCHIVE"))
+			{
+				$RT["SQL"]["table"]["CREATE"] = "USE `".$_SHS."`;\n\n".
+					$RT["CREATE"]["TB"].";\n\n";
+
+				$RT["SQL"]["table"]["CREATE LIKE"] = "USE `".$_SHS."`;\n\n".
+					"CREATE TABLE table_name LIKE `".$_SHS."`.`".$_TBS."`;\n\n".
+					"INSERT INTO table_name SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n";
+
+				$RT["SQL"]["table"]["CREATE AS"] = "USE `".$_SHS."`;\n\n".
+					"CREATE TABLE table_name AS SELECT * FROM `".$_SHS."`.`".$_TBS."`;\n\n";
+
+				$RT["SQL"]["table"]["INSERT INTO"] = "USE `".$_SHS."`;\n\n".
+					"INSERT INTO `".$_TBS."` SELECT * FROM table_name;\n\n";
 			}
 			else
 			{
@@ -786,26 +862,21 @@ Class Manager
 
 				if(isset($RT["SQL_ADD"]["FOREIGN KEY"]))
 				{
-					foreach($RT["SQL_ADD"]["FOREIGN KEY"] as $fk)
+					foreach($RT["SQL_ADD"]["FOREIGN KEY"] as $fk=>$fv)
 					{
 						$referent = $this->request("SELECT UPDATE_RULE, DELETE_RULE ".
 							"FROM information_schema.REFERENTIAL_CONSTRAINTS ".
 							"WHERE CONSTRAINT_SCHEMA = x'".$nv["_SH"]."' ".
 							"AND TABLE_NAME = '".$_TBS."' ".
-							"AND CONSTRAINT_NAME='".$fk["CONSTRAINT_NAME"]."';",
+							"AND CONSTRAINT_NAME='".$fk."';",
 							"", [], __LINE__, false);
 
 						$row_referent = $this->fetch_assoc($referent[1]);
 
-						$FKC .= "ALTER TABLE table_name ADD CONSTRAINT `".
-							$count."fk".microtime()."` FOREIGN KEY (`".
-							$fk["COLUMN_NAME"]."`) REFERENCES `".
-							$fk["REFERENCED_TABLE_SCHEMA"]."`.`".
-							$fk["REFERENCED_TABLE_NAME"]."` (`".
-							$fk["REFERENCED_COLUMN_NAME"]."`) ON UPDATE ".
-							$row_referent["UPDATE_RULE"]." ON DELETE ".$row_referent["DELETE_RULE"].";\n\n";
-
-						$count += 1;
+						$FKC .= "ALTER TABLE table_name ADD FOREIGN KEY (`".implode("`,`",$fv["COLUMN_NAME"])."`) ".
+							"REFERENCES `".$fv["REFERENCED_TABLE_SCHEMA"]."`.`".$fv["REFERENCED_TABLE_NAME"]."` ".
+							"(`".implode("`,`",$fv["REFERENCED_COLUMN_NAME"])."`) ".
+							"ON UPDATE ".$row_referent["UPDATE_RULE"]." ON DELETE ".$row_referent["DELETE_RULE"].";\n\n";
 					}
 				}
 
@@ -818,21 +889,7 @@ Class Manager
 
 				$RT["SQL"]["table"]["INSERT INTO"] = "USE `".$_SHS."`;\n\n".
 					"INSERT INTO `".$_TBS."` SELECT * FROM table_name;\n\n";
-			}
 
-			if($prc === 1){
-
-				$RT["SQL"]["table"]["REMOVE PARTITIONING"] = "ALTER TABLE `".$_TBS."` "."REMOVE PARTITIONING;";
-			}
-
-			if($str !== ""){
-
-				$RT["SQL"]["table"]["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".trim(substr((string)$str, 2)).";";
-			}
-
-			if(($RT["TABLE_TYPE"] === "BASE TABLE") &&
-				(($RT["ENGINE"] !== "MRG_MyISAM") && ($RT["ENGINE"] !== "MRG_MYISAM")))
-			{
 				$f = [];
 				foreach($nv["field_rc"] as $v){
 
@@ -845,10 +902,6 @@ Class Manager
 				$RT["SQL"]["table"]["CREATE VIEW"] =
 					"CREATE VIEW view_name AS SELECT ".$sf." FROM `".$_TBS."`".$RT["SQL_ADD"]["WHERE"].";";
 
-				$RT["SQL"]["table"]["ANALYZE"] = "ANALYZE TABLE `".$_TBS."`;";
-				$RT["SQL"]["table"]["CHECK"] = "CHECK TABLE `".$_TBS."`;";
-				$RT["SQL"]["table"]["OPTIMIZE"] = "OPTIMIZE TABLE `".$_TBS."`;";
-				$RT["SQL"]["table"]["REPAIR"] = "REPAIR TABLE `".$_TBS."`;";
 				$RT["SQL"]["table"]["ADD PRIMARY KEY"] = "ALTER TABLE `".$_TBS."` "."ADD PRIMARY KEY (`...`);";
 				$RT["SQL"]["table"]["ADD CONSTRAINT FOREIGN"] =
 					"ALTER TABLE `".$_TBS."` "."ADD CONSTRAINT `...` \nFOREIGN KEY (`...`) \nREFERENCES `...` (`...`);";
@@ -902,6 +955,18 @@ Class Manager
 			{
 				$RT["SQL"]["table"] = array_merge($RT["SQL"]["table"], $RT["SQL_ADD"]["DROP"]);
 			}
+
+			if($RT["CREATE_OPTIONS"] === "partitioned"){
+
+				$RT["SQL"]["table"]["REMOVE PARTITIONING"] = "ALTER TABLE `".$_TBS."` "."REMOVE PARTITIONING;";
+			}
+
+			if($str !== ""){
+
+				$RT["SQL"]["table"]["ALTER TABLE"] = "ALTER TABLE `".$_TBS."` ".trim(substr((string)$str, 2)).";";
+			}
+
+			$RT["SQL"]["table"]["RENAME TABLE "] = "RENAME TABLE `".$_TBS."` TO table_name;";
 		}
 
 		return $RT;
@@ -1097,86 +1162,7 @@ Class Manager
 			{
 				$row = [];
 
-				if($v["TABLE_TYPE"] !== "VIEW")
-				{
-					if($mode !== "RC"){
-
-						$sT .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
-					}
-
-					if(($v["ENGINE"] !== "MRG_MyISAM") && ($v["ENGINE"] !== "MRG_MYISAM"))
-					{
-						foreach($v["DATA"] as $vr)
-						{
-							$vrex = [];
-
-							foreach($vr as $kf=>$vf)
-							{
-								if((count($nv["field_rc"]) === 0) || (in_array(bin2hex((string)$kf), $nv["field_rc"])))
-								{
-									if(($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED") ||
-										($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED")){
-									}
-									elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["geo"])){
-
-										if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
-
-											$vrex[$kf] = "NULL";
-										}
-										else{
-
-											$vrex[$kf] = "ST_GeomFromText('".$vf."')";
-										}
-									}
-									elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["blob"]) ||
-										in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["binary"])){
-
-										if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
-
-											$vrex[$kf] = "NULL";
-										}
-										else{
-
-											$vrex[$kf] = "x'".$vf."'";
-										}
-									}
-									elseif($v["FIELDS"][$kf]["DATA_TYPE"] === "bit"){
-
-										if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
-
-											$vrex[$kf] = "NULL";
-										}
-										else{
-
-											$vrex[$kf] = "b'".$vf."'";
-										}
-									}
-									else{
-
-										if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
-
-											$vrex[$kf] = "NULL";
-										}
-										else{
-
-											$vrex[$kf] = "'".addslashes($vf)."'";
-										}
-									}
-								}
-							}
-
-							$row[] = "(".implode(",", $vrex).")";
-						}
-
-						if(count($row) !== 0){
-
-							$sT .= PHP_EOL."insert into `".
-								$v["TB"]."` (`".implode("`,`", array_keys($vrex))."`) values".
-								PHP_EOL.implode(",".PHP_EOL, $row).";".PHP_EOL;
-						}
-					}
-				}
-				else
+				if($v["TABLE_TYPE"] === "VIEW")
 				{
 					if($mode === "SH"){
 
@@ -1198,12 +1184,12 @@ Class Manager
 							$RT[] = $row["COLUMN_NAME"];
 						}
 
-						$crt_view_temp .= "-- Temporary view structure for view `".$v["TB"]."`";
+						$crt_view_temp .= PHP_EOL."-- Temporary view structure for view `".$v["TB"]."`";
 
 						$crt_view_temp .= PHP_EOL."CREATE VIEW `".$v["TB"]."` AS SELECT  "."1 AS `".
 							implode("`, 1 AS `", $RT)."`;".PHP_EOL;
 
-						$crt_view .= "/*!50001 DROP VIEW IF EXISTS `".$v["TB"]."`*/;";
+						$crt_view .= PHP_EOL."/*!50001 DROP VIEW IF EXISTS `".$v["TB"]."`*/;";
 
 						$this->request("USE `".$_SHS."`;", "", [], __LINE__);
 
@@ -1217,6 +1203,94 @@ Class Manager
 						}
 					}
 				}
+				elseif(($v["ENGINE"] === "MRG_MyISAM") || ($v["ENGINE"] === "MRG_MYISAM"))
+				{
+					if($mode !== "RC"){
+
+						$sT .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
+					}
+				}
+				elseif($v["ENGINE"] === "FEDERATED")
+				{
+					if($mode !== "RC"){
+
+						$sT .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
+					}
+				}
+				else
+				{
+					if($mode !== "RC"){
+
+						$sT .= PHP_EOL.PHP_EOL.$v["CREATE"]["TB"].";".PHP_EOL;
+					}
+
+					foreach($v["DATA"] as $vr)
+					{
+						$vrex = [];
+
+						foreach($vr as $kf=>$vf)
+						{
+							if((count($nv["field_rc"]) === 0) || (in_array(bin2hex((string)$kf), $nv["field_rc"])))
+							{
+								if(($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED") ||
+									($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED")){}
+								elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["geo"]))
+								{
+									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
+
+										$vrex[$kf] = "NULL";
+									}
+									else{
+
+										$vrex[$kf] = "ST_GeomFromText('".$vf."')";
+									}
+								}
+								elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["blob"]) ||
+										in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["binary"]))
+								{
+									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
+
+										$vrex[$kf] = "NULL";
+									}
+									else{
+
+										$vrex[$kf] = "x'".$vf."'";
+									}
+								}
+								elseif($v["FIELDS"][$kf]["DATA_TYPE"] === "bit")
+								{
+									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
+
+										$vrex[$kf] = "NULL";
+									}
+									else{
+
+										$vrex[$kf] = "b'".$vf."'";
+									}
+								}
+								else
+								{
+									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
+
+										$vrex[$kf] = "NULL";
+									}
+									else{
+
+										$vrex[$kf] = "'".addslashes($vf)."'";
+									}
+								}
+							}
+						}
+
+						$row[] = "(".implode(",", $vrex).")";
+					}
+
+					if(count($row) !== 0){
+
+						$sT .= PHP_EOL."insert into `".$v["TB"]."` (`".implode("`,`", array_keys($vrex))."`) values".
+							PHP_EOL.implode(",".PHP_EOL, $row).";".PHP_EOL;
+					}
+				}
 			}
 
 			if($mode === "SH")
@@ -1227,7 +1301,7 @@ Class Manager
 					"TRIGGERS", "TRIGGER", "SHOW CREATE TRIGGER",
 					"SQL Original Statement", ""))."";
 
-				if($triggers !== ";"){
+				if($triggers !== ""){
 
 					$sT .= PHP_EOL."USE `".$_SHS."`;".PHP_EOL;
 					$sT .= PHP_EOL."/* TRIGGER */".PHP_EOL;
@@ -1238,7 +1312,7 @@ Class Manager
 					"ROUTINES", "ROUTINE", "SHOW CREATE PROCEDURE",
 					"Create Procedure", "ROUTINE_TYPE='PROCEDURE' AND"))."";
 
-				if($procedures !== ";"){
+				if($procedures !== ""){
 
 					$sT .= PHP_EOL."USE `".$_SHS."`;".PHP_EOL;
 					$sT .= PHP_EOL."/* PROCEDURES */".PHP_EOL;
@@ -1249,7 +1323,7 @@ Class Manager
 					"ROUTINES", "ROUTINE", "SHOW CREATE FUNCTION",
 					"Create Function", "ROUTINE_TYPE='FUNCTION' AND"))."";
 
-				if($functions !== ";"){
+				if($functions !== ""){
 
 					$sT .= PHP_EOL."USE `".$_SHS."`;".PHP_EOL;
 					$sT .= PHP_EOL."/* FUNCTIONS */".PHP_EOL;
@@ -1259,7 +1333,7 @@ Class Manager
 				$events = implode("".PHP_EOL.PHP_EOL, $this->get_sub($value, $_SHS,
 					"EVENTS", "EVENT", "SHOW CREATE EVENT", "Create Event", ""))."";
 
-				if($events !== ";"){
+				if($events !== ""){
 
 					$sT .= PHP_EOL."USE `".$_SHS."`;".PHP_EOL;
 					$sT .= PHP_EOL."/* EVENTS */".PHP_EOL;
@@ -1309,6 +1383,12 @@ Class Manager
 		print $res[1];
 
 		die();
+	}
+
+
+	public function res_get($res)
+	{
+		$this->_RS["RESULT"][] = $res[1];
 	}
 
 
@@ -1485,8 +1565,6 @@ Class Manager
 			else{ return; }
 		}
 
-		$this->request("USE `".$_SHS."`;", "", [], __LINE__, false);
-
 		foreach($field as $kh=>$vh)
 		{
 			$k = hex2bin((string)$kh);
@@ -1534,7 +1612,7 @@ Class Manager
 						elseif($action === "_COPY_RC")
 						{
 							$result = $this->request(
-								"SELECT `".$k."` FROM `".$_TBS."` WHERE ".implode(" AND ", $sfK)." LIMIT 1;", "", [], __LINE__);
+								"SELECT `".$k."` FROM `".$_SHS."`.`".$_TBS."` WHERE ".implode(" AND ", $sfK)." LIMIT 1;", "", [], __LINE__);
 
 							if($result[0]){
 
@@ -1713,7 +1791,7 @@ Class Manager
 		{
 			if(count($sfC) !== 0){
 
-				$this->request("INSERT INTO `".$_TBS."` (".implode(", ", $sfC).") VALUES (".implode(", ", $sfV).");",
+				$this->request("INSERT INTO `".$_SHS."`.`".$_TBS."` (".implode(", ", $sfC).") VALUES (".implode(", ", $sfV).");",
 					"", [], __LINE__);
 			}
 		}
@@ -1727,7 +1805,7 @@ Class Manager
 
 			if(count($sfV) !== 0){
 
-				$this->request("UPDATE `".$_TBS."` SET ".implode(", ", $sfV)." ".$WHERE." LIMIT 1;",
+				$this->request("UPDATE `".$_SHS."`.`".$_TBS."` SET ".implode(", ", $sfV)." ".$WHERE." LIMIT 1;",
 					"", [], __LINE__);
 			}
 		}
@@ -1771,9 +1849,7 @@ Class Manager
 				}
 			}
 
-			$this->request("USE `".$_SHS."`;", "", [], __LINE__, false);
-
-			$this->request("DELETE FROM `$_TBS` WHERE ".implode(" AND ", $sfK).";", "", [], __LINE__);
+			$this->request("DELETE FROM `".$_SHS."`.`".$_TBS."` WHERE ".implode(" AND ", $sfK).";", "", [], __LINE__);
 		}
 	}
 
@@ -2069,7 +2145,7 @@ Class Manager
 
 	private function request($sql, $type, $value, $line, $log = true)
 	{
-		if($log){$this->_RS["SQL"][] = $sql;}
+		//if($log){$this->_RS["SQL"][] = $sql;}
 
 		try {
 

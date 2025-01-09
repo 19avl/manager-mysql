@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2024 Andrey Lyskov
+Copyright (c) 2018-2025 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -15,9 +15,9 @@ Class Auth
 	public $CHECK;
 
 	private $exceptions = [
-		"_EXPORT_SQL_SH","_EXPORT_SQL_SH_FILTER",
-		"_EXPORT_SQL_TB","_EXPORT_SQL_TB_FILTER",
-		"_EXPORT_SQL_RC_FILTER"];
+		"_SAVE_SQL_SH","_SAVE_SQL_SH_FILTER",
+		"_SAVE_SQL_TB","_SAVE_SQL_TB_FILTER",
+		"_SAVE_SQL_RC_FILTER"];
 
 	public function __construct($USER, $CHECK)
 	{
