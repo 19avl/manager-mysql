@@ -25,7 +25,7 @@ Class Controller extends Request
 
 		$this->manager = new Manager($LIMIT);
 
-		$this->manager->connect($USER[$this->nv["_US"]]);
+		$this->manager->connect($USER[$this->nv["_US"]]["server"]);
 
 		if($this->manager->connect){
 

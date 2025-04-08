@@ -379,8 +379,7 @@ Class View
 				{
 					$this->tgFr_open();
 
-					$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"],
-						$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], []);
+					$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], $nv["page_rc"], $nv["from_rc"], "", []);
 
 					$this->rc_data_list($RT, $nv, "edit");
 

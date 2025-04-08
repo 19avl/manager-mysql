@@ -75,9 +75,9 @@ var cs =
 		if(document.getElementById("request")){
 
 			var request = document.getElementById("request").value;
-			var pass = document.getElementById("pass").innerHTML;
+			var key = document.getElementById("key").innerHTML;
 
-			return this.sha1(""+encodeURIComponent(request+pass)+this.str_request(oForm));
+			return this.sha1(""+encodeURIComponent(request+key)+this.str_request(oForm));
 		}
 
 		return "";
@@ -269,7 +269,7 @@ var as =
 
 	clr_ps: function(){
 
-		document.getElementById("pass").innerHTML = "";
+		document.getElementById("key").innerHTML = "";
 		document.getElementById("request").value = "";
 	},
 
@@ -283,10 +283,10 @@ var as =
 
 	set_ps: function(us){
 
-		var pass = document.getElementById("en_pass").value;
-		var result = pass.replace(/^\s+/, '').replace(/\s+$/, '');
+		var key = document.getElementById("en_key").value;
+		var result = key.replace(/^\s+/, '').replace(/\s+$/, '');
 
-		document.getElementById("pass").innerHTML = cs.sha1("<?php echo _SESSION; ?>"+result);
+		document.getElementById("key").innerHTML = cs.sha1("<?php echo _SESSION; ?>"+result);
 
 		cs.pst("session=<?php echo _SESSION; ?>"+"&request="+cs.set_rs()+"&usr="+us);
 	}
@@ -888,7 +888,7 @@ body{background: #555555; color: #eee; }
 
 .at_user{color: #f70;}
 
-.at_pass{
+.at_key{
 background: none;
 border: 1px solid #777;
 color: #eee;}
@@ -1142,7 +1142,7 @@ font-size: 14px;
 margin-left: 89px;
 }
 
-.at_pass{
+.at_key{
 width: 211px;
 padding: 7px;
 margin: 3px 3px 2px 0px;
@@ -1717,7 +1717,7 @@ padding: 3px;
 </head>
 <body onload="cs.pst('session=<?php echo _SESSION; ?>');">
 
-<div id='pass' class='' style='display: none;'>...</div>
+<div id='key' class='' style='display: none;'>...</div>
 
 <div id="expl_page" class="page">
 

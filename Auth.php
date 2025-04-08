@@ -31,7 +31,7 @@ Class Auth
 	{
 		if(!isset($_POST["usr"]))
 		{
-			$this->sess();			
+			$this->sess();
 
 			session_destroy();
 			unset($_POST["session"]);
@@ -51,7 +51,7 @@ Class Auth
 			}
 			else
 			{
-				$this->user_form(_AT_MS, "", "");
+				$this->user_form(_AT_MS_US, "", "");
 
 				die();
 			}
@@ -61,7 +61,12 @@ Class Auth
 
 	public function AT($USER)
 	{
-		$pass = sha1($_POST["session"].$USER[$_POST["usr"]]["pass"]);
+		if(!isset($USER[$_POST["usr"]]["key"]) || ($USER[$_POST["usr"]]["key"] === "")){
+
+			print "<input type='hidden' id='request' class='' value=''/>";
+
+			return true;
+		}
 
 		$this->sess();
 
@@ -74,14 +79,7 @@ Class Auth
 			$this->session_key = "";
 		}
 
-		$update = false;
-
-		if(isset($_POST["action"]) && in_array($_POST["action"], $this->exceptions, true)){
-
-			$update = true;
-		}
-
-		if(!$update)
+		if(!isset($_POST["action"]) || !in_array($_POST["action"], $this->exceptions, true))
 		{
 			$_SESSION["request"] = bin2hex(random_bytes(15));
 
@@ -89,32 +87,26 @@ Class Auth
 		}
 
 		if(!isset($_POST['request']) || ($_POST['request'] === '') ||
-			!isset($_SESSION["user"]) || ($_SESSION["user"] !== md5($_POST["usr"])))
+			!isset($_SESSION["alias"]) || ($_SESSION["alias"] !== md5($_POST["usr"])))
 		{
-			$_SESSION["user"] = md5($_POST["usr"]);
+			$_SESSION["alias"] = md5($_POST["usr"]);
 
 			$this->authorize_form("&nbsp;", $_POST["usr"]);
-
 
 			return false;
 		}
 		else
 		{
-			$error = false;
-
-			if($_POST['request'] === sha1($this->session_key.$pass.$this->str_request()))
+			if($_POST['request'] === sha1($this->session_key.sha1($_POST["session"].$USER[$_POST["usr"]]["key"]).$this->str_request()))
 			{
-				$error = true;
+				return true;
 			}
-
-			if(!$error)
+			else
 			{
-				$this->authorize_form(_AT_MS, $_POST["usr"]);
+				$this->authorize_form(_AT_MS_PS, $_POST["usr"]);
 
 				return false;
 			}
-
-			return true;
 		}
 	}
 
@@ -128,17 +120,17 @@ Class Auth
 		register_shutdown_function('session_write_close');
 
 		session_start();
-		session_regenerate_id(true);	
+		session_regenerate_id(true);
 	}
 
 	public function user_form($ms)
 	{
-		print "<div class='at_app'>"._AT_APP.": "._AT_USER."</div>";
+		print "<div class='at_app'>"._AT_APP.": "._AT_ALIAS."</div>";
 		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='at_message' >".$ms."</div>";
 		print "<form method='post'>";
 
-		print "<input type='input' id='en_user' name='at_user' class='at_pass' value=''
+		print "<input type='input' id='en_user' name='at_user' class='at_key' value=''
 			onkeydown='as.in_stu();' autocomplete='off' autofocus/>";
 
 		print "<br><input type='button' name='' class='at_btn' value='OK' onclick='as.set_usr();'/><br/>";
@@ -148,12 +140,12 @@ Class Auth
 
 	public function authorize_form($ms, $_US)
 	{
-		print "<div class='at_app'>"._AT_APP.": "._AT_PASS."</div>";
+		print "<div class='at_app'>"._AT_APP.": "._AT_KEY."</div>";
 		print "<div class='separator11'></div>";
 		print "<div id='ms_in' class='at_message' >".$ms."</div>";
 		print "<form method='post'>";
 
-		print "<input type='password' id='en_pass' name='' class='at_pass' value=''
+		print "<input type='password' id='en_key' name='' class='at_key' value=''
 			onkeydown='as.in_stp(\"".$_US."\");' autocomplete='off' autofocus/>";
 
 		print "<br><input type='button' name='' class='at_btn' value='OK' onclick='as.set_ps(\"".$_US."\");'/><br/>";

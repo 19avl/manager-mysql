@@ -3,14 +3,15 @@
 defined("_EXEC") or die();
 
 define("_AT_APP", "Manager for MYSQL");
-define("_AT_USER", "User");
-define("_AT_PASS", "Password");
-define("_AT_MS", "Connection error");
+define("_AT_ALIAS", "Alias");
+define("_AT_KEY", "Key");
+define("_AT_MS_US", "The user is not registered");
+define("_AT_MS_PS", "The key you entered is incorrect");
 
 define("_MESSAGE_SUPPORT", "Application does not support this browser");
-define("_MESSAGE_PL", "Module PHP mysqli is not installed");
+define("_MESSAGE_PL_MYSQLI", "PHP extensions mysqli is not installed");
 define("_MESSAGE_ERROR", "ERROR");
-define("_MESSAGE_CONNECTION", "Connection error");
+define("_MESSAGE_CONNECTION", "Cannot log in to the MySQL server");
 define("_MESSAGE_UNIQUE_COLUMN", "Table does not contain a unique column. Edit, Delete features are not available.");
 define("_MESSAGE_SH_CHECK", "No schema selected");
 define("_MESSAGE_TB_CHECK", "No table selected");

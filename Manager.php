@@ -2011,12 +2011,10 @@ Class Manager
 	{
 		$this->dbc = mysqli_init();
 
-		if((isset($SERVER["ssl-key"]) && ($SERVER["ssl-key"] !== "")) &&
-			(isset($SERVER["ssl-cert"]) && ($SERVER["ssl-cert"] !== "")) &&
-			(isset($SERVER["ssl-ca"]) && ($SERVER["ssl-ca"] !== "")))
-		{
-			$this->dbc->ssl_set($SERVER["ssl-key"], $SERVER["ssl-cert"], $SERVER["ssl-ca"], NULL, NULL);
-		}
+		if(!isset($SERVER["pass"])){
+
+			$SERVER["pass"] = "";
+		}	
 
 		if(!isset($SERVER["port"]) || ($SERVER["port"] === "")){
 
@@ -2026,6 +2024,13 @@ Class Manager
 		if(!isset($SERVER["socket"]) || ($SERVER["socket"] === "")){
 
 			$SERVER["socket"] = NULL;
+		}
+
+		if((isset($SERVER["ssl-key"]) && ($SERVER["ssl-key"] !== "")) &&
+			(isset($SERVER["ssl-cert"]) && ($SERVER["ssl-cert"] !== "")) &&
+			(isset($SERVER["ssl-ca"]) && ($SERVER["ssl-ca"] !== "")))
+		{
+			$this->dbc->ssl_set($SERVER["ssl-key"], $SERVER["ssl-cert"], $SERVER["ssl-ca"], NULL, NULL);
 		}
 
 		$CLIENT_SSL = 0;
@@ -2096,8 +2101,9 @@ Class Manager
 		if(!extension_loaded("mysqli"))
 		{
 			$this->connect = true;
-			$this->_RS["MESSAGE"]["connect"] = "Module PHP mysqli is not installed";
 
+			$this->_RS["MESSAGE"]["connect"] = _MESSAGE_PL_MYSQLI;
+			
 			return;
 		}
 
@@ -2105,8 +2111,7 @@ Class Manager
 		{
 			$this->connect = true;
 
-			$this->_RS["MESSAGE"]["connect"] =
-				_MESSAGE_CONNECTION.": ".$SERVER["user"]."@".$SERVER["host"].":".$SERVER["port"];
+			$this->_RS["MESSAGE"]["connect"] =_MESSAGE_CONNECTION;			
 		}
 	}
 

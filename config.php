@@ -22,36 +22,49 @@ $LIMIT = ["15", "50", "100", "200"];
 
 $USER = [
 
-	"user"=>[
-		"host"=>"localhost", "port"=>3306, "user"=>"root", "pass"=>"root",
+	"user"=>[ // Alias
 
-		"variables"=>[
-			"names" => "utf8mb4",
-			"sql_mode" => "TRADITIONAL",	
-			//"sql_mode" => "STRICT_ALL_TABLES", 
-			//"GLOBAL general_log" => 0,
-			//"GLOBAL log_output" => "TABLE",
-		],
+		"key"=>"key",
 
-		"socket"=>"",
-		"require_secure_transport"=>false,
-		"ssl-key"=>"",
-		"ssl-cert"=>"",
-		"ssl-ca"=>"",						
+		"server"=>[
+			"host"=>"localhost", "port"=>3306, "user"=>"root", "pass"=>"root",
+
+			"variables"=>[
+				"names" => "utf8mb4",
+				"sql_mode" => "TRADITIONAL",	
+				//"sql_mode" => "STRICT_ALL_TABLES", 
+				//"GLOBAL general_log" => 0,
+				//"GLOBAL log_output" => "TABLE",
+			],
+
+			"socket"=>"",
+			"require_secure_transport"=>false,
+			"ssl-key"=>"",
+			"ssl-cert"=>"",
+			"ssl-ca"=>"",	
+		]			
 	],
 
-	"root@127.0.0.1"=>["host"=>"127.0.0.1", "port"=>3306, "user"=>"root", "pass"=>"root"],
+	"root@127.0.0.1"=>[
+	
+		"server"=>["host"=>"127.0.0.1", "port"=>3306, "user"=>"root", "pass"=>"root"]],
 
 	"root."=>[
-		"host"=>".", "user"=>"root", "pass"=>"", 		
-		"socket"=>"",	
+	
+		"server"=>[
+			"host"=>".", "user"=>"root", "pass"=>"", 		
+			"socket"=>"",
+		]			
 	],
 
-	"root@localhost:33011"=>[
-		"host"=>"localhost", "port"=>33011, "user"=>"root", "pass"=>"",
-		"variables"=>[
-			"names" => "utf8mb4"
-		],		
+	"root@localhost:3307"=>[
+	
+		"server"=>[
+			"host"=>"localhost", "port"=>3307, "user"=>"root", "pass"=>"root",
+			"variables"=>[
+				"names" => "utf8mb4"
+			],	
+		]			
 	],
 ];
 
@@ -74,7 +87,6 @@ $SQL["userscripts"] = [
 $SQL["functions"] = [
 	"AES_ENCRYPT" => ["'str'", "'key'"],
 	"AES_DECRYPT" => ["'crypt_str'", "'key'"],
-	"CONCAT" => ["'str1'", "'str2'", "'...'"],
 	"REPLACE" => ["'str'", "'from_str'", "'to_str'"],
 	"LOWER" => ["'str'"],
 	"UPPER" => ["'str'"],
