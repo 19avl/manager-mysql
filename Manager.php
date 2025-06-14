@@ -195,7 +195,7 @@ Class Manager
 		}
 
 		$result = $this->request("SELECT ".implode(", s.", $RT["FIELD_SE_FILTER"]).", ".
-			"(SELECT COUNT(*) FROM information_schema.TABLES WHERE `TABLE_SCHEMA`=s.SCHEMA_NAME) as TABLES ".
+			"(SELECT COUNT(*) FROM information_schema.TABLES WHERE `TABLE_SCHEMA`=CAST(s.SCHEMA_NAME AS BINARY)) as TABLES ".
 			"FROM information_schema.SCHEMATA s ".$WHERE." ORDER BY ".
 			($RT["FIELD_SE_ORDER"][$nv["order_rc"]])." ".$nv["order_desc_rc"].
 			" LIMIT ".$nv["from_rc"].", ".$nv["page_rc"].";", "", [], __LINE__);
@@ -567,7 +567,7 @@ Class Manager
 		}
 
 		$result = $this->request("SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, COLUMN_KEY, ".
-			"COLUMN_DEFAULT, IS_NULLABLE, EXTRA, NUMERIC_PRECISION ".
+			"COLUMN_DEFAULT, IS_NULLABLE, EXTRA, NUMERIC_PRECISION, GENERATION_EXPRESSION ".
 			"FROM information_schema.columns WHERE TABLE_SCHEMA=x'".$nv["_SH"]."' ".
 			"AND table_name = x'".$nv["_TB"]."' ORDER BY ORDINAL_POSITION;", "", [], __LINE__, false);
 
@@ -644,6 +644,22 @@ Class Manager
 							$RT["FIELDS"][$row["COLUMN_NAME"]]["FOREIGN"] = true;
 						}
 					}
+
+					$RT["FIELDS"][$row["COLUMN_NAME"]]["GENERATED"] = "";
+					if(($row["GENERATION_EXPRESSION"] !== "") && 
+						(($row["EXTRA"] === "VIRTUAL GENERATED") ||
+						($row["EXTRA"] === "VIRTUAL GENERATED INVISIBLE") ||					
+						($row["EXTRA"] === "STORED GENERATED") ||
+						($row["EXTRA"] === "STORED GENERATED INVISIBLE")))
+					{
+						$RT["FIELDS"][$row["COLUMN_NAME"]]["GENERATED"] = $row["GENERATION_EXPRESSION"];
+					}
+
+					if(($row["EXTRA"] === "auto_increment") || ($RT["FIELDS"][$row["COLUMN_NAME"]]["GENERATED"] !== ""))
+					{
+						$RT["FIELDS"][$row["COLUMN_NAME"]]["DISABLED"] = false;
+					}
+					else{$RT["FIELDS"][$row["COLUMN_NAME"]]["DISABLED"] = true;}					
 				}
 
 				if($row["COLUMN_KEY"] === "PRI"){
@@ -1785,28 +1801,24 @@ Class Manager
 				}
 				else{ return; }
 			}
+			else
+			{
+				if($action === "_UPDATE_RC"){
+
+					$sfV[] = "`".$k."`=DEFAULT ";
+				}				
+			}
 		}
 
 		if(($action === "_COPY_RC") || ($action === "_INSERT_RC"))
 		{
-			if(count($sfC) !== 0){
-
-				$this->request("INSERT INTO `".$_SHS."`.`".$_TBS."` (".implode(", ", $sfC).") VALUES (".implode(", ", $sfV).");",
-					"", [], __LINE__);
-			}
+			$this->request("INSERT INTO `".$_SHS."`.`".$_TBS."` (".implode(", ", $sfC).") VALUES (".implode(", ", $sfV).");", "", [], __LINE__);
 		}
 		else
 		{
-			$WHERE = "";
-			if(count($sfK) !== 0){
-
-				$WHERE = "WHERE ".implode(" AND ", $sfK);
-			}
-
-			if(count($sfV) !== 0){
-
-				$this->request("UPDATE `".$_SHS."`.`".$_TBS."` SET ".implode(", ", $sfV)." ".$WHERE." LIMIT 1;",
-					"", [], __LINE__);
+			if((count($sfV) !== 0) && (count($sfK) !== 0))
+			{
+				$this->request("UPDATE `".$_SHS."`.`".$_TBS."` SET ".implode(", ", $sfV)." WHERE ".implode(" AND ", $sfK)." LIMIT 1;", "", [], __LINE__);
 			}
 		}
 

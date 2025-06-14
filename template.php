@@ -1021,13 +1021,11 @@ background: #333;
 outline: none;
 }
 
-.dt_btn,
-.dt_btn_text{
+.dt_btn{
 color: #eee;
 background: #333;
 border: 1px solid #333;
 }
-
 
 .dt_slc_list{
 background:#333;
@@ -1384,14 +1382,6 @@ height: 33px;
 padding: 5px;
 margin: 2px 2px 2px 0px;
 cursor: pointer;
-}
-
-.dt_btn_text{
-width: 435px;
-height: 33px;
-padding: 5px 5px 5px 11px;
-margin: 2px 0px 2px 0px;
-text-align: left;
 }
 
 .dt_wr{

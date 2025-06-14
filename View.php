@@ -669,11 +669,18 @@ Class View
 				$this->tgFr_input("hidden", "key[".$uk."]", "", "", bin2hex((string)$v), "", "");
 			}
 
+
 			$constraint = "";
+$type_constraint = "";				
 			foreach($RT["FIELDS"][$k]["CONSTRAINT"] as $vc){
 
 				$constraint .= $vc[0];
+$type_constraint .= "".$vc."\n";				
 			}
+
+$title_def = " title='".$type_constraint."'";
+
+
 
 			$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 
@@ -683,7 +690,8 @@ Class View
 
 			if($flag !== "disabled"){ $pac = true; }
 
-			if(((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"] !== "") || ($RT["FIELDS"][$k]["IS_NULLABLE"] === "YES"))
+			if(((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"] !== "") || ($RT["FIELDS"][$k]["IS_NULLABLE"] === "YES") && 
+				($RT["FIELDS"][$k]["DISABLED"]))					
 			{
 				$this->tgFr_input("checkbox", "list_rw[]", "", "dt_check", $uk, "", "checked");
 			}
@@ -697,7 +705,7 @@ Class View
 			$this->tg_open("td", "", "", "", "");
 
 
-			$this->tgFr_input("text", "", "", "dt_in_key", $constraint, "", "disabled");
+			$this->tgFr_input("text", "", "", "dt_in_key", $constraint, "", "disabled ".$title_def);
 
 			$this->tgFr_input("text", "", "", "dt_in_name", $this->html("$k"), "", "disabled");
 
@@ -710,9 +718,7 @@ Class View
 
 			$this->tg_open("div", "", "", "display:inline-block;", "");
 
-			if(($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") ||
-				($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
-				($RT["FIELDS"][$k]["FOREIGN"]))
+			if(($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") || ($RT["FIELDS"][$k]["DATA_TYPE"] === "set") || ($RT["FIELDS"][$k]["FOREIGN"]))
 			{
 				$this->tg_open("div", "com".$count.$count_fl.$uk.$mod, "", "display: none;", "");
 
@@ -796,9 +802,9 @@ Class View
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") ||
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "bit") ||
-				($RT["FIELDS"][$k]["EXTRA"] === "auto_increment") ||
+				(!$RT["FIELDS"][$k]["DISABLED"]) || 		
 				($RT["FIELDS"][$k]["COLUMN_DEFAULT"] === "CURRENT_TIMESTAMP") ||
-				in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"]))
+				in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"]))					
 			{
 				$this->tgFr_input("text", "function[".$uk."]", "function_".$count.$count_fl.$uk.$mod,
 					"dt_in_function_disabled", "", "", "disabled");
@@ -819,7 +825,18 @@ Class View
 
 			$data_flag = $flag;
 
-			$type_placeholder = $this->html(trim((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"]));
+			if($RT["FIELDS"][$k]["EXTRA"] === "auto_increment")			
+			{
+				$type_placeholder = " placeholder='auto_increment'";			
+			}		
+			elseif($RT["FIELDS"][$k]["GENERATED"] !== "")			
+			{
+				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["GENERATED"]))."'";			
+			}
+			else
+			{			
+				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"]))."'";			
+			}
 
 			if(gettype ( $v ) === "NULL"){
 
@@ -830,9 +847,9 @@ Class View
 			{
 				$v = hex2bin((string)$v);
 
-				if($flag === "disabled")
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
 				{
-					$this->tgFr_input("button", "", "", "dt_btn_text", "&nbsp;", "");
+					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);						
 				}
 				else
 				{
@@ -897,9 +914,11 @@ Class View
 			}
 			elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"]) || ($RT["FIELDS"][$k]["DATA_TYPE"] === "json"))
 			{
-				if($flag === "disabled")
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
 				{
-					$this->tgFr_input("button", "", "", "dt_btn_text", "&nbsp;", "");
+					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);		
+
+					$data_flag = "disabled";					
 				}
 				else
 				{
@@ -965,8 +984,8 @@ Class View
 			{
 				$class = "dt_in_value";
 
-				if($flag === "disabled"){
-
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
 				}
@@ -980,24 +999,20 @@ Class View
 			{
 				$class = "dt_in_value";
 
-				if($flag === "disabled"){
-
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
 				}
 
-				$this->tgFr_input("text", "field[".$uk."]", "", $class, $this->html($v), "", $data_flag);
+				$this->tgFr_input("text", "field[".$uk."]", "", $class, $this->html($v), "", $data_flag." ".$type_placeholder);
 			}
 			else
 			{
 				$class = "dt_in_value";
 
-				if(($RT["FIELDS"][$k]["EXTRA"] === "auto_increment") ||
-					($RT["FIELDS"][$k]["EXTRA"] === "VIRTUAL") ||
-					($RT["FIELDS"][$k]["EXTRA"] === "VIRTUAL GENERATED") ||
-					($RT["FIELDS"][$k]["EXTRA"] === "STORED GENERATED") ||
-					($RT["FIELDS"][$k]["COLUMN_DEFAULT"] === "CURRENT_TIMESTAMP")){
-
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
 				}
@@ -1006,12 +1021,6 @@ Class View
 					in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"])){
 
 					$data_flag = "readonly";
-				}
-
-				if($flag === "disabled"){
-
-					$class = "dt_in_value_disabled";
-					$data_flag = "disabled";
 				}
 
 				$this->tgFr_input("text", "field[".$uk."]", "text".$count.$count_fl.$uk.$mod, $class, $this->html($v),

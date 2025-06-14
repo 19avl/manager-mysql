@@ -24,10 +24,11 @@ $USER = [
 
 	"user"=>[ // Alias
 
-		"key"=>"key",
+		//"key"=>"key",
 
 		"server"=>[
 			"host"=>"localhost", "port"=>3306, "user"=>"root", "pass"=>"root",
+			"flags"=>0,
 
 			"variables"=>[
 				"names" => "utf8mb4",
@@ -38,7 +39,7 @@ $USER = [
 			],
 
 			"socket"=>"",
-			"require_secure_transport"=>false,
+
 			"ssl-key"=>"",
 			"ssl-cert"=>"",
 			"ssl-ca"=>"",	
