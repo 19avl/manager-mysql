@@ -59,8 +59,7 @@ Class Request
 			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_rc"]))) ?
 				$this->set_value($_POST["order_rc"]) : "0";
 
-		$this->nv["order_desc_rc"] = (isset($_POST["order_desc_rc"]) &&
-			($_POST["order_desc_rc"] === "desc")) ? "DESC" : "";
+		$this->nv["order_desc_rc"] = (isset($_POST["order_desc_rc"]) && ($_POST["order_desc_rc"] === "DESC")) ? "DESC" : "";
 
 		$this->nv["field_rc"] = (isset($_POST["field_rc"])) ? $this->set_value_list($_POST["field_rc"]) : [];
 
@@ -77,10 +76,9 @@ Class Request
 			$this->set_value_list($_POST["fl_operator_rc"]); }
 
 		$this->nv["fl_and_rc"] = [];
-		if(isset($_POST["fl_and_rc"])){ $this->nv["fl_and_rc"] =
-			$this->set_value_list($_POST["fl_and_rc"]); }
+		if(isset($_POST["fl_and_rc"])){ $this->nv["fl_and_rc"] = $this->set_value_list($_POST["fl_and_rc"]); }
 
-		$this->nv["fl_count_rc"] = (isset($_POST["fl_count_rc"])) ? $this->set_value($_POST["fl_count_rc"]) : "2";
+		$this->nv["fl_count_rc"] = (isset($_POST["fl_count_rc"])) ? $this->set_value($_POST["fl_count_rc"]) : _WHERE_CN_DEF;		
 
 		$this->nv["view_rc"] = (isset($_POST["view_rc"])) ? $this->set_value($_POST["view_rc"]) : "";
 

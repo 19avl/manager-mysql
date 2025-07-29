@@ -15,7 +15,6 @@ Class View
 
 	private $bookmark;
 	private $bookmark_view;
-	private $profile;
 	private $server_view;
 	private $ac_con;
 	private $ac_ex;
@@ -42,27 +41,6 @@ Class View
 		$this->tgFr_input("button", "", "", "altDl_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.view_va('id_alt_message', 'none');\"");
 
 		$this->tg("div", "id_alt_message_text", "altDl_text", "", "", "");
-
-		$this->tg_close("div");
-	}
-
-
-	private function dl_confirm($id)
-	{
-		$this->tg_open("div", $id, "confirmDl", "display: none;", "");
-
-		$this->tg_open("div", "", "", "", "");
-
-		$this->tg("div", "", "confirmDl_title", "", _NOTE_CONFIRM, "");
-
-		$this->tg("div", $id."_text", "confirmDl_text", "", "", "");
-
-		$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CONFIRM_YES,
-			"onclick=\"ms.RF('', '', '', this.form, 0); ms.view_va('".$id."', 'none');\"");
-
-		$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CONFIRM_NO, "onclick=\"ms.view_va('".$id."', 'none'); \"");
-
-		$this->tg_close("div");
 
 		$this->tg_close("div");
 	}
@@ -116,7 +94,7 @@ Class View
 				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CONFIRM_UNSET,
 					"onclick=\"ms.unset_rcdl_function('rcDl_buf_id', 'text_id');\"");
 
-				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.close_rcdl();\"");
+				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CLOSE, "onclick=\"ms.close_rcdl();\"");
 
 			$this->tg_close("div");
 
@@ -167,8 +145,7 @@ Class View
 
 		$this->tgFr_open("nav_main_form", "reload");
 
-		$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"],
-			$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+		$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], $nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
 
 		$this->filter_set($nv);
 
@@ -185,12 +162,12 @@ Class View
 
 		$style_wr_script = "btn_nav";
 		if($display == "sql"){
-	
-			$style_wr_script = "btn_nav_focus";	
+
+			$style_wr_script = "btn_nav_focus";
 		}
-	
+
 		$this->tgFr_input("button", "", "nav_id_wr_script", $style_wr_script, _NOTE_SQL,
-			"onclick=\"ms.view_wr('id_wr_script',[''], this);\"");			
+			"onclick=\"ms.view_wr('id_wr_script',[''], this);\"");
 
 		$this->tgFr_input("hidden", "session", "", "", "", "", "");
 
@@ -290,13 +267,28 @@ Class View
 		$this->tg("div", "", "separator0", "", "", "");
 
 		$this->tgFr_input("button", "", "", "sc_btn", _ACTION_RUN,
-			"onclick=\"ms.AV('_RUN_SQL', '', '".$nv["_TB"]."', this.form, 0, 'script_text_sql', '"._MESSAGE_NOT_VALUE."');\"");
+			"onclick=\"ms.AV('_RUN_SQL', '', '".$nv["_TB"]."', this.form, 0, 'script_text_sql');\"");
 
 		$this->tgFr_close();
 
 		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tg_close("div");
+	}
+
+
+	public function rc_data_async($RT, $nv, $mod)
+	{
+		$this->tg("div", "", "separator11", "", "", "");
+
+		$count = 0;
+
+		foreach($RT["DATA"] as $value)
+		{
+			$count += 1;
+
+			$this->rc_data($RT, $value, $count, $nv, $mod);
+		}
 	}
 
 
@@ -334,7 +326,7 @@ Class View
 			"onclick=\"ms.view_va('id_alt_message', 'none');\"", "");
 
 		$this->tgFr_input("button", "", "", "dt_btn_search", _ACTION_FIND,
-			"onclick=\"ms.AV('_FIND_TB', '', '".$nv["_TB"]."', this.form, 0, 'search_tb', '"._MESSAGE_NOT_VALUE."');\"");
+			"onclick=\"ms.AV('_FIND_TB', '', '".$nv["_TB"]."', this.form, 0, 'search_tb');\"");
 
 		$this->tg_close("div");
 
@@ -348,51 +340,23 @@ Class View
 
 		if($RT["COUNT"] !== 0)
 		{
-			if($nv["view_rc"] === "table")
+			if(($nv["_SH"] === "") || ($nv["_TB"] === ""))
 			{
 				$this->tgFr_open();
 
-				$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"],
-					$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"]);
+				$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], $nv["page_rc"], $nv["from_rc"], "", []);
 
-				$this->filter_set($nv);
-
-				$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-					"onclick=\"ms.RF('VIEW', '".$nv["_SH"]."', '".$nv["_TB"]."', this.form, 0);\"", "title='"._NOTE_CLOSE."'");
+				$this->rc_data_list($RT, $nv, "edit");
 
 				$this->tgFr_close();
 
 				$this->tg("div", "", "separator11", "", "", "");
-
-				$count = 0;
-
-				foreach($RT["DATA"] as $value)
-				{
-					$count += 1;
-
-					$this->rc_data($RT, $value, $count, $nv, "edit");
-				}
 			}
 			else
 			{
-				if(($nv["_SH"] === "") || ($nv["_TB"] === ""))
-				{
-					$this->tgFr_open();
+				$this->rc_data_list($RT, $nv, "edit");
 
-					$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], $nv["page_rc"], $nv["from_rc"], "", []);
-
-					$this->rc_data_list($RT, $nv, "edit");
-
-					$this->tgFr_close();
-
-					$this->tg("div", "", "separator11", "", "", "");
-				}
-				else
-				{
-					$this->rc_data_list($RT, $nv, "edit");
-
-					$this->tg("div", "", "separator11", "", "", "");
-				}
+				$this->tg("div", "", "separator11", "", "", "");
 			}
 		}
 
@@ -414,13 +378,13 @@ Class View
 
 						$this->tgFr_input("checkbox", "totalH", "", "dt_check", "checkbox",
 							"onclick=\"ms.set_list_ch_fr(this.form,'list_rc[]',this.checked);
-							ms.view_va('id_alt_message', 'none');\"", "");
+							ms.view_sl(this.form,'list_rc[]','id_dt_slc')\"", "");
 
 					$this->tg_close("td");
 
 					$this->tg_open("td", "", "", "", "");
 
-						$this->tgFr_input("button", "", "", "dt_btn_list", "&#160;", "");
+						$this->tgFr_input("button", "", "", "dt_btn_em", "&nbsp;", "");
 
 					$this->tg_close("td");
 				}
@@ -428,23 +392,12 @@ Class View
 				{
 					$this->tg_open("td", "", "", "", "");
 
-						$this->tgFr_open();
-
-						$this->form_set($nv["_US"], $nv["_SV"], "", "",
-							$nv["page_rc"], $nv["from_rc"], $nv["order_rc"], $nv["field_rc"], "table");
-
-						$this->filter_set($nv);
-
-						$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-							"onclick=\"ms.RF('VIEW', '".$nv["_SH"]."', '".$nv["_TB"]."', this.form, 0);\"",
-							"title='"._NOTE_OPEN."'");
-
-						$this->tgFr_close();
+					$this->tgFr_input("button", "", "", "dt_btn_em", "&nbsp;", "");
 
 					$this->tg_close("td");
 				}
 
-				foreach($RT["DATA"][0] as $k=>$value)
+				foreach(array_values($RT["DATA"])[0] as $k=>$value)
 				{
 					$is_extra = $RT["FIELDS"][$k]["EXTRA"];
 
@@ -471,7 +424,7 @@ Class View
 
 						$this->tgFr_input("text", "", "", "dt_in_label_list", $constraint.$DATA_TYPE.$this->html("$k"),
 							"", "title='".$this->html("$k")." ".$is_extra."' disabled");
-							
+
 						$this->tg_close("td");
 					}
 				}
@@ -479,6 +432,8 @@ Class View
 			$this->tg_close("tr");
 
 		$this->tg_close("table");
+
+		$from_rc = $nv["from_rc"];
 
 		$count = 0;
 
@@ -498,7 +453,7 @@ Class View
 
 						$name = bin2hex($value[$RT["SCHEMA_NAME_SL"]]);
 
-						$this->tgFr_input("checkbox", "list_rc[]", "", "dt_check", $name, "onclick=\"ms.view_va('id_alt_message', 'none');\"", "");
+						$this->tgFr_input("checkbox", "list_rc[]", "", "dt_check", $name, "onclick=\"ms.view_sl(this.form,'list_rc[]','id_dt_slc'); \"", "");
 
 						$this->tg_close("td");
 					}
@@ -508,7 +463,7 @@ Class View
 
 						$name = bin2hex($value[$RT["TABLE_NAME"]]);
 
-						$this->tgFr_input("checkbox", "list_rc[]", "", "dt_check", $name, "onclick=\"ms.view_va('id_alt_message', 'none');\"", "");
+						$this->tgFr_input("checkbox", "list_rc[]", "", "dt_check", $name, "onclick=\"ms.view_sl(this.form,'list_rc[]','id_dt_slc')\"", "");
 
 						$this->tg_close("td");
 					}
@@ -519,7 +474,7 @@ Class View
 
 						$name = bin2hex($value[$RT["SCHEMA_NAME"]]);
 
-						$this->tgFr_input("button", "", "", "dt_btn_list", "...", 
+						$this->tgFr_input("button", "", "", "dt_btn_list", "...",
 							"onclick=\"ms.RF('VIEW', '".$name."', '', this.form, 0);\"",
 							"title='"._NOTE_OPEN."'");
 
@@ -541,10 +496,21 @@ Class View
 					{
 						$this->tg_open("td", "", "", "", "");
 
-						$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-							"onclick=\"ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_cn');
-							ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc_list');\"",
-							"title='"._NOTE_OPEN."'");
+						$this->tgFr_open();
+
+							$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], "1", $from_rc, $nv["order_rc"], $nv["field_rc"], "1");
+
+							$this->filter_set($nv);
+
+							$this->tgFr_input("button", "", "", "dt_btn_list", "...",
+								"onclick=\"ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_cn');
+								ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc_list');
+								ms.RF('VIEW_DATA', '', '', this.form, 0, '".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc');\"",
+								"title='"._NOTE_OPEN."'");
+
+						$from_rc = $from_rc+1;
+
+						$this->tgFr_close();
 
 						$this->tg_close("td");
 					}
@@ -571,18 +537,14 @@ Class View
 						{
 							$this->tg_open("td", "", "", "", "");
 
-							if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["blob"])){
+							if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["blob"]) || in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"])){
 
-								$this->tgFr_input("text", "", "", $class, $this->get_size(hex2bin((string)$v)), "", "readonly");
+								$this->tgFr_input("text", "", "", $class, $this->get_size((string)$v), "", "readonly");
 							}
-							elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"])){
 
-								$this->tgFr_input("text", "", "", $class, $this->get_size($v), "", "readonly");
-							}
 							else{
 
-								$this->tgFr_input("text", "", "", $class, $this->html($v), "", 
-									"title='".$this->html($v)."' readonly");							
+								$this->tgFr_input("text", "", "", $class, $this->html($v), "", "title='".$this->html($v)."' readonly");
 							}
 
 							$this->tg_close("td");
@@ -599,38 +561,33 @@ Class View
 			{
 				$this->tg_open("div", $nv["_SH"]." - ".$nv["_TB"]." - ".$count."_cn", "", "display: none;", "");
 
-				$this->tg("div", "", "separator11", "", "", "");
+					$this->tgFr_input("button", "", "", "dt_btn_list", "...",
+						"onclick=\"ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_cn');
+						ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc_list');\"",
+						"title='"._NOTE_CLOSE."'");
 
-				$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-					"onclick=\"ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_cn');
-					ms.view_vb('".$nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc_list');\"", "title='"._NOTE_CLOSE."'");
-
-				$this->tg("div", "", "separator11", "", "", "");
-
-				$this->tg("div", $nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc", "", "", "", "");
-
-				$this->rc_data($RT, $value, $count, $nv, "edit");
-
-				$this->tg("div", "", "separator11", "", "", "");
+					$this->tg("div", $nv["_SH"]." - ".$nv["_TB"]." - ".$count."_rc", "", "", "", "");
 
 				$this->tg_close("div");
 			}
 		}
-
-		$this->dl_confirm("id_cn_db");
 
 		$this->tg("div", "", "separator3", "", "", "");
 
 		if(($nv["_SH"] === "") || ($nv["_TB"] === ""))
 		{
 			$this->select($RT["ACS"],
-				false, "", "", "", "dt_slc", _NOTE_SELECT,
-					"onchange=\"ms.AL(this.value, 'id_cn_db', this, this.form, 'list_rc[]',
-					'"._NOTE_SCHEMAS." / "._NOTE_SELECT." / ',
-					".$this->ac_con.",".$this->ac_ex.",'"._MESSAGE_SH_CHECK."' );\"",
+				false, "", "", "id_dt_slc", "dt_slc", _NOTE_SELECT,
+					"onchange=\"ms.AL(this.value, this, this.form, 'list_rc[]',
+					'"._NOTE_SELECT." / ',
+					".$this->ac_con.",".$this->ac_ex.");\"",
 				function($k, $v){return $v;},
 				function($k, $v){return $k;},
-				function($k, $v){return $v;});
+				function($k, $v){return $v;}, 'disabled' );
+		}
+		else
+		{
+			$this->tg("div", "", "separator11", "", "", "");
 		}
 	}
 
@@ -662,6 +619,8 @@ Class View
 				$this->tg_open("div", "", "", "display: none;", "");
 			}
 
+			$count = $count.$nv["from_rc"];
+
 			$uk = bin2hex((string)$k);
 
 			if($RT["FIELDS"][$k]["COLUMN_KEY"] === "PRI"){
@@ -669,18 +628,15 @@ Class View
 				$this->tgFr_input("hidden", "key[".$uk."]", "", "", bin2hex((string)$v), "", "");
 			}
 
-
 			$constraint = "";
-$type_constraint = "";				
+			$type_constraint = "";
 			foreach($RT["FIELDS"][$k]["CONSTRAINT"] as $vc){
 
 				$constraint .= $vc[0];
-$type_constraint .= "".$vc."\n";				
+				$type_constraint .= "".$vc."\n";
 			}
 
-$title_def = " title='".$type_constraint."'";
-
-
+			$title_def = " title='".$type_constraint."'";
 
 			$flag = $this->privileges_rc($k, $RT["PRIVILEGES"], $mod);
 
@@ -690,8 +646,8 @@ $title_def = " title='".$type_constraint."'";
 
 			if($flag !== "disabled"){ $pac = true; }
 
-			if(((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"] !== "") || ($RT["FIELDS"][$k]["IS_NULLABLE"] === "YES") && 
-				($RT["FIELDS"][$k]["DISABLED"]))					
+			if(((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"] !== "") || ($RT["FIELDS"][$k]["IS_NULLABLE"] === "YES") &&
+				($RT["FIELDS"][$k]["DISABLED"]))
 			{
 				$this->tgFr_input("checkbox", "list_rw[]", "", "dt_check", $uk, "", "checked");
 			}
@@ -802,9 +758,9 @@ $title_def = " title='".$type_constraint."'";
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "enum") ||
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "set") ||
 				($RT["FIELDS"][$k]["DATA_TYPE"] === "bit") ||
-				(!$RT["FIELDS"][$k]["DISABLED"]) || 		
+				(!$RT["FIELDS"][$k]["DISABLED"]) ||
 				($RT["FIELDS"][$k]["COLUMN_DEFAULT"] === "CURRENT_TIMESTAMP") ||
-				in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"]))					
+				in_array("FOREIGN KEY", $RT["FIELDS"][$k]["CONSTRAINT"]))
 			{
 				$this->tgFr_input("text", "function[".$uk."]", "function_".$count.$count_fl.$uk.$mod,
 					"dt_in_function_disabled", "", "", "disabled");
@@ -825,17 +781,17 @@ $title_def = " title='".$type_constraint."'";
 
 			$data_flag = $flag;
 
-			if($RT["FIELDS"][$k]["EXTRA"] === "auto_increment")			
+			if($RT["FIELDS"][$k]["EXTRA"] === "auto_increment")
 			{
-				$type_placeholder = " placeholder='auto_increment'";			
-			}		
-			elseif($RT["FIELDS"][$k]["GENERATED"] !== "")			
+				$type_placeholder = " placeholder='auto_increment'";
+			}
+			elseif($RT["FIELDS"][$k]["GENERATED"] !== "")
 			{
-				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["GENERATED"]))."'";			
+				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["GENERATED"]))."'";
 			}
 			else
-			{			
-				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"]))."'";			
+			{
+				$type_placeholder = " placeholder='".$this->html(trim((string)$RT["FIELDS"][$k]["COLUMN_DEFAULT"]))."'";
 			}
 
 			if(gettype ( $v ) === "NULL"){
@@ -847,9 +803,9 @@ $title_def = " title='".$type_constraint."'";
 			{
 				$v = hex2bin((string)$v);
 
-				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])
 				{
-					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);						
+					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);
 				}
 				else
 				{
@@ -873,7 +829,7 @@ $title_def = " title='".$type_constraint."'";
 
 							$this->tg_open("div", "", "file_dl", "", "");
 
-							$this->tg("a", "", "file_dl_a", "", _NOTE_DL." (".$this->get_size($v).")",
+							$this->tg("a", "", "file_dl_a", "", _NOTE_DL." (".$this->get_size(strlen((string)$v)).")",
 								"download='".$k.".bin' href='data:multipart/form-data;base64,".base64_encode((string)$v)."'");
 
 							$this->tg_close("div");
@@ -900,25 +856,14 @@ $title_def = " title='".$type_constraint."'";
 
 					$this->textarea("field[".$uk."]", "field".$count.$count_fl.$uk.$mod, "", "", "", "hidden", "");
 				}
-
-				if(($mod === "edit") && (trim((string)$v) !== ""))
-				{
-					$this->textarea("", "prev".$count.$count_fl.$uk.$mod, "dt_in_text",
-						$this->strTV($this->html($v)), "", "disabled", $type_placeholder);
-				}
-				else
-				{
-					$this->textarea("", "prev".$count.$count_fl.$uk.$mod, "dt_in_text",
-						$this->strTV($this->html($v)), "", "disabled hidden", $type_placeholder);
-				}
 			}
 			elseif(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"]) || ($RT["FIELDS"][$k]["DATA_TYPE"] === "json"))
 			{
-				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])
 				{
-					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);		
+					$this->tgFr_input("text", "", "", "dt_in_value_disabled", "", "", $type_placeholder);
 
-					$data_flag = "disabled";					
+					$data_flag = "disabled";
 				}
 				else
 				{
@@ -984,7 +929,7 @@ $title_def = " title='".$type_constraint."'";
 			{
 				$class = "dt_in_value";
 
-				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])
 				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
@@ -999,7 +944,7 @@ $title_def = " title='".$type_constraint."'";
 			{
 				$class = "dt_in_value";
 
-				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])
 				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
@@ -1011,7 +956,7 @@ $title_def = " title='".$type_constraint."'";
 			{
 				$class = "dt_in_value";
 
-				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])	
+				if(($flag === "disabled") || !$RT["FIELDS"][$k]["DISABLED"])
 				{
 					$class = "dt_in_value_disabled";
 					$data_flag = "disabled";
@@ -1034,8 +979,6 @@ $title_def = " title='".$type_constraint."'";
 			$this->tg_close("div");
 		}
 
-		$this->dl_confirm("id_cn_rc".$count.$mod);
-
 		$this->tg("div", "", "separator3", "", "", "");
 
 		if($pac && ($count_fl > 0) && ($count_fl_display > 0))
@@ -1045,11 +988,9 @@ $title_def = " title='".$type_constraint."'";
 				if($RT["PRI"] || (strtoupper($RT["TABLE_TYPE"]) === "VIEW"))
 				{
 					$this->tgFr_input("button", "", "", "dt_btn", _ACTION_DELETE,
-						"onclick=\"ms.AT('_DELETE_RC', 'id_cn_rc".$count.$mod."', this, this.form,
-						'"._NOTE_ROW." / "._ACTION_DELETE."', ['_DELETE_RC'], []); \"");
+						"onclick=\"ms.AT('_DELETE_RC', this, this.form, '"._NOTE_ROW." / "._ACTION_DELETE."', ['_DELETE_RC'], []); \"");
 
-					$this->tgFr_input("button", "", "", "dt_btn", _ACTION_UPDATE,
-						"onclick=\"ms.RF('_UPDATE_RC', '', '', this.form, 0);\"");
+					$this->tgFr_input("button", "", "", "dt_btn", _ACTION_UPDATE, "onclick=\"ms.RF('_UPDATE_RC', '', '', this.form, 0);\"");
 				}
 
 				if($this->prci($RT["PRIVILEGES"])){
@@ -1090,6 +1031,8 @@ $title_def = " title='".$type_constraint."'";
 		}
 
 		$this->tgFr_input("hidden", "fl_count_rc", "", "", $nv["fl_count_rc"], "", "");
+
+		$this->tgFr_input("hidden", "order_desc_rc", "", "", $nv["order_desc_rc"], "", "");
 	}
 
 
@@ -1101,12 +1044,73 @@ $title_def = " title='".$type_constraint."'";
 
 			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
 
-				$this->tgFr_input("button", "", "", "fl_btn", "select ", "onclick=\"ms.el_open_com('com_field_rc');\"");
+				$this->tgFr_input("button", "", "", "fl_btn", "select", "onclick=\"ms.view_vb('flc_rc');\"");
 
-				$this->tg_open("div", "com_field_rc", "slcus", "display: none;",
-					"onclick=\"ms.el_stop_com();\"");
+			$this->tg_close("td");
 
-				$this->tg_open("div", "com_sl_field_rc", "slcus_sl", "", "");
+			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
+
+				$this->select($RT["ON_PAGE"], $nv["page_rc"], "", "page_rc", "", "fl_slc", "",
+					"onchange=\"ms.set_vl('from_rc', '0'); ms.RF('VIEW', '', '', this.form, 0);\"",
+					function($k, $v){return $v;},
+					function($k, $v){return $v;},
+					function($k, $v){return "limit ".$v;});
+
+			$this->tg_close("td");
+
+			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
+
+				$this->select($RT["FROM"], $nv["from_rc"], "", "from_rc", "from_rc", "fl_slc", "",
+					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
+					function($k, $v){return $v;},
+					function($k, $v){return $v;},
+					function($k, $v){return "from ".$v;});
+
+			$this->tg_close("td");
+
+			$this->tg_open("td", "", "", "", "");
+
+				$this->select($RT["FIELD_SE_ORDER"], $nv["order_rc"], "", "order_rc", "", "fl_slc2", "",
+					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
+					function($k, $v){return $k;},
+					function($k, $v){return $k;},
+					function($k, $v){return "order by ".$this->html($v);});
+
+				if($nv["order_desc_rc"] === "DESC"){
+
+					$this->tgFr_input("checkbox", "order_desc_rc", "", "dt_check", "", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "checked");
+				}
+				else{
+
+					$this->tgFr_input("checkbox", "order_desc_rc", "", "dt_check", "DESC", "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "");
+				}
+
+				$this->tg("label", "", "", "", "DESC", "");
+
+			$this->tg_close("td");
+
+			$this->tg_close("tr");
+
+		$this->tg_close("table");
+
+		$fl_display = "display: none;";
+
+		if(isset($nv["fl_view"])){
+
+			$this->tg_open("div", "flc_rc", "", "", "");
+		}
+		else{
+
+			$this->tg_open("div", "flc_rc", "", "display: none;", "");
+		}
+
+		$this->tg("div", "", "separator3", "", "", "");
+
+		$this->tg_open("table", "", "", "", "");
+		$this->tg_open("tr", "", "", "", "");
+		$this->tg_open("td", "", "", "", "");
+
+				$this->tg_open("div", "com_field_rc", "fl_slcus", "", "onclick=\"ms.el_stop_com();\"");
 
 				$this->tg_open("div", "", "slcus_sl_k", "", "");
 
@@ -1150,81 +1154,11 @@ $title_def = " title='".$type_constraint."'";
 
 				$this->tg("div", "", "separator3", "", "", "");
 
-				$this->tg_close("div");
-
-				$this->tgFr_input("button", "", "", "dt_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
-
-				$this->tgFr_input("button", "", "", "dt_btn", _NOTE_CONFIRM_NO, "onclick=\"ms.view_va('com_field_rc', 'none');\"");
-
 			$this->tg_close("div");
 
-			$this->tg_close("td");
+		$this->tg_close("td");
 
-			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
-
-				$this->tgFr_input("button", "", "", "fl_btn", "where", "onclick=\"ms.view_vb('flc_rc');\"");
-
-			$this->tg_close("td");
-
-			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
-
-				$this->select($RT["ON_PAGE"], $nv["page_rc"], "", "page_rc", "", "fl_slc", "",
-					"onchange=\"ms.set_vl('from_rc', '0'); ms.RF('VIEW', '', '', this.form, 0);\"",
-					function($k, $v){return $v;},
-					function($k, $v){return $v;},
-					function($k, $v){return "limit ".$v;});
-
-			$this->tg_close("td");
-
-			$this->tg_open("td", "", "fl_wrap_main_tb", "", "");
-
-				$this->select($RT["FROM"], $nv["from_rc"], "", "from_rc", "from_rc", "fl_slc", "",
-					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
-					function($k, $v){return $v;},
-					function($k, $v){return $v;},
-					function($k, $v){return "from ".$v;});
-
-			$this->tg_close("td");
-
-			$this->tg_open("td", "", "", "", "");
-
-				$this->select($RT["FIELD_SE_ORDER"], $nv["order_rc"], "", "order_rc", "", "fl_slc2", "",
-					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
-					function($k, $v){return $k;},
-					function($k, $v){return $k;},
-					function($k, $v){return "order by ".$this->html($v);});
-
-				if($nv["order_desc_rc"] === "DESC"){
-
-					$this->tgFr_input("checkbox", "order_desc_rc", "", "dt_check", "",
-						"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "checked");
-				}
-				else{
-
-					$this->tgFr_input("checkbox", "order_desc_rc", "", "dt_check", "desc",
-						"onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"", "");
-				}
-
-				$this->tg("label", "", "", "", "DESC", "");
-
-			$this->tg_close("td");
-
-			$this->tg_close("tr");
-
-		$this->tg_close("table");
-
-		$fl_display = "display: none;";
-
-		if((isset($nv["fl_field_rc"][0]) && ($RT["FIELD_SE_FILTER"][0] !== $nv["fl_field_rc"][0])) ||
-			(isset($nv["fl_field_rc"][1]) && ($RT["FIELD_SE_FILTER"][1] !== $nv["fl_field_rc"][1]))	||
-			(implode("", $nv["fl_value_rc"]) !== "") || ($nv["fl_count_rc"] > 2)){
-
-			$fl_display = "";
-		}
-
-		$this->tg_open("div", "flc_rc", "", $fl_display, "");
-
-		$this->tg("div", "", "separator3", "", "", "");
+		$this->tg_open("td", "", "", "", "");
 
 		$this->tg_open("table", "", "fl_wrap_table", "", "");
 
@@ -1260,11 +1194,12 @@ $title_def = " title='".$type_constraint."'";
 			if($k === 0){
 
 				$this->tgFr_input("hidden", "fl_and_rc[]", "", "fl_value", "", "", "");
+				$this->tgFr_input("button", "", "", "fl_btn_title", "WHERE", "", "");
 			}
 			else{
 
 				$this->select(["AND", "OR"], $add_fl_operator_and, "",
-					"fl_and_rc[]", "", "fl_slc", "", "",
+					"fl_and_rc[]", "", "fl_slc_sl", "", "",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
 					function($k, $v){return $v;});
@@ -1275,8 +1210,7 @@ $title_def = " title='".$type_constraint."'";
 			$this->tg_open("td", "", "fl_wrap_td", "", "");
 
 				$this->select($RT["FIELD_SE_FILTER"], $add_fl_field_and, "",
-					"fl_field_rc[]", "", "fl_slc", "",
-					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
+					"fl_field_rc[]", "", "fl_slc_sl", "", "",
 					function($k, $v){return $v;},
 					function($k, $v){return $this->html($v);},
 					function($k, $v){return $this->html($v);});
@@ -1285,7 +1219,7 @@ $title_def = " title='".$type_constraint."'";
 			$this->tg_open("td", "", "fl_wrap_td", "", "");
 
 				$this->select($RT["FILTER_EX"][$add_fl_field_and], $add_fl_operator, "",
-					"fl_operator_rc[]", "", "fl_slc", "", "",
+					"fl_operator_rc[]", "", "fl_slc_sl", "", "",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
 					function($k, $v){return $v;});
@@ -1293,7 +1227,7 @@ $title_def = " title='".$type_constraint."'";
 			$this->tg_close("td");
 			$this->tg_open("td", "", "", "", "");
 
-				$this->tgFr_input("text", "fl_value_rc[]", "", "fl_value", $add_fl_value, "", _NOTE_FILTER_VALUE);
+				$this->tgFr_input("text", "fl_value_rc[]", "", "fl_value_sl", $add_fl_value, "", _NOTE_FILTER_VALUE);
 
 			$this->tg_close("td");
 
@@ -1304,17 +1238,22 @@ $title_def = " title='".$type_constraint."'";
 
 		$this->tgFr_input("hidden", "fl_count_rc", "", "", $nv["fl_count_rc"], "", "");
 
-		$this->tgFr_input("button", "", "", "fl_btn", _NOTE_FILTER_ADD, "onclick=\"ms.RF('_ADD_FILTER_rc', '', '', this.form, 0);\"");
+		$this->tgFr_input("button", "", "", "fl_btn_add", "+", "onclick=\"ms.RF('_ADD_FILTER_rc', '', '', this.form, 0);\"");
 
-		$this->tg("div", "", "separator3", "", "", "");
+		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_FILTER_RESET, "onclick=\"ms.RF('_RESET_FILTER_rc', '', '', this.form, 0);\"");
 
 		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
+		$this->tg_close("td");
+		$this->tg_close("tr");
+		$this->tg_close("table");
+
 		$this->tg("div", "", "separator11", "", "", "");
 
 		$this->tg_close("div");
+
 
 		if(((int)$RT["COUNT"] === 0))
 		{
@@ -1325,22 +1264,25 @@ $title_def = " title='".$type_constraint."'";
 		{
 			$this->tg("div", "", "separator3", "", "", "");
 
-			$this->dl_confirm("id_cn_nv_TARGET");
-
 			$this->select($RT["ACF"],
-				false, "", "list_FT_sl", "", "dt_slc", _NOTE_TOTAL." [ ".$RT["COUNT"]." ] ",
-					"onchange=\"ms.AL(this.value, 'id_cn_nv_TARGET', this, this.form, '',
-					'"._NOTE_ROWS." / "._NOTE_TOTAL." [ ".$RT["COUNT"]." ] / ',
-					".$this->ac_con.",".$this->ac_ex.", '' ); \"",
+				false, "--", "list_FT_sl", "", "dt_slc", _NOTE_TOTAL." [ ".$RT["COUNT"]." ] ",
+					"onchange=\"ms.AL(this.value, this, this.form, '',
+					'"._NOTE_TOTAL." [ ".$RT["COUNT"]." ] / ',
+					".$this->ac_con.",".$this->ac_ex."); \"",
 				function($k, $v){return $v;},
 				function($k, $v){return $k;},
 				function($k, $v){return $v;});
 		}
 	}
 
+
 	private function get_size($v)
 	{
-		$size = strlen((string)$v);
+		$size = (int)$v;
+
+		if($size === 0){return "";}
+
+		$size = ($size/1024);
 
 		if($size > 1024)
 		{
@@ -1349,50 +1291,21 @@ $title_def = " title='".$type_constraint."'";
 			if($size > 1024)
 			{
 				$size = ($size/1024);
-
-				if($size > 1024)
-				{
-					$size = ($size/1024);
-					$size = round($size, 2)." gb";
-				}
-				else
-				{
-					$size = round($size, 2)." mb";
-				}
+				$size = round($size, 2)." gb";
 			}
 			else
 			{
-				$size = round($size, 2)." kb";
+				$size = round($size, 2)." mb";
 			}
 		}
 		else
 		{
-			$size = round($size, 2)." b";
+			$size = round($size, 3)." kb";
 		}
 
 		return $size;
 	}
 
-	protected function strTV($str)
-	{
-		$hex = "";
-
-		$l = strlen((string)$str);
-
-		for ($i=0; $i<$l; $i++){
-
-			if((ord($str[$i]) > 31) && (ord($str[$i]) < 127)){
-
-				$hex = $hex.$str[$i];
-			}
-			else{
-
-				$hex = $hex.'.';
-			}
-		}
-
-		return $hex;
-	}
 
 	private function privileges_rc($k, $PRIVILEGES, $mod)
 	{
@@ -1433,7 +1346,7 @@ $title_def = " title='".$type_constraint."'";
 		return false;
 	}
 
-	private function form_set($_US, $_SV, $_SH, $_TB, $page_rc, $from_rc, $order_rc, $field_rc, $view_rc="")
+	private function form_set($_US, $_SV, $_SH, $_TB, $page_rc, $from_rc, $order_rc, $field_rc, $view_rc=0)
 	{
 		$this->tgFr_input("hidden", "action", "", "", "", "", "");
 
@@ -1510,12 +1423,12 @@ $title_def = " title='".$type_constraint."'";
 			$value."</textarea>";
 	}
 
-	private function select($foreach, $selected, $disabled, $name, $id, $class, $title, $event, $ch, $fk, $fv)
+	private function select($foreach, $selected, $disabled, $name, $id, $class, $title, $event, $ch, $fk, $fv, $atr="")
 	{
 		$id = ($id !== "") ? "id='".$id."'" : "";
 		$class = ($class !== "") ? "class='".$class."'" : "";
 
-		print "<select ".$id." name='".$name."' ".$class." size='1' ".$event.">";
+		print "<select ".$id." name='".$name."' ".$class." size='1' ".$event." ".$atr.">";
 
 		if($title !== ""){print "<OPTION SELECTED value='' disabled> ".$title." </OPTION>";}
 

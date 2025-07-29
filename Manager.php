@@ -82,11 +82,12 @@ Class Manager
 
 	public function reset_fl($nv){
 
+		$nv["field_rc"] = [];
 		$nv["fl_field_rc"] = [];
 		$nv["fl_value_rc"] = [];
 		$nv["fl_operator_rc"] = [];
 		$nv["fl_and_rc"] = [];
-		$nv["fl_count_rc"] = "2";
+		$nv["fl_count_rc"] = _WHERE_CN_DEF;
 
 		return $nv;
 	}
@@ -319,8 +320,7 @@ Class Manager
 				}
 				else{
 
-					$lines = $this->request("SELECT COUNT(*) FROM `$_SHS`.`".$row["TABLE_NAME"]."`;",
-							"", [], __LINE__, false);
+					$lines = $this->request("SELECT COUNT(*) FROM `$_SHS`.`".$row["TABLE_NAME"]."`;", "", [], __LINE__, false);
 
 					if($lines[0]){
 
@@ -328,7 +328,7 @@ Class Manager
 					}
 				}
 
-				$RT["DATA"][] = $row;
+				$RT["DATA"][$row["TABLE_NAME"]] = $row;
 			}
 		}
 
@@ -587,12 +587,6 @@ Class Manager
 
 					$RT["FIELD_SE_VIEW"][] = $row["COLUMN_NAME"];
 
-
-					if($row["COLUMN_TYPE"] !== "json"){
-
-						$RT["FIELD_SE_ORDER"][] = $row["COLUMN_NAME"];
-					}
-
 					$RT["DATA_NEW"][0][$row["COLUMN_NAME"]] = "";
 
 					if(isset($C_T[$row["COLUMN_NAME"]])){
@@ -606,8 +600,7 @@ Class Manager
 
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_VALUE"] = [];
 
-					if(($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "enum") ||
-						($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "set"))
+					if(($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "enum") || ($RT["FIELDS"][$row["COLUMN_NAME"]]["DATA_TYPE"] === "set"))
 					{
 						$temp = preg_replace("/^(enum|set)\('/", "", $RT["FIELDS"][$row["COLUMN_NAME"]]["COLUMN_TYPE"]);
 						$temp = preg_replace("/'\)$/", "", $temp);
@@ -646,9 +639,9 @@ Class Manager
 					}
 
 					$RT["FIELDS"][$row["COLUMN_NAME"]]["GENERATED"] = "";
-					if(($row["GENERATION_EXPRESSION"] !== "") && 
+					if(($row["GENERATION_EXPRESSION"] !== "") &&
 						(($row["EXTRA"] === "VIRTUAL GENERATED") ||
-						($row["EXTRA"] === "VIRTUAL GENERATED INVISIBLE") ||					
+						($row["EXTRA"] === "VIRTUAL GENERATED INVISIBLE") ||
 						($row["EXTRA"] === "STORED GENERATED") ||
 						($row["EXTRA"] === "STORED GENERATED INVISIBLE")))
 					{
@@ -659,7 +652,7 @@ Class Manager
 					{
 						$RT["FIELDS"][$row["COLUMN_NAME"]]["DISABLED"] = false;
 					}
-					else{$RT["FIELDS"][$row["COLUMN_NAME"]]["DISABLED"] = true;}					
+					else{$RT["FIELDS"][$row["COLUMN_NAME"]]["DISABLED"] = true;}
 				}
 
 				if($row["COLUMN_KEY"] === "PRI"){
@@ -672,10 +665,27 @@ Class Manager
 					$LIST[] = "LPAD(BIN(`".$row["COLUMN_NAME"]."`), ".
 						$RT["FIELDS"][$row["COLUMN_NAME"]]["NUMERIC_PRECISION"].", '0') AS `".$row["COLUMN_NAME"]."`";
 				}
-				elseif(in_array( $row["DATA_TYPE"], $this->GT["blob"]) ||
-					in_array( $row["DATA_TYPE"], $this->GT["binary"])){
+				elseif(in_array( $row["DATA_TYPE"], $this->GT["blob"]) || in_array( $row["DATA_TYPE"], $this->GT["binary"])){
 
-					$LIST[] = "HEX(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+					if($nv["view_rc"] === "1"){
+
+						$LIST[] = "HEX(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+					}
+					else{
+
+						$LIST[] = "LENGTH(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+					}
+				}
+				elseif(in_array( $row["COLUMN_TYPE"], $this->GT["text"])){
+
+					if($nv["view_rc"] === "1"){
+
+						$LIST[] = "`".$row["COLUMN_NAME"]."` AS `".$row["COLUMN_NAME"]."`";
+					}
+					else{
+
+						$LIST[] = "LENGTH(`".$row["COLUMN_NAME"]."`) AS `".$row["COLUMN_NAME"]."`";
+					}
 				}
 				elseif(in_array( $row["COLUMN_TYPE"], $this->GT["geo"])){
 
@@ -691,9 +701,16 @@ Class Manager
 					}
 				}
 
-				if($row["COLUMN_TYPE"]  !== "json"){
-
+				if(($row["COLUMN_TYPE"] !== "json") &&
+					!in_array( $row["DATA_TYPE"], $this->GT["blob"]) &&
+					!in_array( $row["COLUMN_TYPE"], $this->GT["text"]))
+				{
 					$ORDER_LIST[] = "`".$row["COLUMN_NAME"]."`";
+
+					if($mode === ""){
+
+						$RT["FIELD_SE_ORDER"][] = $row["COLUMN_NAME"];
+					}
 				}
 			}
 		}
@@ -720,43 +737,26 @@ Class Manager
 			}
 
 			$LIMIT = "";
-			if($mode === ""){
-
+			if($mode === "")
+			{
 				$LIMIT = " LIMIT ".$nv["from_rc"].", ".$nv["page_rc"];
 			}
 
-
-			$ORDER_LIST	= array_keys($ORDER_LIST);
-			unset($ORDER_LIST[0]);
+			$ORDER_LIST	= array_values($ORDER_LIST);
 
 			if(count($ORDER_LIST) === 0){$order_list_st = "";}
 			else{
 
-				$order_list_st = " ORDER BY ".($nv["order_rc"]+1)." ".$nv["order_desc_rc"].",".
-				implode(" ".$nv["order_desc_rc"].", ", $ORDER_LIST);
+				$order_list_st = " ORDER BY ".$ORDER_LIST[($nv["order_rc"])]." ".$nv["order_desc_rc"].",".implode(" ".$nv["order_desc_rc"].", ", $ORDER_LIST);
 			}
 
-
-			$result = $this->request("SELECT ".implode(", ",  $LIST).
-				" FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";", "", [], __LINE__, false);
+			$result = $this->request("SELECT ".implode(", ",  $LIST)." FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";",
+				"", [], __LINE__, false);
 
 			if($result[0])
 			{
 				while($res = $this->fetch_assoc($result[1])){
 
-					$RT["DATA"][] = $res;
-				}
-			}
-			elseif(($result[1] === 1038) && (count($LIST_KEY)) !== 0)
-			{
-				$order_list_st = " ORDER BY `".implode("`, `", $LIST_KEY)."` ";
-
-				$result = $this->request("SELECT ".implode(", ",  $LIST_KEY).
-					" FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";",
-					"", [], __LINE__, false);
-
-				while($res = $this->fetch_assoc($result[1]))
-				{
 					$RT["DATA"][] = $res;
 				}
 			}
@@ -1131,7 +1131,6 @@ Class Manager
 	}
 
 
-
 	public function export_sql($list_sh, $list_tb, $nv, $mode)
 	{
 		$filename = date("d-m-Y").".sql";
@@ -1187,8 +1186,7 @@ Class Manager
 					}
 
 					$result = $this->request("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='".
-						addslashes($_SHS)."' AND TABLE_NAME='".
-						addslashes($v["TB"])."';",
+						addslashes($_SHS)."' AND TABLE_NAME='".addslashes($v["TB"])."';",
 						"", [], __LINE__, false);
 
 					$RT = [];
@@ -1248,8 +1246,9 @@ Class Manager
 						{
 							if((count($nv["field_rc"]) === 0) || (in_array(bin2hex((string)$kf), $nv["field_rc"])))
 							{
-								if(($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED") ||
-									($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED")){}
+								if(($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED") || ($v["FIELDS"][$kf]["EXTRA"] === "VIRTUAL GENERATED INVISIBLE") ||
+									($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED") || ($v["FIELDS"][$kf]["EXTRA"] === "STORED GENERATED INVISIBLE")){
+								}
 								elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["geo"]))
 								{
 									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
@@ -1262,7 +1261,7 @@ Class Manager
 									}
 								}
 								elseif(in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["blob"]) ||
-										in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["binary"]))
+									in_array($v["FIELDS"][$kf]["DATA_TYPE"], $this->GT["binary"]))
 								{
 									if(($vf === NULL) && ($v["FIELDS"][$kf]["IS_NULLABLE"] === "YES")){
 
@@ -1379,6 +1378,7 @@ Class Manager
 		{
 			$nv["_SH"] = $_SH;
 			$nv["_TB"] = $val;
+			$nv["view_rc"] = "1";
 
 			$RT[] = $this->rc( $nv, $mode );
 		}
@@ -1455,8 +1455,7 @@ Class Manager
 
 		if($WHERE !== ""){$WHERE = " WHERE ".$WHERE;}
 
-		$result = $this->request("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ".$WHERE.";",
-			"", [], __LINE__, false);
+		$result = $this->request("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ".$WHERE.";", "", [], __LINE__, false);
 
 		if($result[0]){
 
@@ -1500,8 +1499,8 @@ Class Manager
 		{
 			$VIEW = [];
 
-			$result = $this->request("SELECT TABLE_NAME ".
-				"FROM information_schema.VIEWS WHERE TABLE_SCHEMA=x'".$_SH."';", "", [], __LINE__, false);
+			$result = $this->request("SELECT TABLE_NAME "."FROM information_schema.VIEWS WHERE TABLE_SCHEMA=x'".$_SH."';",
+				"", [], __LINE__, false);
 
 			while( $row = $this->fetch_assoc($result[1]) ){ $VIEW[] = $row["TABLE_NAME"];}
 
@@ -1533,8 +1532,8 @@ Class Manager
 
 		if($WHERE !== ""){$WHERE = " AND (".$WHERE.") ";}
 
-		$result = $this->request("SELECT TABLE_NAME ".
-			"FROM information_schema.TABLES WHERE TABLE_SCHEMA=x'".$nv["_SH"]."' ".$WHERE.";", "", [], __LINE__, false);
+		$result = $this->request("SELECT TABLE_NAME "."FROM information_schema.TABLES WHERE TABLE_SCHEMA=x'".$nv["_SH"]."' ".$WHERE.";",
+			"", [], __LINE__, false);
 
 		if($result[0]){
 
@@ -1673,7 +1672,7 @@ Class Manager
 
 							$sfC[] = "`".$k."`";
 
-							$sfV[] = "(".stripslashes($this->escape($text[bin2hex((string)$k)])).")";
+							$sfV[] = "(".stripslashes($this->escape($text[$kh])).")";
 						}
 						elseif(isset($text[$kh])){
 
@@ -1806,7 +1805,7 @@ Class Manager
 				if($action === "_UPDATE_RC"){
 
 					$sfV[] = "`".$k."`=DEFAULT ";
-				}				
+				}
 			}
 		}
 
@@ -1873,7 +1872,7 @@ Class Manager
 
 		if(!in_array($_SHS, $this->DS))
 		{
-			$RT[] = $this->rc( $nv, "drf" );
+			$RT[] = $this->rc( $nv, "delete" );
 
 			$WHERE = $this->get_wr($nv, $RT[0]["FIELDS"]);
 
@@ -1982,7 +1981,6 @@ Class Manager
 			$nvt["fl_value_rc"] = "'".addslashes($nvt["fl_value_rc"])."'";
 		}
 
-
 		if(count($field) === 0)
 		{
 			$WHERE .= " `".$nvt["fl_field_rc"]."` ".$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";
@@ -2026,7 +2024,7 @@ Class Manager
 		if(!isset($SERVER["pass"])){
 
 			$SERVER["pass"] = "";
-		}	
+		}
 
 		if(!isset($SERVER["port"]) || ($SERVER["port"] === "")){
 
@@ -2115,7 +2113,7 @@ Class Manager
 			$this->connect = true;
 
 			$this->_RS["MESSAGE"]["connect"] = _MESSAGE_PL_MYSQLI;
-			
+
 			return;
 		}
 
@@ -2123,7 +2121,7 @@ Class Manager
 		{
 			$this->connect = true;
 
-			$this->_RS["MESSAGE"]["connect"] =_MESSAGE_CONNECTION;			
+			$this->_RS["MESSAGE"]["connect"] =_MESSAGE_CONNECTION;
 		}
 	}
 

@@ -295,6 +295,8 @@ var as =
 
 var ms =
 {
+	conf_text: "", 	
+	
 	RF: function(action, sh, table, form, request, container = "content")
 	{
 		form.session.value = "<?php echo _SESSION; ?>";		
@@ -306,6 +308,7 @@ var ms =
 
 		var data = "";
 		var oForm = [];
+		var count = 1;
 
 		if(form != "")
 		{
@@ -327,6 +330,8 @@ var ms =
 
 								oForm[form[i].name] = form[i].value;
 							}
+							
+							count += 1;								
 						}
 					}
 					else if(!form[i].disabled)
@@ -341,10 +346,23 @@ var ms =
 
 							oForm[form[i].name] = form[i].value;
 						}
+						
+						count += 1;							
 					}
 				}
 			}
 		}
+
+		var ctext = this.conf_text;
+		this.conf_text = "";	
+
+		if(count > "<?php echo ini_get('max_input_vars'); ?>"){	
+
+			alert("<?php echo _MESSAGE_CHECK_MAX; ?>");
+			return false;
+		}
+
+		if((ctext !== "") && (!confirm(ctext))){return false;}
 
 		if(request === 1)
 		{
@@ -359,116 +377,43 @@ var ms =
 	},
 
 
-	AL: function(action, id_win, obj, form, cbName, text, warning_list, request_list, war)
+	AL: function(action, obj, form, cbName, conf_text, warning_list, request_list)	
 	{
-		if(cbName !== "")
-		{
-			var flag = 0;
+		conf_text += obj[Array.from(obj).map((elements) => { return elements.value; }).indexOf(obj.value)].innerHTML; 
 
-			if(form[cbName])
-			{
-				if(form[cbName].length){
-
-					for (var i=0; i < form[cbName].length; i++) {
-
-						if(form[cbName][i].checked == true){flag = 1;}
-					}
-				}
-				else{ if(form[cbName].checked == true){flag = 1;} }
-
-				if(flag === 0){
-
-					this.open_alert(war);
-
-					if( obj.nodeName === "SELECT"){ obj[0].selected='selected'; }
-
-					return false;
-				}
-			}
-		}
-
-		for (var i=0; i < obj.length; i++) {
-
-			if(obj[i].value === obj.value){ text += obj[i].innerHTML; }
-		}
-
-		var warning = 0;
-		for (var w=0; w < warning_list.length; w++) {
-
-			if(warning_list[w] === obj.value){ warning = 1; }
-		}
+		var conf = 0;
+		if(warning_list.includes(obj.value)){conf = 1;};
 
 		var request = 0;
-		for (var r=0; r < request_list.length; r++) {
-
-			if(request_list[r] === obj.value){ request = 1;}
-		}
+		if(request_list.includes(obj.value)){request = 1;};
 
 		form.action.value = action;
 
 		if( obj.nodeName === "SELECT"){ obj[0].selected='selected'; }
 
-		if((warning === 1) && (request === 0)){
-
-			this.open_confirm(id_win, text);
-		}
-		else{
-
-			ms.RF('', '', '', form, request);
-		}
+		if(conf === 1){ms.conf_text = conf_text;}
+		ms.RF('', '', '', form, request);	
 	},
 
 
-	AT: function(action, id_win, obj, form, text, warning_list, request_list)
+	AT: function(action, obj, form, conf_text, warning_list, request_list)	
 	{
-		for (var i=0; i < obj.length; i++) {
-
-			if(obj[i].value === obj.value){ text += obj[i].innerHTML; }
-		}
-
-		var warning = 0;
-		for (var w=0; w < warning_list.length; w++) {
-
-			if(warning_list[w] === action){ warning = 1; }
-		}
+		var conf = 0;
+		if(warning_list.includes(action)){conf = 1;};	
 
 		form.action.value = action;
 
-		if((warning === 1)){
-
-			this.open_confirm(id_win, text);
-		}
-		else{
-
-			ms.RF('', '', '', form, 0);
-		}
+		if(conf === 1){ms.conf_text = conf_text;}
+		ms.RF('', '', '', form, 0);	
 	},
 
 
-	AV: function(action, sh, table, form, request, id, war)
+	AV: function(action, sh, table, form, request, id)
 	{
-		if(document.getElementById(id).value.replace(/\s/g, "") === ""){
-
-			this.open_alert(war);
-		}
-		else{
+		if(document.getElementById(id).value.replace(/\s/g, "") !== ""){
 
 			this.RF(action, sh, table, form, request);
 		}
-	},
-
-
-	open_alert: function(text)
-	{
-		document.getElementById("id_alt_message_text").innerHTML = text;
-		document.getElementById("id_alt_message").style.display = "";
-	},
-
-
-	open_confirm: function(id_win, text)
-	{
-		document.getElementById(id_win+"_text").innerHTML = text;
-		document.getElementById(id_win).style.display = "";
 	},
 
 
@@ -586,6 +531,30 @@ var ms =
 
 			document.getElementById(id).style.display = "none";
 		}
+	},
+
+
+	view_sl: function(form, cbName, id)
+	{
+		var count = 0;
+	
+		if(Array.from(form[cbName]).length !== 0)	
+		{
+			count = Array.from(form[cbName])
+				.map((element) => { 
+					const { name, type } = element;
+					const value = type === 'checkbox' ? element.checked : element.value;
+					return { name, value }
+				}).filter(n => n.value !== false).length;	
+		}
+		else
+		{
+			if(form[cbName].checked){count = 1;}
+			else{count = 0;}
+		}
+
+		if(count !== 0){document.getElementById(id).disabled = false;}
+		else{document.getElementById(id).disabled = true;}
 	},
 
 
@@ -747,7 +716,6 @@ var ms =
 		document.getElementById("text"+id).innerText = "";
 		document.getElementById("text"+id).hidden = "hidden";
 		document.getElementById("text"+id).disabled = "disabled";
-		document.getElementById("prev"+id).style.display = "none";
 		document.getElementById("function_"+id).disabled = "disabled";
 	},
 
@@ -760,7 +728,6 @@ var ms =
 		document.getElementById("text"+id).innerText = "";
 		document.getElementById("text"+id).hidden = "";
 		document.getElementById("text"+id).disabled = "";
-		document.getElementById("prev"+id).style.display = "none";
 		document.getElementById("function_"+id).disabled = "";
 	},
 
@@ -1040,6 +1007,7 @@ color: #eee;
 }
 
 .dt_in_label_list,
+.dt_btn_em,
 .dt_btn_list{
 background: #333;
 border: 1px solid #333;
@@ -1051,6 +1019,10 @@ color: #eee;
 .dt_in_value_list{
 background: #555;
 border: 1px solid #777;
+color: #eee;
+}
+
+.fl_slcus{	
 color: #eee;
 }
 
@@ -1066,25 +1038,33 @@ border-right: 1px solid #111;
 
 .fl_wrap_td{}
 
-.fl_value{
+.fl_value,
+.fl_value_sl{
 background: none;
 border: 1px solid #777;
 color: #eee;
 }
 
-.fl_slc,
-.fl_slc2{
+.fl_slc, 
+.fl_slc2,
+.fl_slc_sl{
 background:#333;
 color: #eee;
 border: 1px solid #333;
 }
 
-.fl_btn{
+.fl_btn,
+.fl_btn_add{
 background: #333;
 color: #eee;
 border: 2px solid #333;
 }
 
+.fl_btn_title{
+background: none;  
+color: #eee;
+border: 2px solid #333;
+}
 
 
 html{height:100%;}
@@ -1413,6 +1393,7 @@ padding: 0 3px 2px 0;
 
 .dt_in_label_list,
 .dt_in_value_list,
+.dt_btn_em,
 .dt_btn_list{
 padding: 8px;
 margin: 0px;
@@ -1424,9 +1405,21 @@ cursor: default;
 width: 149px;
 }
 
+.dt_btn_em{
+width: 45px;
+}
+
 .dt_btn_list{
 width: 45px;
 cursor: pointer;
+}
+
+.fl_slcus{
+width: 229px;
+height: 155px;
+padding: 3px 0px 0px 0px;
+margin: 3px 12px 0px 0px;
+overflow: auto;
 }
 
 .fl_wrap_main_table{
@@ -1485,6 +1478,38 @@ margin: 3px 2px 2px 0px;
 outline: none;
 text-align: left;
 }
+
+.fl_btn_add{
+width: 33px;
+padding: 7px 7px 7px 11px;
+margin: 1px 2px 1px 0px;
+outline: none;
+text-align: left;
+}
+
+.fl_btn_title{
+width: 120px;
+padding: 7px 7px 7px 11px;
+margin: 3px 2px 2px 0px;
+outline: none;
+text-align: center;
+border: 0;
+}
+
+.fl_value_sl{
+width: 325px;
+padding: 7.3px;
+margin: 1px 2px 2px 0px;
+}
+
+.fl_slc_sl{
+width: 125px;
+padding: 7px;
+margin: 1px 2px 1px 0px;
+outline: none;
+text-align: left;
+}
+
 
 #status{
 z-index: 501;

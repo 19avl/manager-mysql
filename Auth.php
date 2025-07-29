@@ -17,7 +17,7 @@ Class Auth
 	private $exceptions = [
 		"_SAVE_SQL_SH","_SAVE_SQL_SH_FILTER",
 		"_SAVE_SQL_TB","_SAVE_SQL_TB_FILTER",
-		"_SAVE_SQL_RC_FILTER"];
+		"_SAVE_SQL_RC_FILTER", "VIEW_DATA"];
 
 	public function __construct($USER, $CHECK)
 	{
@@ -62,8 +62,6 @@ Class Auth
 	public function AT($USER)
 	{
 		if(!isset($USER[$_POST["usr"]]["key"]) || ($USER[$_POST["usr"]]["key"] === "")){
-
-			print "<input type='hidden' id='request' class='' value=''/>";
 
 			return true;
 		}

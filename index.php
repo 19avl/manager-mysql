@@ -24,7 +24,7 @@ else
 	require __DIR__."/Request.php";
 	require __DIR__."/Controller.php";
 
-	new Controller($LIMIT, $USER, $CHECK, $SQL);	
+	new Controller($USER, $CHECK, $SQL);	
 }
 
 

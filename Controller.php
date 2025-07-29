@@ -13,8 +13,12 @@ Class Controller extends Request
 	private $LIST_SQL;
 	private $script_sql;
 
-	public function __construct($LIMIT, $USER, $CHECK, $SQL)
+	public function __construct($USER, $CHECK, $SQL)
 	{
+		$LIMIT = ["15", "50", "100", "250", "500"];
+		
+		define("_WHERE_CN_DEF", 2);		
+		
 		$this->auth = new Auth($USER, $CHECK);
 
 		$this->request($LIMIT);
@@ -39,6 +43,15 @@ Class Controller extends Request
 		require __DIR__."/View.php";
 
 		$this->view = new View($USER[$this->nv["_US"]], $this->manager->GT);
+
+		if($this->action === "VIEW_DATA")
+		{
+			$this->DATA = $this->manager->rc( $this->nv, "" );
+
+			$this->view->rc_data_async($this->DATA, $this->nv, "edit");
+
+			die();
+		}
 
 		if($this->action === "_RUN_SQL")
 		{
@@ -208,6 +221,8 @@ Class Controller extends Request
 				case "_ADD_FILTER_rc":
 				{
 					$this->nv["fl_count_rc"] = ($this->nv["fl_count_rc"]+1);
+					
+$this->nv["fl_view"] = true;					
 				}
 				break;
 

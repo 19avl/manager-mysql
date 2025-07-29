@@ -16,15 +16,11 @@ error_reporting (0);
 define("_URL", $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"].parse_url($_SERVER["REQUEST_URI"])["path"]);
 
 
-/* ITEMS ON PAGE */
-$LIMIT = ["15", "50", "100", "200"];
-
-
 $USER = [
 
 	"user"=>[ // Alias
 
-		//"key"=>"key",
+		"key"=>"key",
 
 		"server"=>[
 			"host"=>"localhost", "port"=>3306, "user"=>"root", "pass"=>"root",
@@ -32,7 +28,7 @@ $USER = [
 
 			"variables"=>[
 				"names" => "utf8mb4",
-				"sql_mode" => "TRADITIONAL",	
+				//"sql_mode" => "TRADITIONAL",	
 				//"sql_mode" => "STRICT_ALL_TABLES", 
 				//"GLOBAL general_log" => 0,
 				//"GLOBAL log_output" => "TABLE",
@@ -63,7 +59,7 @@ $USER = [
 		"server"=>[
 			"host"=>"localhost", "port"=>3307, "user"=>"root", "pass"=>"root",
 			"variables"=>[
-				"names" => "utf8mb4"
+				"names" => "utf8mb4",			
 			],	
 		]			
 	],
