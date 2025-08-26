@@ -174,12 +174,7 @@ Class Manager
 			];
 		}
 
-		$RT["FILTER_EX"] = [];
-
-		foreach($RT["FIELD_SE_FILTER"] as $v){
-
-			$RT["FILTER_EX"][$v] = ["","=","<>","LIKE %...%","NOT LIKE %...%","REGEXP","NOT REGEXP"];
-		}
+		$RT["FILTER_EX"] = ["","=","<>","LIKE %...%","NOT LIKE %...%","REGEXP","NOT REGEXP"];
 
 		$WHERE = $this->get_wr($nv, $RT["FIELDS"]);
 
@@ -199,7 +194,7 @@ Class Manager
 			"(SELECT COUNT(*) FROM information_schema.TABLES WHERE `TABLE_SCHEMA`=CAST(s.SCHEMA_NAME AS BINARY)) as TABLES ".
 			"FROM information_schema.SCHEMATA s ".$WHERE." ORDER BY ".
 			($RT["FIELD_SE_ORDER"][$nv["order_rc"]])." ".$nv["order_desc_rc"].
-			" LIMIT ".$nv["from_rc"].", ".$nv["page_rc"].";", "", [], __LINE__);
+			" LIMIT ".$nv["from_rc"].", ".$nv["page_rc"].";", "", [], __LINE__, false);
 
 		if($result[0]){
 
@@ -274,13 +269,7 @@ Class Manager
 
 		$RT["CREATE"]["SH"] = $this->fetch_row($CREATE[1])[1];
 
-		$RT["FILTER_EX"] = [];
-
-		foreach($RT["FIELD_SE_FILTER"] as $v){
-
-			$RT["FILTER_EX"][$v] =
-				["","=","<>","LIKE %...%","NOT LIKE %...%","REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
-		}
+		$RT["FILTER_EX"] = ["","=","<>","LIKE %...%","NOT LIKE %...%","REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
 
 		$WHERE = $this->get_wr($nv, $RT["FIELDS"]);
 
@@ -579,8 +568,8 @@ Class Manager
 
 				if($mode === "")
 				{
-					if(!in_array( $row["DATA_TYPE"], $this->GT["blob"]) &&
-						!in_array( $row["DATA_TYPE"], $this->GT["binary"])){
+					if(!in_array( $row["DATA_TYPE"], $this->GT["blob"]) && !in_array( $row["DATA_TYPE"], $this->GT["binary"]) &&
+						!in_array( $row["DATA_TYPE"], $this->GT["geo"])){
 
 						$RT["FIELD_SE_FILTER"][] = $row["COLUMN_NAME"];
 					}
@@ -736,28 +725,30 @@ Class Manager
 				if($RT["COUNT"] <= $nv["from_rc"]){$nv["from_rc"] = "0";}
 			}
 
-			$LIMIT = "";
-			if($mode === "")
+			if($RT["COUNT"] != 0)
 			{
-				$LIMIT = " LIMIT ".$nv["from_rc"].", ".$nv["page_rc"];
-			}
+				$LIMIT = "";
+				if($mode === "")
+				{
+					$LIMIT = " LIMIT ".$nv["from_rc"].", ".$nv["page_rc"];
+				}
 
-			$ORDER_LIST	= array_values($ORDER_LIST);
+				$ORDER_LIST	= array_values($ORDER_LIST);
 
-			if(count($ORDER_LIST) === 0){$order_list_st = "";}
-			else{
+				if(count($ORDER_LIST) === 0){$order_list_st = "";}
+				else{
 
-				$order_list_st = " ORDER BY ".$ORDER_LIST[($nv["order_rc"])]." ".$nv["order_desc_rc"].",".implode(" ".$nv["order_desc_rc"].", ", $ORDER_LIST);
-			}
+					$order_list_st = " ORDER BY ".$ORDER_LIST[($nv["order_rc"])]." ".$nv["order_desc_rc"].",".implode(" ".$nv["order_desc_rc"].", ", $ORDER_LIST);
+				}
 
-			$result = $this->request("SELECT ".implode(", ",  $LIST)." FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";",
-				"", [], __LINE__, false);
+				$result = $this->request("SELECT ".implode(", ",  $LIST)." FROM `".$_SHS."`.`".$_TBS."` ".$WHERE.$order_list_st.$LIMIT.";", "", [], __LINE__, false);
 
-			if($result[0])
-			{
-				while($res = $this->fetch_assoc($result[1])){
+				if($result[0])
+				{
+					while($res = $this->fetch_assoc($result[1])){
 
-					$RT["DATA"][] = $res;
+						$RT["DATA"][] = $res;
+					}
 				}
 			}
 		}
@@ -769,23 +760,7 @@ Class Manager
 				if(!$RT["PRI"]){ $this->_RS["RESULT"][] = _MESSAGE_UNIQUE_COLUMN; }
 			}
 
-			foreach($RT["FIELD_SE_FILTER"] as $v)
-			{
-				if(in_array($RT["FIELDS"][$v]["DATA_TYPE"], $this->GT["geo"]) ||
-					in_array($RT["FIELDS"][$v]["DATA_TYPE"], $this->GT["char"]) ||
-					in_array($RT["FIELDS"][$v]["DATA_TYPE"], $this->GT["text"]) ||
-					($RT["FIELDS"][$v]["DATA_TYPE"] === "set") ||
-					($RT["FIELDS"][$v]["DATA_TYPE"] === "enum")){
-
-					$RT["FILTER_EX"][$v] = ["","=","<>","LIKE %...%","NOT LIKE %...%",
-						"REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
-				}
-				else{
-
-					$RT["FILTER_EX"][$v] = ["","=","<>",">",">=","<","<=","LIKE %...%","NOT LIKE %...%",
-						"REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
-				}
-			}
+			$RT["FILTER_EX"] = ["","=","<>",">",">=","<","<=","LIKE %...%","NOT LIKE %...%","REGEXP","NOT REGEXP","IS NULL","IS NOT NULL"];
 
 			$count_page = 0;
 
@@ -1976,7 +1951,7 @@ Class Manager
 		{
 			$nvt["fl_value_rc"] = "";
 		}
-		else{
+		elseif($nvt["fl_operator_rc"] !== ""){
 
 			$nvt["fl_value_rc"] = "'".addslashes($nvt["fl_value_rc"])."'";
 		}
@@ -1987,25 +1962,9 @@ Class Manager
 		}
 		else
 		{
-			if($field[$nvt["fl_field_rc"]]["DATA_TYPE"] === "bit")
+			if(($nvt["fl_operator_rc"] !== "") && in_array($field[$nvt["fl_field_rc"]]["DATA_TYPE"], $this->GT["bit"]))
 			{
-				$WHERE .= " LPAD(BIN(`".$nvt["fl_field_rc"]."`), ".
-					$field[$nvt["fl_field_rc"]]["NUMERIC_PRECISION"].", '0') ".
-					$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";
-			}
-			elseif(in_array($field[$nvt["fl_field_rc"]]["DATA_TYPE"], $this->GT["geo"]))
-			{
-				$WHERE .= " ST_AsText(".$nvt["fl_field_rc"].") ".
-					$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";
-			}
-			elseif(
-				in_array($field[$nvt["fl_field_rc"]]["DATA_TYPE"], $this->GT["char"]) ||
-				in_array($field[$nvt["fl_field_rc"]]["DATA_TYPE"], $this->GT["text"]))
-			{
-				$WHERE .= (($nvt["fl_operator_rc"] === "LIKE") || ($nvt["fl_operator_rc"] === "NOT LIKE")) ?
-					" `".$nvt["fl_field_rc"]."` ".$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."" :
-					" CAST(`".$nvt["fl_field_rc"]."` AS CHAR) ".$nvt["fl_operator_rc"]." ".
-					$nvt["fl_value_rc"]."";
+				$WHERE .= " LPAD(BIN(`".$nvt["fl_field_rc"]."`), ".$field[$nvt["fl_field_rc"]]["NUMERIC_PRECISION"].", '0') ".$nvt["fl_operator_rc"]." ".$nvt["fl_value_rc"]."";
 			}
 			else
 			{

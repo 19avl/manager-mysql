@@ -222,7 +222,7 @@ Class Controller extends Request
 				{
 					$this->nv["fl_count_rc"] = ($this->nv["fl_count_rc"]+1);
 					
-$this->nv["fl_view"] = true;					
+					$this->nv["fl_view"] = true;					
 				}
 				break;
 

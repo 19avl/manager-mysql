@@ -91,7 +91,7 @@ Class View
 
 				$this->tg("div", "", "separator3", "", "", "");
 
-				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CONFIRM_UNSET,
+				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_RESET,
 					"onclick=\"ms.unset_rcdl_function('rcDl_buf_id', 'text_id');\"");
 
 				$this->tgFr_input("button", "", "", "confirmDl_btn", _NOTE_CLOSE, "onclick=\"ms.close_rcdl();\"");
@@ -1162,6 +1162,14 @@ Class View
 
 		$this->tg_open("table", "", "fl_wrap_table", "", "");
 
+
+		$disSel = "";
+		if(count($RT["FIELD_SE_FILTER"]) === 0)
+		{
+			$RT["FIELD_SE_FILTER"][0] = "";
+			$disSel = "disabled";
+		}
+
 		for($k=0;$k<$nv["fl_count_rc"];$k++)
 		{
 			$add_fl_operator = "";
@@ -1218,7 +1226,7 @@ Class View
 			$this->tg_close("td");
 			$this->tg_open("td", "", "fl_wrap_td", "", "");
 
-				$this->select($RT["FILTER_EX"][$add_fl_field_and], $add_fl_operator, "",
+				$this->select($RT["FILTER_EX"], $add_fl_operator, "",
 					"fl_operator_rc[]", "", "fl_slc_sl", "", "",
 					function($k, $v){return $v;},
 					function($k, $v){return $v;},
@@ -1238,13 +1246,13 @@ Class View
 
 		$this->tgFr_input("hidden", "fl_count_rc", "", "", $nv["fl_count_rc"], "", "");
 
-		$this->tgFr_input("button", "", "", "fl_btn_add", "+", "onclick=\"ms.RF('_ADD_FILTER_rc', '', '', this.form, 0);\"");
+		$this->tgFr_input("button", "", "", "fl_btn_add", "+", "onclick=\"ms.RF('_ADD_FILTER_rc', '', '', this.form, 0);\"", $disSel);
 
 		$this->tg("div", "", "separator11", "", "", "");
 
-		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_FILTER_RESET, "onclick=\"ms.RF('_RESET_FILTER_rc', '', '', this.form, 0);\"");
+		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_RESET, "onclick=\"ms.RF('_RESET_FILTER_rc', '', '', this.form, 0);\"");
 
-		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
+		$this->tgFr_input("button", "", "", "dt_btn", _NOTE_APLY, "onclick=\"ms.RF('VIEW', '', '', this.form, 0);\"");
 
 		$this->tg_close("td");
 		$this->tg_close("tr");

@@ -32,11 +32,7 @@ var cs =
 			catch (CatchException){ X = new ActiveXObject("Msxml2.XMLHTTP"); }
 		}
 
-		if (!X){
-
-			alert("<?php echo _MESSAGE_ERROR; ?>");
-			return;
-		}
+		if (!X){return;}
 
 		X.onreadystatechange = function(){
 
@@ -68,8 +64,8 @@ var cs =
 		X.setRequestHeader("Max-Forwards", "0");
 		X.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=utf-8");
 		X.send(data);
-	},	
-	
+	},
+
 	set_rs: function(oForm = []){
 
 		if(document.getElementById("request")){
@@ -270,7 +266,11 @@ var as =
 	clr_ps: function(){
 
 		document.getElementById("key").innerHTML = "";
-		document.getElementById("request").value = "";
+		
+		if(document.getElementById("request")){
+			
+			document.getElementById("request").value = "";
+		}
 	},
 
 	set_usr: function(){
@@ -295,12 +295,12 @@ var as =
 
 var ms =
 {
-	conf_text: "", 	
-	
+	conf_text: "",
+
 	RF: function(action, sh, table, form, request, container = "content")
 	{
-		form.session.value = "<?php echo _SESSION; ?>";		
-		
+		form.session.value = "<?php echo _SESSION; ?>";
+
 		if(action !== ""){form.action.value=action;}
 
 		if(sh !== ""){form.sh.value=sh;}
@@ -330,8 +330,8 @@ var ms =
 
 								oForm[form[i].name] = form[i].value;
 							}
-							
-							count += 1;								
+
+							count += 1;
 						}
 					}
 					else if(!form[i].disabled)
@@ -346,17 +346,17 @@ var ms =
 
 							oForm[form[i].name] = form[i].value;
 						}
-						
-						count += 1;							
+
+						count += 1;
 					}
 				}
 			}
 		}
 
 		var ctext = this.conf_text;
-		this.conf_text = "";	
+		this.conf_text = "";
 
-		if(count > "<?php echo ini_get('max_input_vars'); ?>"){	
+		if(count > "<?php echo ini_get('max_input_vars'); ?>"){
 
 			alert("<?php echo _MESSAGE_CHECK_MAX; ?>");
 			return false;
@@ -377,9 +377,9 @@ var ms =
 	},
 
 
-	AL: function(action, obj, form, cbName, conf_text, warning_list, request_list)	
+	AL: function(action, obj, form, cbName, conf_text, warning_list, request_list)
 	{
-		conf_text += obj[Array.from(obj).map((elements) => { return elements.value; }).indexOf(obj.value)].innerHTML; 
+		conf_text += obj[Array.from(obj).map((elements) => { return elements.value; }).indexOf(obj.value)].innerHTML;
 
 		var conf = 0;
 		if(warning_list.includes(obj.value)){conf = 1;};
@@ -392,19 +392,19 @@ var ms =
 		if( obj.nodeName === "SELECT"){ obj[0].selected='selected'; }
 
 		if(conf === 1){ms.conf_text = conf_text;}
-		ms.RF('', '', '', form, request);	
+		ms.RF('', '', '', form, request);
 	},
 
 
-	AT: function(action, obj, form, conf_text, warning_list, request_list)	
+	AT: function(action, obj, form, conf_text, warning_list, request_list)
 	{
 		var conf = 0;
-		if(warning_list.includes(action)){conf = 1;};	
+		if(warning_list.includes(action)){conf = 1;};
 
 		form.action.value = action;
 
 		if(conf === 1){ms.conf_text = conf_text;}
-		ms.RF('', '', '', form, 0);	
+		ms.RF('', '', '', form, 0);
 	},
 
 
@@ -483,7 +483,7 @@ var ms =
 
 	check_change: function(obj, style)
 	{
-		obj.className = style;			
+		obj.className = style;
 	},
 
 
@@ -493,8 +493,8 @@ var ms =
 
 			document.getElementById(f).style.display = "none";
 
-			if(document.getElementById("nav_"+f)){	
-			
+			if(document.getElementById("nav_"+f)){
+
 				document.getElementById("nav_"+f).className = "btn_nav";
 			}
 		}
@@ -502,13 +502,13 @@ var ms =
 		if(document.getElementById(id).style.display === "none"){
 
 			document.getElementById(id).style.display = "";
-			
+
 			obj.className = "btn_nav_focus";
 		}
 		else{
 
 			document.getElementById(id).style.display = "none";
-			document.getElementById("nav_"+id).className = "btn_nav";		
+			document.getElementById("nav_"+id).className = "btn_nav";
 		}
 
 		window.scrollTo(0,0);
@@ -537,15 +537,15 @@ var ms =
 	view_sl: function(form, cbName, id)
 	{
 		var count = 0;
-	
-		if(Array.from(form[cbName]).length !== 0)	
+
+		if(Array.from(form[cbName]).length !== 0)
 		{
 			count = Array.from(form[cbName])
-				.map((element) => { 
+				.map((element) => {
 					const { name, type } = element;
 					const value = type === 'checkbox' ? element.checked : element.value;
 					return { name, value }
-				}).filter(n => n.value !== false).length;	
+				}).filter(n => n.value !== false).length;
 		}
 		else
 		{
@@ -784,8 +784,8 @@ var ms =
 			}
 		}
 	},
-	
-	
+
+
 	creat_rcdl: function(this_id, text_id, mod_id, title)
 	{
 		document.getElementById(mod_id).style.display = '';
@@ -1022,7 +1022,7 @@ border: 1px solid #777;
 color: #eee;
 }
 
-.fl_slcus{	
+.fl_slcus{
 color: #eee;
 }
 
@@ -1045,7 +1045,7 @@ border: 1px solid #777;
 color: #eee;
 }
 
-.fl_slc, 
+.fl_slc,
 .fl_slc2,
 .fl_slc_sl{
 background:#333;
@@ -1061,7 +1061,7 @@ border: 2px solid #333;
 }
 
 .fl_btn_title{
-background: none;  
+background: none;
 color: #eee;
 border: 2px solid #333;
 }
@@ -1600,7 +1600,7 @@ fill: white;
 
 .btn_nav_first_im path:nth-of-type(2){
 stroke: #fff;
-stroke-width: 2px;	
+stroke-width: 2px;
 fill: transparent;
 }
 
@@ -1623,7 +1623,7 @@ border: 0px;
 border-right: 1px solid #000;
 padding: 14px 5px 14px 5px;
 width: 117px;
-height: 47px;	
+height: 47px;
 cursor: pointer;
 background-color: #111;
 color:#FFF;
