@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright (c) 2018-2025 Andrey Lyskov
+Copyright (c) 2018-2026 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -20,16 +20,17 @@ $USER = [
 
 	"user"=>[ // Alias
 
-		"key"=>"key",	
+		"key"=>"key",
 
 		"server"=>[
 			"host"=>"localhost", "port"=>3306, "user"=>"root", "pass"=>"root",
+			
 			"flags"=>0,
 
 			"variables"=>[
 				"names" => "utf8mb4",
-				//"sql_mode" => "TRADITIONAL",	
-				//"sql_mode" => "STRICT_ALL_TABLES", 
+				//"sql_mode" => "STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO",
+				//"sql_mode" => "ANSI_QUOTES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO",				
 				//"GLOBAL general_log" => 0,
 				//"GLOBAL log_output" => "TABLE",
 			],
@@ -38,30 +39,27 @@ $USER = [
 
 			"ssl-key"=>"",
 			"ssl-cert"=>"",
-			"ssl-ca"=>"",	
-		]			
+			"ssl-ca"=>"",
+		]
 	],
 
-	"root@127.0.0.1"=>[
-	
+	"user1"=>[
+
 		"server"=>["host"=>"127.0.0.1", "port"=>3306, "user"=>"root", "pass"=>"root"]],
 
-	"root."=>[
-	
-		"server"=>[
-			"host"=>".", "user"=>"root", "pass"=>"", 		
-			"socket"=>"",
-		]			
+	"user2"=>[
+
+		"server"=>["host"=>"p:localhost", "user"=>"root", "pass"=>"root", ]
 	],
 
-	"root@localhost:3307"=>[
-	
+	"user3"=>[
+
 		"server"=>[
 			"host"=>"localhost", "port"=>3307, "user"=>"root", "pass"=>"root",
 			"variables"=>[
-				"names" => "utf8mb4",			
-			],	
-		]			
+				"names" => "utf8mb4"
+			],
+		]
 	],
 ];
 
@@ -76,8 +74,8 @@ $SQL["userscripts"] = [
 	"show processlist" => "SHOW PROCESSLIST;",
 	"show open tables" => "SHOW OPEN TABLES;",
 	"show privileges" => "SHOW PRIVILEGES;",
-	"show grants" => "SHOW GRANTS;",	
-	"show status" => "SHOW STATUS;",	
+	"show grants" => "SHOW GRANTS;",
+	"show status" => "SHOW STATUS;",
 ];
 
 

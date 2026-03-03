@@ -11,7 +11,6 @@ define("_AT_MS_PS", "The key you entered is incorrect");
 define("_MESSAGE_SUPPORT", "Application does not support this browser");
 define("_MESSAGE_PL_MYSQLI", "PHP extensions mysqli is not installed");
 define("_MESSAGE_CONNECTION", "Cannot log in to the MySQL server");
-define("_MESSAGE_UNIQUE_COLUMN", "Table does not contain a unique column. Edit, Delete features are not available.");
 define("_MESSAGE_CHECK_MAX", "Maximum number of allowed fields exceeded");
 define("_MESSAGE_FIND_NOT_FOUND", "Is not found");
 define("_MESSAGE_SEARCHING", "SEARCHING");

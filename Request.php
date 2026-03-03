@@ -20,13 +20,11 @@ Class Request
 	protected $cl_df = "";
 
 	protected $script = "";
-	protected $script_id = "";
-	protected $script_id_add = "";
-	protected $script_id_php = "";
+	protected $script_id_sql = "";
 
 	public function __construct(){}
 
-	protected function request($LIMIT)
+	protected function request()
 	{
 		if(isset($_POST["action"])){ $this->action = $this->set_value($_POST["action"]); }
 
@@ -47,16 +45,13 @@ Class Request
 		if(isset($_POST["tb"])){ $this->nv["_TB"] = $this->set_value($_POST["tb"]); }
 		else{$this->nv["_TB"] = "";}
 
-		$this->nv["page_rc"] = (isset($_POST["page_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_rc"]))) ?
-				$this->set_value($_POST["page_rc"]) : $LIMIT[0];
+		$this->nv["page_rc"] = (isset($_POST["page_rc"]) && preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["page_rc"]))) ?
+				$this->set_value($_POST["page_rc"]) : $this->LIMIT[0];
 
-		$this->nv["from_rc"] = (isset($_POST["from_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_rc"]))) ?
+		$this->nv["from_rc"] = (isset($_POST["from_rc"]) && preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["from_rc"]))) ?
 				$this->set_value($_POST["from_rc"]) : "0";
 
-		$this->nv["order_rc"] = (isset($_POST["order_rc"]) &&
-			preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_rc"]))) ?
+		$this->nv["order_rc"] = (isset($_POST["order_rc"]) && preg_match("/^[0-9]{1,}$/", $this->set_value($_POST["order_rc"]))) ?
 				$this->set_value($_POST["order_rc"]) : "0";
 
 		$this->nv["order_desc_rc"] = (isset($_POST["order_desc_rc"]) && ($_POST["order_desc_rc"] === "DESC")) ? "DESC" : "";
@@ -64,16 +59,13 @@ Class Request
 		$this->nv["field_rc"] = (isset($_POST["field_rc"])) ? $this->set_value_list($_POST["field_rc"]) : [];
 
 		$this->nv["fl_field_rc"] = [];
-		if(isset($_POST["fl_field_rc"])){ $this->nv["fl_field_rc"] =
-			$this->set_value_list($_POST["fl_field_rc"]); }
+		if(isset($_POST["fl_field_rc"])){ $this->nv["fl_field_rc"] = $this->set_value_list($_POST["fl_field_rc"]); }
 
 		$this->nv["fl_value_rc"] = [];
-		if(isset($_POST["fl_value_rc"])){ $this->nv["fl_value_rc"] =
-			$this->set_value_list($_POST["fl_value_rc"]); }
+		if(isset($_POST["fl_value_rc"])){ $this->nv["fl_value_rc"] = $this->set_value_list($_POST["fl_value_rc"]); }
 
 		$this->nv["fl_operator_rc"] = [];
-		if(isset($_POST["fl_operator_rc"])){ $this->nv["fl_operator_rc"] =
-			$this->set_value_list($_POST["fl_operator_rc"]); }
+		if(isset($_POST["fl_operator_rc"])){ $this->nv["fl_operator_rc"] = $this->set_value_list($_POST["fl_operator_rc"]); }
 
 		$this->nv["fl_and_rc"] = [];
 		if(isset($_POST["fl_and_rc"])){ $this->nv["fl_and_rc"] = $this->set_value_list($_POST["fl_and_rc"]); }
@@ -98,11 +90,7 @@ Class Request
 
 		if(isset($_POST["script"])){ $this->script = $this->set_value($_POST["script"]); }
 
-		if(isset($_POST["script_id"])){ $this->script_id = $this->set_value($_POST["script_id"]); }
-
-		if(isset($_POST["script_id_add"])){ $this->script_id_add = $this->set_value($_POST["script_id_add"]); }
-
-		if(isset($_POST["script_id_php"])){ $this->script_id_php = $this->set_value($_POST["script_id_php"]); }
+		if(isset($_POST["script_id_sql"])){ $this->script_id_sql = $this->set_value($_POST["script_id_sql"]); }
 	}
 
 	protected function set_value($value)

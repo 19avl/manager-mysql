@@ -266,9 +266,9 @@ var as =
 	clr_ps: function(){
 
 		document.getElementById("key").innerHTML = "";
-		
+
 		if(document.getElementById("request")){
-			
+
 			document.getElementById("request").value = "";
 		}
 	},
@@ -1080,7 +1080,6 @@ input, textarea{outline: none;}
 table, td{
 padding: 0px;
 margin: 0px;
-
 vertical-align: top;
 border-spacing: 0;
 }
@@ -1216,8 +1215,8 @@ width: 970px;
 
 .sc_slc1,
 .sc_slc2{
-width: 105px;
-padding: 7px;
+width: 97px;
+padding: 7px 3px 7px 3px;
 margin: 2px 2px 2px 0px;
 outline: none;
 text-align: left;
@@ -1269,12 +1268,10 @@ padding: 3px 11px 3px 51px;
 .nav_wr_result{
 overflow: auto;
 width: 100%;
-max-height: 300px;
+max-height: 350px;
 }
 
-.nav_result{
-padding-bottom: 11px;
-}
+.nav_result{}
 
 .dt_label_tl{
 font-size: 17px;

@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2025 Andrey Lyskov
+Copyright (c) 2018-2026 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 

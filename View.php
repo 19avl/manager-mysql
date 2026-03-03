@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2018-2025 Andrey Lyskov
+Copyright (c) 2018-2026 Andrey Lyskov
 This project is licensed under the MIT License - see the LICENSE.md file
 */
 
@@ -32,19 +32,6 @@ Class View
 			'_SAVE_SQL_TB_FILTER','_SAVE_SQL_TB',
 			'_SAVE_SQL_RC_FILTER']";
 	}
-
-
-	public function dl_ms()
-	{
-		$this->tg_open("div", "id_alt_message", "altDl", "display: none;", "");
-
-		$this->tgFr_input("button", "", "", "altDl_btn", _NOTE_CONFIRM_YES, "onclick=\"ms.view_va('id_alt_message', 'none');\"");
-
-		$this->tg("div", "id_alt_message_text", "altDl_text", "", "", "");
-
-		$this->tg_close("div");
-	}
-
 
 	private function rcdl($FUNCTION)
 	{
@@ -161,6 +148,7 @@ Class View
 		$this->tgFr_open("nav_main_form");
 
 		$style_wr_script = "btn_nav";
+
 		if($display == "sql"){
 
 			$style_wr_script = "btn_nav_focus";
@@ -212,8 +200,10 @@ Class View
 	}
 
 
-	public function sql($SCRIPT, $SQL_SL, $nv, $display)
+	public function sql($SCRIPT, $SQL_ID, $nv, $display)
 	{
+		$SQL_SL = ($SQL_ID !== "") ? $SCRIPT["userscripts"][$SQL_ID] : "";
+
 		if($display === "sql"){
 
 			$this->tg_open("div", "id_wr_script", "nav_wr_main", "", "");
@@ -229,12 +219,11 @@ Class View
 
 		$this->tgFr_input("hidden", "display", "", "", "sql", "", "");
 
-
 		$this->tg_open("div", "", "nav_wr_script", "", "");
 
 			if(isset($SCRIPT["userscripts"])){
 
-				$this->select(array_keys($SCRIPT["userscripts"]), "", "--", "script_id", "", "sc_slc1", "userscripts",
+				$this->select(array_keys($SCRIPT["userscripts"]), "", "--", "script_id_sql", "", "sc_slc1", "userscripts",
 					"onchange=\"ms.RF('VIEW', '', '', this.form, 0);\"",
 					function($k, $v){return $v;},
 					function($k, $v){return $this->html($v);},
@@ -245,11 +234,14 @@ Class View
 
 				foreach($SCRIPT["objects"] as $k=>$v)
 				{
-					$this->select($v, "", "--", $k, $k."_id", "sc_slc1", $k,
-						"onchange=\"ms.edit_text('".$k."_id', 'script_text_sql', this);\"",
-						function($k, $v){return $k;},
-						function($k, $v){return $this->html($v);},
-						function($k, $v){return $this->html($k);});
+					if(count($v) !== 0)
+					{					
+						$this->select($v, "", "--", $k, $k."_id", "sc_slc1", $k,
+							"onchange=\"ms.edit_text('".$k."_id', 'script_text_sql', this);\"",
+							function($k, $v){return $k;},
+							function($k, $v){return $this->html($v);},
+							function($k, $v){return $this->html($k);});
+					}	
 				}
 			}
 
@@ -261,8 +253,7 @@ Class View
 
 		$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], $nv["page_rc"], $nv["from_rc"], $nv["order_rc"], []);
 
-		$this->textarea("script", "script_text_sql", "", $SQL_SL,
-			"onclick=\"ms.view_va('id_alt_message', 'none');\"", "title='"._NOTE_SCRIPT_DROP."'", "");
+		$this->textarea("script", "script_text_sql", "", $SQL_SL,"", "title='"._NOTE_SCRIPT_DROP."'", "");
 
 		$this->tg("div", "", "separator0", "", "", "");
 
@@ -291,24 +282,8 @@ Class View
 		}
 	}
 
-
-	public function rc($RT, $nv, $FUNCTION)
+	public function rc_nav($RT, $nv)
 	{
-		if($RT["CREATE"] == ""){return;}
-
-		$this->tg_open("div", "tb_id", "dt_wr", "display: none;", "");
-
-		$count = 0;
-
-		foreach($RT["DATA_NEW"] as $value)
-		{
-			$count += 1;
-
-			$this->rc_data($RT, $value, $count, $nv, "insert");
-		}
-
-		$this->tg_close("div");
-
 		$this->tgFr_open();
 
 		$this->form_set($nv["_US"], $nv["_SV"], $nv["_SH"], $nv["_TB"], "", "", "", [], $nv["view_rc"]);
@@ -322,8 +297,7 @@ Class View
 			function($k, $v){return $k;},
 			function($k, $v){return $v;});
 
-		$this->tgFr_input("text", "cl_in", "search_tb", "dt_in_search", "",
-			"onclick=\"ms.view_va('id_alt_message', 'none');\"", "");
+		$this->tgFr_input("text", "cl_in", "search_tb", "dt_in_search", "","", "");
 
 		$this->tgFr_input("button", "", "", "dt_btn_search", _ACTION_FIND,
 			"onclick=\"ms.AV('_FIND_TB', '', '".$nv["_TB"]."', this.form, 0, 'search_tb');\"");
@@ -335,6 +309,26 @@ Class View
 		$this->filter($RT, $nv);
 
 		$this->tgFr_close();
+	}
+
+	public function rc($RT, $nv, $FUNCTION)
+	{
+		if($RT["CREATE"] == ""){return;}
+
+		$this->tg_open("div", "tb_id", "dt_wr", "display: none;", "");
+
+		$this->tg("div", "", "separator3", "", "", "");
+
+		$count = 0;
+
+		foreach($RT["DATA_NEW"] as $value)
+		{
+			$count += 1;
+
+			$this->rc_data($RT, $value, $count, $nv, "insert");
+		}
+
+		$this->tg_close("div");
 
 		$this->tg("div", "", "separator3", "", "", "");
 
@@ -363,7 +357,6 @@ Class View
 		$this->rcdl($FUNCTION);
 	}
 
-
 	private function rc_data_list($RT, $nv, $mod)
 	{
 		if(count($RT["DATA"]) === 0){return;}
@@ -377,8 +370,7 @@ Class View
 					$this->tg_open("td", "", "", "", "");
 
 						$this->tgFr_input("checkbox", "totalH", "", "dt_check", "checkbox",
-							"onclick=\"ms.set_list_ch_fr(this.form,'list_rc[]',this.checked);
-							ms.view_sl(this.form,'list_rc[]','id_dt_slc')\"", "");
+							"onclick=\"ms.set_list_ch_fr(this.form,'list_rc[]',this.checked); ms.view_sl(this.form,'list_rc[]','id_dt_slc')\"", "");
 
 					$this->tg_close("td");
 
@@ -451,7 +443,7 @@ Class View
 					{
 						$this->tg_open("td", "", "", "", "");
 
-						$name = bin2hex($value[$RT["SCHEMA_NAME_SL"]]);
+						$name = bin2hex($value[$RT["SCHEMA_NAME"]]);
 
 						$this->tgFr_input("checkbox", "list_rc[]", "", "dt_check", $name, "onclick=\"ms.view_sl(this.form,'list_rc[]','id_dt_slc'); \"", "");
 
@@ -475,8 +467,7 @@ Class View
 						$name = bin2hex($value[$RT["SCHEMA_NAME"]]);
 
 						$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-							"onclick=\"ms.RF('VIEW', '".$name."', '', this.form, 0);\"",
-							"title='"._NOTE_OPEN."'");
+							"onclick=\"ms.RF('VIEW', '".$name."', '', this.form, 0);\"", "title='"._NOTE_OPEN."'");
 
 						$this->tg_close("td");
 					}
@@ -487,8 +478,7 @@ Class View
 						$name = bin2hex($value[$RT["TABLE_NAME"]]);
 
 						$this->tgFr_input("button", "", "", "dt_btn_list", "...",
-							"onclick=\"ms.RF('_RESET_FILTER_rc', '".$nv["_SH"]."', '".$name."', this.form, 0);\"",
-							"title='"._NOTE_OPEN."'");
+							"onclick=\"ms.RF('_RESET_FILTER_rc', '".$nv["_SH"]."', '".$name."', this.form, 0);\"", "title='"._NOTE_OPEN."'");
 
 						$this->tg_close("td");
 					}
@@ -537,11 +527,11 @@ Class View
 						{
 							$this->tg_open("td", "", "", "", "");
 
-							if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["blob"]) || in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"])){
+							if(in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["blob"]) || in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["text"]) ||
+								in_array($RT["FIELDS"][$k]["DATA_TYPE"], $this->GT["binary"])){
 
 								$this->tgFr_input("text", "", "", $class, $this->get_size((string)$v), "", "readonly");
 							}
-
 							else{
 
 								$this->tgFr_input("text", "", "", $class, $this->html($v), "", "title='".$this->html($v)."' readonly");
@@ -887,7 +877,7 @@ Class View
 
 							$this->tg_open("div", "", "file_dl", "", "");
 
-							$this->tg("a", "", "file_dl_a", "", _NOTE_DL." (".$this->get_size($v).")",
+							$this->tg("a", "", "file_dl_a", "", _NOTE_DL." (".$this->get_size(strlen((string)$v)).")",
 								"download='".$k.".txt' href='data:multipart/form-data;base64,".base64_encode((string)$v)."'");
 
 							$this->tg_close("div");
